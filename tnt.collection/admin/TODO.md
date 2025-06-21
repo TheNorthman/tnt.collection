@@ -5,16 +5,15 @@
 - [ ] Use Ikariam's own tooltips:
 - [ ] Auto hide tables:
     - Have an option to make the tables visible on hover only (Same effect as clicking min/max button)
+- [ ] The ability to set different triggers on buildings
+    - The idea: You can set a max level on a building and it will make the collapse the Upgrade building box
 - [ ] Building table navigation: Click on building level sends user to the city the building is in and opens the building's dialog (Could be extended with build option. Depends a little on 1. Use Ikariam's own tooltips)
-- [ ] Storage integrity checker:
-    - [ ] If the storage has gotten corrupted, we can act on it
-    - [ ] If corrupted we can attempt to restore as much as possible to make things work again. This may be a tricky one. Many things to consider
 - [ ] Building sorting options:
     - [ ] Sort by Ikariam's custom sorting (Ikariam -> Options -> Game Options)
     - [ ] Sort by resource type
     - [ ] Sort alphabetically
 - [ ] Detect rebellion:
-    - [ ] Make the city column cell red, to show they are angry.
+    - [ ] Make the city column cell red, to show they are angry. Maybe have to be based on wine $storage / $usage 
 
 ---
 
