@@ -1367,8 +1367,8 @@ const tnt = {
             };
 
             $.each(tnt.data.storage.city, function (cityID, cityData) {
-                total.population += cityData.population || 0;
-                total.citizens += cityData.citizens || 0;
+                total.population += parseInt(cityData.population) || 0;
+                total.citizens += parseInt(cityData.citizens) || 0;
                 total.wood += cityData.wood || 0;
                 total.wine += cityData.wine || 0;
                 total.marble += cityData.marble || 0;
