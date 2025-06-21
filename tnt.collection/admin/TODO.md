@@ -14,7 +14,8 @@
     - [ ] Sort alphabetically
 - [ ] Detect rebellion:
     - [ ] Make the city column cell red, to show they are angry. Maybe have to be based on wine $storage / $usage 
-
+- [ ] IkaMap:
+    - Open new tab with IkaMap (Map, Graph, Player info, Inactive players) eg.: https://www.ika-map.com/graph.html?server=42&world=54&searchType=player&scoreType=trade&time=300&searchInput1=thenorthman&searchInput2=youngblood64&searchInput3=roarus&searchInput4=velvit&searchInput5=
 ---
 
 ## 🐛 **Current Issues**

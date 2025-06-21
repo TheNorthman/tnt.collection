@@ -19,6 +19,9 @@
 // const UPDATE_URL = "http://ikariam.rjj-net.dk/scripts/tnt.Collection/update.php";
 // const UPDATE_HQ_URL = "http://lazy.rjj-net.dk/tnt/ikariam/hq/update";
 
+// Initialize the tnt.console
+const tntConsole = Object.assign({}, window.console);
+
 const validBuildingTypes = [
     'townHall', 'palace', 'palaceColony', 'warehouse', 'wall', 'barracks',
     'shipyard', 'port', 'academy', 'museum', 'temple', 'embassy', 'branchOffice',
@@ -117,6 +120,7 @@ const TNT_STYLES = `
 `;
 
 const tnt = {
+
     version: GM_info.script.version,
 
     template, // Add template to tnt object
@@ -667,7 +671,7 @@ const tnt = {
 
         // City switching utility function - extracted from tableBuilder.attachEventHandlers
         switchToCity(cityId) {
-            console.log('[TNT] Utils switching to city:', cityId);
+            // tntConsole.log('[TNT] Utils switching to city:', cityId);
 
             // Try multiple methods to switch cities
             let switchSuccess = false;
@@ -675,33 +679,33 @@ const tnt = {
             // Method 1: Direct ajaxHandlerCall (most reliable)
             try {
                 if (typeof ajaxHandlerCall === 'function') {
-                    console.log('[TNT] Utils using ajaxHandlerCall method');
+                    // console.log('[TNT] Utils using ajaxHandlerCall method');
                     ajaxHandlerCall(`?view=city&cityId=${cityId}`);
                     switchSuccess = true;
                     return true;
                 }
             } catch (e) {
-                console.log('[TNT] Utils ajaxHandlerCall failed:', e.message);
+                // console.log('[TNT] Utils ajaxHandlerCall failed:', e.message);
             }
 
             // Method 2: Try to find and trigger the city select dropdown change
             try {
                 const $citySelect = $('#js_GlobalMenu_citySelect');
                 if ($citySelect.length > 0) {
-                    console.log('[TNT] Utils using city select dropdown method');
+                    // console.log('[TNT] Utils using city select dropdown method');
                     $citySelect.val(cityId).trigger('change');
                     switchSuccess = true;
                     return true;
                 }
             } catch (e) {
-                console.log('[TNT] Utils city select dropdown failed:', e.message);
+                // console.log('[TNT] Utils city select dropdown failed:', e.message);
             }
 
             // Method 3: Try the dropdown li click with more specific targeting
             try {
                 const $cityOption = $(`#dropDown_js_citySelectContainer li[selectValue="${cityId}"]`);
                 if ($cityOption.length > 0) {
-                    console.log('[TNT] Utils using improved dropdown click method');
+                    // console.log('[TNT] Utils using improved dropdown click method');
 
                     // Get the select element that the dropdown controls
                     const $select = $('#js_GlobalMenu_citySelect, #citySelect');
@@ -720,12 +724,12 @@ const tnt = {
                     }
                 }
             } catch (e) {
-                console.log('[TNT] Utils improved dropdown method failed:', e.message);
+                // console.log('[TNT] Utils improved dropdown method failed:', e.message);
             }
 
             // Method 4: Direct URL navigation (fallback)
             if (!switchSuccess) {
-                console.log('[TNT] Utils using URL navigation fallback');
+                // console.log('[TNT] Utils using URL navigation fallback');
                 const currentUrl = new URL(window.location.href);
                 currentUrl.searchParams.set('cityId', cityId);
                 currentUrl.searchParams.set('currentCityId', cityId);
@@ -889,13 +893,13 @@ const tnt = {
                     )) {
                         return; // Skip these noisy debug messages
                     }
-                    console.log(val);
+                    tntConsole.log(val);
                 }
             },
             dir(obj, level = 0) {
                 // Only show directory output for level 0 (most important)
                 if (tnt.settings.debug.enable && level === 0) {
-                    console.dir(obj);
+                    tntConsole.dir(obj);
                 }
             }
         },
@@ -918,7 +922,7 @@ const tnt = {
                         if (storedVersion === tnt.version) {
                             // Same version - use existing data
                             tnt.data.storage = $.extend(true, {}, tnt.data.storage, parsedData);
-                            console.log('[TNT] Using existing storage data (version match)');
+                            // console.log('[TNT] Using existing storage data (version match)');
                         } else {
                             // Check if stored data has new structure (city, foreign, spy, settings)
                             const hasNewStructure = parsedData.city &&
@@ -930,11 +934,11 @@ const tnt = {
                                 tnt.data.storage = $.extend(true, {}, tnt.data.storage, parsedData);
                                 tnt.data.storage.version = tnt.version;
                                 tnt.core.storage.save();
-                                console.log(`[TNT] Updated version from ${storedVersion} to ${tnt.version} (structure compatible)`);
+                                // console.log(`[TNT] Updated version from ${storedVersion} to ${tnt.version} (structure compatible)`);
                             } else {
                                 // Old structure or incompatible - reset and auto-start
-                                console.log(`[TNT] Incompatible storage structure - resetting and starting data collection`);
-                                console.log(`[TNT] Stored: ${storedVersion}, Current: ${tnt.version}`);
+                                // console.log(`[TNT] Incompatible storage structure - resetting and starting data collection`);
+                                // console.log(`[TNT] Stored: ${storedVersion}, Current: ${tnt.version}`);
 
                                 // Reset to clean defaults with current version
                                 tnt.data.storage.version = tnt.version;
@@ -945,25 +949,25 @@ const tnt = {
                                     const cityList = tnt.get.cityList();
                                     const cityCount = Object.keys(cityList).length;
 
-                                    console.log(`[TNT] Auto-starting data collection for ${cityCount} cities`);
+                                    // console.log(`[TNT] Auto-starting data collection for ${cityCount} cities`);
 
                                     if (cityCount > 1) {
                                         // Multiple cities - start city switcher
-                                        console.log('[TNT] Starting city switcher for multi-city data collection');
+                                        // console.log('[TNT] Starting city switcher for multi-city data collection');
                                         tnt.citySwitcher.start();
                                     } else if (cityCount === 1) {
                                         // Single city - just collect current city data
-                                        console.log('[TNT] Single city detected - collecting current city data');
+                                        // console.log('[TNT] Single city detected - collecting current city data');
                                         tnt.dataCollector.update();
                                     } else {
-                                        console.log('[TNT] No cities detected - skipping auto-collection');
+                                        // console.log('[TNT] No cities detected - skipping auto-collection');
                                     }
                                 }, 200);
                             }
                         }
                     } else {
                         // No existing storage - new user
-                        console.log('[TNT] No existing storage found - new user detected');
+                        // console.log('[TNT] No existing storage found - new user detected');
                         tnt.data.storage.version = tnt.version;
                         tnt.core.storage.save();
 
@@ -972,29 +976,29 @@ const tnt = {
                             const cityList = tnt.get.cityList();
                             const cityCount = Object.keys(cityList).length;
 
-                            console.log(`[TNT] New user auto-starting data collection for ${cityCount} cities`);
+                            // console.log(`[TNT] New user auto-starting data collection for ${cityCount} cities`);
 
                             if (cityCount > 1) {
                                 // Multiple cities - start city switcher
-                                console.log('[TNT] Starting city switcher for new user');
+                                // console.log('[TNT] Starting city switcher for new user');
                                 tnt.citySwitcher.start();
                             } else if (cityCount === 1) {
                                 // Single city - just collect current city data
-                                console.log('[TNT] Single city new user - collecting current city data');
+                                // console.log('[TNT] Single city new user - collecting current city data');
                                 tnt.dataCollector.update();
                             } else {
-                                console.log('[TNT] New user with no cities - skipping auto-collection');
+                                // console.log('[TNT] New user with no cities - skipping auto-collection');
                             }
                         }, 200);
                     }
 
                     // Check when city list becomes available
                     const cityList = tnt.get.cityList();
-                    console.log(`[TNT Timing] City list ready: ${(performance.now() - scriptStartTime).toFixed(2)}ms (${Object.keys(cityList).length} cities)`);
+                    // console.log(`[TNT Timing] City list ready: ${(performance.now() - scriptStartTime).toFixed(2)}ms (${Object.keys(cityList).length} cities)`);
 
                 } catch (e) {
                     tnt.core.debug.log("Error parsing tnt_storage: " + e.message);
-                    console.log('[TNT] Using default storage structure due to parse error');
+                    // console.log('[TNT] Using default storage structure due to parse error');
 
                     // On parse error, treat as new user
                     tnt.data.storage.version = tnt.version;
@@ -1210,7 +1214,7 @@ const tnt = {
 
             // Update visual progress AFTER data collection with proper timing
             if (tnt.citySwitcher.isActive) {
-                console.log(`[TNT] Data collected for ${currentCityId} - scheduling visual update`);
+                // console.log(`[TNT] Data collected for ${currentCityId} - scheduling visual update`);
                 setTimeout(() => {
                     tnt.citySwitcher.updateVisualProgress();
                 }, 500);
@@ -1257,7 +1261,7 @@ const tnt = {
         },
 
         collectForeignCityData(currentCityId) {
-            console.log('[TNT] Collecting foreign city data for:', currentCityId);
+            // console.log('[TNT] Collecting foreign city data for:', currentCityId);
 
             const hasSpyAccess = $('.spy_warning').length > 0 || $('#js_spiesInsideText').length > 0;
             const ownerName = tnt.utils.safeGet(() => ikariam.backgroundView.screen.data.ownerName, 'Unknown');
@@ -1290,11 +1294,11 @@ const tnt = {
             // Also store in spy data if we have spy access
             if (hasSpyAccess) {
                 tnt.data.storage.spy[currentCityId] = foreignCityData;
-                console.log('[TNT] Stored spy data for city:', currentCityId);
+                // console.log('[TNT] Stored spy data for city:', currentCityId);
             }
 
             tnt.core.storage.save();
-            console.log('[TNT] Foreign city data collected and stored');
+            // console.log('[TNT] Foreign city data collected and stored');
         },
 
         show() {
@@ -1303,11 +1307,11 @@ const tnt = {
                 $("body").attr("id") == "city" &&
                 tnt.game.city.isOwn()) {
 
-                console.log('[TNT] Showing resource tables');
+                // console.log('[TNT] Showing resource tables');
 
                 if ($('#tnt_info_resources').length === 0) {
                     $('body').append(tnt.template.resources);
-                    console.log('[TNT] Created tnt_info_resources container');
+                    // console.log('[TNT] Created tnt_info_resources container');
                 }
 
                 $('#tnt_info_resources_content').empty();
@@ -1315,21 +1319,21 @@ const tnt = {
 
                 const resourceTable = tnt.tableBuilder.buildTable('resources');
                 $('#tnt_info_resources_content').html(resourceTable);
-                console.log('[TNT] Inserted resource table HTML');
+                // console.log('[TNT] Inserted resource table HTML');
 
                 const buildingTable = tnt.tableBuilder.buildTable('buildings');
                 $('#tnt_info_buildings_content').html(buildingTable);
-                console.log('[TNT] Inserted building table HTML');
+                // console.log('[TNT] Inserted building table HTML');
 
                 this.createExternalControls();
                 tnt.tableBuilder.attachEventHandlers();
 
                 const $cityLinks = $('.tnt_city_link');
-                console.log('[TNT] Created city links:', $cityLinks.length);
+                // console.log('[TNT] Created city links:', $cityLinks.length);
             } else {
-                console.log('[TNT] Not showing resource tables - conditions not met');
+                // console.log('[TNT] Not showing resource tables - conditions not met');
                 if (!tnt.game.city.isOwn()) {
-                    console.log('[TNT] Foreign city detected - not showing own city tables');
+                    // console.log('[TNT] Foreign city detected - not showing own city tables');
                 }
             }
         },
@@ -1499,11 +1503,11 @@ const tnt = {
             const settings = tnt.settings.getResourceDisplaySettings();
             const currentCityId = tnt.get.cityId();
 
-            console.log('[TNT] Building resource table with cities:', Object.keys(cities).length);
-            console.log('[TNT] Current city ID:', currentCityId);
+            // console.log('[TNT] Building resource table with cities:', Object.keys(cities).length);
+            // console.log('[TNT] Current city ID:', currentCityId);
 
             if (sortedCityIds.length === 0) {
-                console.log('[TNT] No sorted cities available');
+                // console.log('[TNT] No sorted cities available');
                 return '<div>No city data available</div>';
             }
 
@@ -1586,7 +1590,7 @@ const tnt = {
 
                 // DEBUG: Simple state logging
                 if (tnt.citySwitcher.isActive) {
-                    console.log(`[TNT] City ${cityId}: Current=${isCurrentCity}, Visited=${isVisited}, Class="${progressClass}"`);
+                    // console.log(`[TNT] City ${cityId}: Current=${isCurrentCity}, Visited=${isVisited}, Class="${progressClass}"`);
                 }
 
                 html += `<tr${rowClass}>`;
@@ -1746,12 +1750,12 @@ const tnt = {
                 const rowClass = isCurrentCity ? ' class="tnt_selected"' : '';
 
                 // DEBUG: Enhanced logging for visual state tracking (buildings table)
-                console.log(`[TNT DEBUG Buildings] City ${cityId}:`);
-                console.log(`  - Current: ${isCurrentCity}`);
-                console.log(`  - Construction: ${hasConstruction}`);
-                console.log(`  - Visited: ${isVisited}`);
-                console.log(`  - Progress Class: "${progressClass}"`);
-                console.log(`  - Row Class: "${rowClass}"`);
+                // console.log(`[TNT DEBUG Buildings] City ${cityId}:`);
+                // console.log(`  - Current: ${isCurrentCity}`);
+                // console.log(`  - Construction: ${hasConstruction}`);
+                // console.log(`  - Visited: ${isVisited}`);
+                // console.log(`  - Progress Class: "${progressClass}"`);
+                // console.log(`  - Row Class: "${rowClass}"`);
 
                 html += `<tr${rowClass}>`;
 
@@ -1834,10 +1838,10 @@ const tnt = {
                 event.preventDefault();
                 event.stopPropagation();
 
-                console.log('[TNT] City link clicked!');
+                // console.log('[TNT] City link clicked!');
 
                 const cityId = $(this).data('city-id');
-                console.log('[TNT] Switching to city:', cityId);
+                // console.log('[TNT] Switching to city:', cityId);
 
                 // Try multiple methods to switch cities
                 let switchSuccess = false;
@@ -1845,33 +1849,33 @@ const tnt = {
                 // Method 1: Direct ajaxHandlerCall (most reliable)
                 try {
                     if (typeof ajaxHandlerCall === 'function') {
-                        console.log('[TNT] Using ajaxHandlerCall method');
+                        // console.log('[TNT] Using ajaxHandlerCall method');
                         ajaxHandlerCall(`?view=city&cityId=${cityId}`);
                         switchSuccess = true;
                         return false;
                     }
                 } catch (e) {
-                    console.log('[TNT] ajaxHandlerCall failed:', e.message);
+                    // console.log('[TNT] ajaxHandlerCall failed:', e.message);
                 }
 
                 // Method 2: Try to find and trigger the city select dropdown change
                 try {
                     const $citySelect = $('#js_GlobalMenu_citySelect');
                     if ($citySelect.length > 0) {
-                        console.log('[TNT] Using city select dropdown method');
+                        // console.log('[TNT] Using city select dropdown method');
                         $citySelect.val(cityId).trigger('change');
                         switchSuccess = true;
                         return false;
                     }
                 } catch (e) {
-                    console.log('[TNT] City select dropdown failed:', e.message);
+                    // console.log('[TNT] City select dropdown failed:', e.message);
                 }
 
                 // Method 3: Try the dropdown li click with more specific targeting
                 try {
                     const $cityOption = $(`#dropDown_js_citySelectContainer li[selectValue="${cityId}"]`);
                     if ($cityOption.length > 0) {
-                        console.log('[TNT] Using improved dropdown click method');
+                        // console.log('[TNT] Using improved dropdown click method');
 
                         // Get the select element that the dropdown controls
                         const $select = $('#js_GlobalMenu_citySelect, #citySelect');
@@ -1890,12 +1894,12 @@ const tnt = {
                         }
                     }
                 } catch (e) {
-                    console.log('[TNT] Improved dropdown method failed:', e.message);
+                    // console.log('[TNT] Improved dropdown method failed:', e.message);
                 }
 
                 // Method 4: Direct URL navigation (fallback)
                 if (!switchSuccess) {
-                    console.log('[TNT] Using URL navigation fallback');
+                    // console.log('[TNT] Using URL navigation fallback');
                     const currentUrl = new URL(window.location.href);
                     currentUrl.searchParams.set('cityId', cityId);
                     currentUrl.searchParams.set('currentCityId', cityId);
@@ -1910,10 +1914,10 @@ const tnt = {
                 event.preventDefault();
                 event.stopPropagation();
 
-                console.log('[TNT] Direct city link clicked!');
+                // console.log('[TNT] Direct city link clicked!');
 
                 const cityId = $(this).data('city-id');
-                console.log('[TNT] Direct switching to city:', cityId);
+                // console.log('[TNT] Direct switching to city:', cityId);
 
                 // Use the same improved switching logic
                 let switchSuccess = false;
@@ -1921,31 +1925,31 @@ const tnt = {
                 // Method 1: Direct ajaxHandlerCall
                 try {
                     if (typeof ajaxHandlerCall === 'function') {
-                        console.log('[TNT] Direct using ajaxHandlerCall method');
+                        // console.log('[TNT] Direct using ajaxHandlerCall method');
                         ajaxHandlerCall(`?view=city&cityId=${cityId}`);
                         switchSuccess = true;
                         return false;
                     }
                 } catch (e) {
-                    console.log('[TNT] Direct ajaxHandlerCall failed:', e.message);
+                    // console.log('[TNT] Direct ajaxHandlerCall failed:', e.message);
                 }
 
                 // Method 2: City select dropdown
                 try {
                     const $citySelect = $('#js_GlobalMenu_citySelect');
                     if ($citySelect.length > 0) {
-                        console.log('[TNT] Direct using city select dropdown method');
+                        // console.log('[TNT] Direct using city select dropdown method');
                         $citySelect.val(cityId).trigger('change');
                         switchSuccess = true;
                         return false;
                     }
                 } catch (e) {
-                    console.log('[TNT] Direct city select dropdown failed:', e.message);
+                    // console.log('[TNT] Direct city select dropdown failed:', e.message);
                 }
 
                 // Method 3: URL navigation fallback
                 if (!switchSuccess) {
-                    console.log('[TNT] Direct using URL navigation fallback');
+                    // console.log('[TNT] Direct using URL navigation fallback');
                     const currentUrl = new URL(window.location.href);
                     currentUrl.searchParams.set('cityId', cityId);
                     currentUrl.searchParams.set('currentCityId', cityId);
@@ -2002,7 +2006,7 @@ const tnt = {
             this.startCityId = tnt.get.cityId();
 
             if (!this.startCityId) {
-                console.log('[TNT] Cannot start - no valid city ID detected');
+                // console.log('[TNT] Cannot start - no valid city ID detected');
                 return;
             }
 
@@ -2013,7 +2017,7 @@ const tnt = {
             tnt.settings.set("citySwitcherStartCity", this.startCityId);
             tnt.settings.set("citySwitcherVisited", this.visitedCities);
 
-            console.log(`[TNT] CitySwitcher STARTED from city: ${this.startCityId}`);
+            // console.log(`[TNT] CitySwitcher STARTED from city: ${this.startCityId}`);
 
             // Update visual immediately for starting city
             this.updateVisualProgress();
@@ -2026,35 +2030,35 @@ const tnt = {
 
         nextCity() {
             const allCities = Object.keys(tnt.get.cityList());
-            console.log(`[TNT] Looking for next city. Visited: [${this.visitedCities.join(', ')}]`);
+            // console.log(`[TNT] Looking for next city. Visited: [${this.visitedCities.join(', ')}]`);
 
             for (const cityId of allCities) {
                 if (!this.visitedCities.includes(cityId)) {
-                    console.log(`[TNT] Next city: ${cityId}`);
+                    // console.log(`[TNT] Next city: ${cityId}`);
                     this.switchToCity(cityId);
                     return;
                 }
             }
 
-            console.log('[TNT] All cities visited - ending cycle');
+            // console.log('[TNT] All cities visited - ending cycle');
             this.end();
         },
 
         switchToCity(cityId) {
-            console.log(`[TNT] === SWITCHING TO CITY ${cityId} ===`);
+            // console.log(`[TNT] === SWITCHING TO CITY ${cityId} ===`);
 
             // Add to visited list BEFORE switching
             if (!this.visitedCities.includes(cityId)) {
                 this.visitedCities.push(cityId);
                 tnt.settings.set("citySwitcherVisited", this.visitedCities);
-                console.log(`[TNT] Visited list updated: [${this.visitedCities.join(', ')}]`);
+                // console.log(`[TNT] Visited list updated: [${this.visitedCities.join(', ')}]`);
             }
 
             return tnt.utils.switchToCity(cityId);
         },
 
         end() {
-            console.log(`[TNT] === ENDING - Returning to start city: ${this.startCityId} ===`);
+            // console.log(`[TNT] === ENDING - Returning to start city: ${this.startCityId} ===`);
 
             this.switchToCity(this.startCityId);
             this.isActive = false;
@@ -2062,13 +2066,13 @@ const tnt = {
 
             // Restore normal state after final switch
             setTimeout(() => {
-                console.log('[TNT] Restoring normal visual state');
+                // console.log('[TNT] Restoring normal visual state');
                 this.restoreNormalVisualState();
             }, 2000);
         },
 
         updateVisualProgress() {
-            console.log(`[TNT] Visual update - Active: ${this.isActive}, Current: ${tnt.get.cityId()}`);
+            // console.log(`[TNT] Visual update - Active: ${this.isActive}, Current: ${tnt.get.cityId()}`);
 
             if ($('#tnt_info_resources').is(':visible') && $("body").attr("id") === "city") {
                 setTimeout(() => {
@@ -2079,13 +2083,13 @@ const tnt = {
                     $('#tnt_info_buildings_content').html(buildingTable);
 
                     tnt.tableBuilder.attachEventHandlers();
-                    console.log('[TNT] Tables updated');
+                    // console.log('[TNT] Tables updated');
                 }, 300);
             }
         },
 
         restoreNormalVisualState() {
-            console.log('[TNT] === RESTORING NORMAL STATE ===');
+            // console.log('[TNT] === RESTORING NORMAL STATE ===');
 
             this.visitedCities = [];
 
@@ -2098,7 +2102,7 @@ const tnt = {
                     $('#tnt_info_buildings_content').html(buildingTable);
 
                     tnt.tableBuilder.attachEventHandlers();
-                    console.log('[TNT] Normal state restored');
+                    // console.log('[TNT] Normal state restored');
                 }, 300);
             }
         },
@@ -2110,7 +2114,7 @@ const tnt = {
                 const visitedCities = tnt.settings.get("citySwitcherVisited", []);
 
                 if (visitedCities.length > 1) {
-                    console.log('[TNT] Continuing citySwitcher cycle');
+                    // console.log('[TNT] Continuing citySwitcher cycle');
                     this.isActive = true;
                     this.startCityId = tnt.settings.get("citySwitcherStartCity");
                     this.visitedCities = visitedCities;
@@ -2122,7 +2126,7 @@ const tnt = {
                         this.nextCity();
                     }, 100);
                 } else {
-                    console.log('[TNT] Direct navigation detected - stopping citySwitcher');
+                    // console.log('[TNT] Direct navigation detected - stopping citySwitcher');
                     this.isActive = false;
                     tnt.settings.set("citySwitcherActive", false);
                     this.restoreNormalVisualState();
@@ -2226,6 +2230,9 @@ const tnt = {
     }
 };
 
+// END: DO NOT MODIFY - Fixed logic
+
+// Initialize the TNT core
 $(document).ready(() => tnt.core.init());
 
 // Apply styles at the end
