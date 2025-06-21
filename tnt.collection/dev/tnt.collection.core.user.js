@@ -15,9 +15,9 @@
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
-const VERSION_URL = "http://ikariam.rjj-net.dk/scripts/tnt.Collection/version.php";
-const UPDATE_URL = "http://ikariam.rjj-net.dk/scripts/tnt.Collection/update.php";
-const UPDATE_HQ_URL = "http://lazy.rjj-net.dk/tnt/ikariam/hq/update";
+// const VERSION_URL = "http://ikariam.rjj-net.dk/scripts/tnt.Collection/version.php";
+// const UPDATE_URL = "http://ikariam.rjj-net.dk/scripts/tnt.Collection/update.php";
+// const UPDATE_HQ_URL = "http://lazy.rjj-net.dk/tnt/ikariam/hq/update";
 
 const validBuildingTypes = [
     'townHall', 'palace', 'palaceColony', 'warehouse', 'wall', 'barracks',
@@ -120,7 +120,7 @@ const tnt = {
     version: GM_info.script.version,
 
     template, // Add template to tnt object
-    url: { versionUrl: VERSION_URL, updateUrl: UPDATE_URL, update: UPDATE_HQ_URL },
+    //url: { versionUrl: VERSION_URL, updateUrl: UPDATE_URL, update: UPDATE_HQ_URL },
 
     delay: (time) => new Promise(resolve => setTimeout(resolve, time)),
 
@@ -734,18 +734,6 @@ const tnt = {
             }
 
             return false;
-        }
-    },
-
-    // Update core.options to use new modules
-    core: {
-        options: {
-            init() {
-                if (tnt.settings.get("version") !== tnt.version) {
-                    tnt.settings.initDefaults();
-                }
-                tnt.ui.showOptionsDialog();
-            }
         }
     },
 
