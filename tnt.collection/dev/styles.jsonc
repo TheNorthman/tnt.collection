@@ -1,0 +1,241 @@
+{
+    "Base": {
+        "name": "TNT Collection - Styling Rules Overview",
+        "description": "This file provides an overview of the styling rules used in the TNT Collection. All rules here are based on the actual CSS in tnt.collection.styles.user.js and the UI logic in tnt.collection.core.user.js. Each section lists the relevant class names used in the code.",
+        "version": "1.0.2",
+        "rules": {
+            "all tables": {
+                "Category Headers": {
+                    "Classes": [
+                        ".tnt_category_header",
+                        "tr.tnt_category_header",
+                        "th.tnt_category_header"
+                    ],
+                    "background": "#DBBE8C (brown/tan)",
+                    "border": "1px solid #000",
+                    "padding": "4px",
+                    "font-weight": "bold",
+                    "text-align": "center",
+                    "height": "25px (tr.tnt_category_header)",
+                    "vertical-align": "middle",
+                    "box-sizing": "border-box",
+                    "font-size": "12px"
+                },
+                "Subcategory Headers": {
+                    "Classes": [
+                        ".tnt_subcategory_header",
+                        "tr.tnt_subcategory_header",
+                        "th.tnt_subcategory_header"
+                    ],
+                    "background": "#faeac6 (darker cream)",
+                    "border": "1px solid #000",
+                    "padding": "4px",
+                    "font-weight": "bold",
+                    "text-align": "center",
+                    "height": "41px (tr.tnt_subcategory_header)",
+                    "vertical-align": "middle",
+                    "box-sizing": "border-box",
+                    "font-size": "12px"
+                },
+                "Total Rows": {
+                    "Classes": [
+                        ".tnt_total"
+                    ],
+                    "background": "#faeac6 (header color)",
+                    "border": "1px solid #000",
+                    "padding": "4px",
+                    "font-weight": "bold",
+                    "height": "auto"
+                },
+                "Category Spacer": {
+                    "Classes": [
+                        ".tnt_category_spacer"
+                    ],
+                    "display": "none (should not be used)",
+                    "background": "transparent",
+                    "border": "none",
+                    "padding": "4px",
+                    "text-align": "center"
+                },
+                "Table Cells": {
+                    "Classes": [
+                        "td",
+                        ".tnt_center",
+                        ".tnt_left",
+                        ".tnt_right"
+                    ],
+                    "background": "#fdf7dd (light cream)",
+                    "border": "1px solid #000",
+                    "padding": "4px",
+                    "text-align": "center",
+                    "vertical-align": "middle",
+                    "font": "12px Arial, Helvetica, sans-serif"
+                },
+                "Construction Status": {
+                    "Classes": [
+                        ".tnt_construction",
+                        ".tnt_progress_visited"
+                    ],
+                    "Under construction": "#80404050 background (orange tint, 50% opacity) for the first cell in the row on all tables, plus border-left: 2px solid #32CD32 for progress visited.",
+                    "Class": ".tnt_construction",
+                    "Progress Visited": ".tnt_progress_visited uses #90EE9050 background and border-left: 2px solid #32CD32",
+                    "Tooltips": "Building type, level and time left of construction status shown on hover"
+                },
+                "Current City Highlighting": {
+                    "Classes": [
+                        ".tnt_selected",
+                        "tr.tnt_selected"
+                    ],
+                    "Border": "2px solid black around entire row (tr.tnt_selected)",
+                    "Background": "No background change, just border",
+                    "Class": ".tnt_selected"
+                },
+                "Font": "12px Arial, Helvetica, sans-serif",
+                "Border Collapse": "collapse"
+            },
+            "Resource Table": {
+                "Category Headers": {
+                    "Classes": [
+                        "#tnt_resources_table .tnt_category_header"
+                    ],
+                    "City Info": "Dynamic span (2-4 columns) - City, Level, Population, Citizens",
+                    "Resources": "Dynamic span (0-5 columns) - Wood, Wine, Marble, Crystal, Sulfur"
+                },
+                "Storage Warnings": {
+                    "Classes": [
+                        ".tnt_storage_min",
+                        ".tnt_storage_danger"
+                    ],
+                    "tnt_storage_min": "#ffaaaa background when below threshold (class: .tnt_storage_min)",
+                    "tnt_storage_danger": "#ffaaaa background when over 80% of maximum storage (class: .tnt_storage_danger)",
+                    "Wood/Wine threshold": "#ffaaaa background < 100,000",
+                    "Marble/Crystal/Sulfur threshold": "#ffaaaa background < 50,000"
+                },
+                "Production Indicators": {
+                    "Classes": [
+                        ".tnt_bold"
+                    ],
+                    "Tradegood cities": "Bold font weight for produced Tradegood and resource (class: .tnt_bold)",
+                    "Tooltips": "24-hour production shown on hover",
+                    "Number formatting": ".toLocaleString() for thousands separators"
+                },
+                "Column Visibility": {
+                    "Always visible": "City, Level",
+                    "Toggleable": "Population, Citizens, Wood, Wine, Marble, Crystal, Sulfur",
+                    "Based on": "User settings (GM_getValue or tnt.settings)"
+                },
+                "Resource Icons": {
+                    "Classes": [
+                        ".tnt_resource_icon"
+                    ],
+                    "Size": "18px x 16px",
+                    "Alignment": "vertical-align: middle"
+                },
+                "Text Alignment": {
+                    "Resources": "Numbers right-aligned (class: .tnt_right)",
+                    "City names": "Left-aligned (class: .tnt_left)",
+                    "Headers": "Center-aligned (class: .tnt_center)"
+                }
+            },
+            "Building Table": {
+                "Category Headers": {
+                    "Classes": [
+                        "#tnt_buildings_table .tnt_category_header"
+                    ],
+                    "Government": "townHall, palace, palaceColony, embassy, chronosForge",
+                    "Storage": "warehouse, dump",
+                    "Trade": "port, dockyard, marineChartArchive, branchOffice",
+                    "Resource Reducers": "carpentering, architect, vineyard, optician, fireworker",
+                    "Resource Enhancers": "forester, stonemason, winegrower, glassblowing, alchemist",
+                    "Military": "wall, barracks, safehouse, workshop, shipyard",
+                    "Culture": "tavern, museum, academy, temple, shrineOfOlympus",
+                    "Special": "pirateFortress, blackMarket"
+                },
+                "Construction Status": {
+                    "Classes": [
+                        ".tnt_construction",
+                        ".tnt_progress_visited"
+                    ],
+                    "Under construction": "#80404050 background (orange tint, 50% opacity) on the cell with level data (class: .tnt_construction)",
+                    "Progress Visited": ".tnt_progress_visited uses #90EE9050 background and border-left: 2px solid #32CD32",
+                    "Tooltips": "Building type, level and time left of construction status shown on hover",
+                    "Palace merge": "Palace + Governor's Residence in single column with two icons"
+                },
+                "Building Icons": {
+                    "Classes": [
+                        ".tnt_building_icon"
+                    ],
+                    "Size": "36px x 32px",
+                    "Wall special": "scale(0.8) transform for wall.png",
+                    "Clickable": "Links to buildingDetail view in Ikarium help"
+                },
+                "Column Display": {
+                    "Only shows": "Buildings that exist in at least one city",
+                    "Dynamic spans": "Calculated based on actual building presence"
+                },
+                "Text Alignment": {
+                    "Building levels": "Center-aligned (class: .tnt_center)",
+                    "City names": "Left-aligned (class: .tnt_left)"
+                }
+            },
+            "Control Elements": {
+                "External Controls": {
+                    "Classes": [
+                        ".tnt_external_controls",
+                        ".tnt_left_buttons",
+                        ".tnt_right_buttons"
+                    ],
+                    "Position": "absolute, top: 2px, left: 2px, width: 116px, height: 18px, z-index: 1000",
+                    "Display": "flex, justify-content: space-between"
+                },
+                "Minimize Button": {
+                    "Classes": [
+                        ".tnt_panel_minimize_btn",
+                        ".tnt_back",
+                        ".tnt_foreward"
+                    ],
+                    "Size": "18px x 18px",
+                    "Position": "absolute, left: 2px, top: 2px",
+                    "Icon": "Triangle (CSS :after or :before)",
+                    "Hover": "Background #DDD, icon color #000"
+                },
+                "Toggle Button": {
+                    "Classes": [
+                        ".tnt_table_toggle_btn",
+                        ".active"
+                    ],
+                    "Size": "18px x 18px",
+                    "Icon": "Three horizontal lines (CSS :after)",
+                    "Active": "background: #006600, icon color #006600",
+                    "Hover": "background: #DDD, icon color #000"
+                },
+                "Refresh Button": {
+                    "Classes": [
+                        ".tnt_refresh_btn"
+                    ],
+                    "Size": "18px x 18px",
+                    "Icon": "Unicode ⟳ (CSS :before)",
+                    "Hover": "icon color #000, font-weight: 900"
+                },
+                "Panel Minimization": {
+                    "Classes": [
+                        "#tnt_info_resources.minimized",
+                        "#tnt_info_buildings.minimized"
+                    ],
+                    "Minimized state": "width: auto, only first column visible (other columns display: none)",
+                    "Button rotation": "tnt_back/tnt_foreward class toggles triangle direction",
+                    "Position": "fixed, bottom: 20px, left: 0px"
+                }
+            },
+            "Color Scheme": {
+                "#fdf7dd": "Light cream table cell background",
+                "#faeac6": "Header background (darker cream)",
+                "#DBBE8C": "Category header background (brown/tan)",
+                "#ffaaaa": "Red tint for storage warnings (danger/min, 100% opacity)",
+                "#80404050": "Orange tint for construction status (50% opacity)",
+                "#90EE9050": "Green tint for progress visited (50% opacity)",
+                "#333333": "Dark grey for bold text"
+            }
+        }
+    }
+}
