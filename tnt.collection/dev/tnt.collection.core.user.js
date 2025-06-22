@@ -490,11 +490,11 @@ const tnt = {
             const city = tnt.data.storage.city[cityID]; // Use new storage structure
             if (city && city.hasOwnProperty('resourceProduction') && city.hasOwnProperty('tradegoodProduction')) {
                 return {
-                    wood: (city.resourceProduction * hours * 3600).toLocaleString(),
-                    wine: city.producedTradegood == 1 ? (city.tradegoodProduction * hours * 3600).toLocaleString() : "0",
-                    marble: city.producedTradegood == 2 ? (city.tradegoodProduction * hours * 3600).toLocaleString() : "0",
-                    crystal: city.producedTradegood == 3 ? (city.tradegoodProduction * hours * 3600).toLocaleString() : "0",
-                    sulfur: city.producedTradegood == 4 ? (city.tradegoodProduction * hours * 3600).toLocaleString() : "0"
+                    wood: parseInt((city.resourceProduction * hours * 3600)).toLocaleString(),
+                    wine: city.producedTradegood == 1 ? (parseInt(city.tradegoodProduction * hours * 3600)).toLocaleString() : "0",
+                    marble: city.producedTradegood == 2 ? (parseInt(city.tradegoodProduction * hours * 3600)).toLocaleString() : "0",
+                    crystal: city.producedTradegood == 3 ? (parseInt(city.tradegoodProduction * hours * 3600)).toLocaleString() : "0",
+                    sulfur: city.producedTradegood == 4 ? (parseInt(city.tradegoodProduction * hours * 3600)).toLocaleString() : "0"
                 };
             }
 
@@ -1511,10 +1511,12 @@ const tnt = {
                 return '<div>No city data available</div>';
             }
 
-            // Calculate resources span based on enabled settings
-            let resourcesSpan = 0;
-            if (settings.showPopulation) resourcesSpan++;
-            if (settings.showCitizens) resourcesSpan++;
+            // Calculate colspan for City and Resources columns, based on enabled settings
+            let cityColspan = 1; // We start with 1 for the city name column, which is always shown
+            if (settings.showPopulation) cityColspan++;
+            if (settings.showCitizens) cityColspan++;
+
+            let resourcesSpan = 0; // We start with 0 for the resources columns, which are all conditionally shown
             if (settings.showWood) resourcesSpan++;
             if (settings.showWine) resourcesSpan++;
             if (settings.showMarble) resourcesSpan++;
@@ -1527,7 +1529,7 @@ const tnt = {
             // Category header row - NO CONTROLS TEXT
             html += '<tr class="tnt_category_header">';
             html += '<th class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;width:60px;"></th>';
-            html += '<th colspan="3" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">City Info</th>';
+            html += `<th colspan="${cityColspan}" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">City Info</th>`;
             if (resourcesSpan > 0) {
                 html += `<th colspan="${resourcesSpan}" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">Resources</th>`;
             }
@@ -1542,7 +1544,7 @@ const tnt = {
 
             // Town Hall header
             html += '<th class="tnt_center tnt_bold" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-            html += '<a href="#" onclick="ajaxHandlerCall(\'?view=buildingDetail&buildingId=0&helpId=1\');return false;" title="Learn more about Town Hall...">';
+            html += `<a href="#" onclick="ajaxHandlerCall('?view=buildingDetail&buildingId=0&helpId=1');return false;" title="Learn more about Town Hall...">`;
             html += '<img class="tnt_resource_icon tnt_building_icon" title="Town Hall" src="/cdn/all/both/img/city/townhall_l.png">';
             html += '</a></th>';
 
@@ -1619,7 +1621,7 @@ const tnt = {
                 }
                 if (settings.showWood) {
                     const cssClass = tnt.dataCollector.checkMinMax(city, 0);
-                    const production = tnt.calc.production(cityId, 24).wood;
+                    const production = tnt.utils.calculateProduction(cityId, 24).wood;
                     html += `<td class="tnt_wood${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;"><span title="${production}">${city.wood.toLocaleString()}</span></td>`;
                 }
                 if (settings.showWine) {
