@@ -215,6 +215,58 @@ const tnt = {
         }
     },
 
+    // Main data structure to hold all data - NEW STRUCTURE
+    data: {
+        ikariam: {
+            subDomain: location.hostname.split('.')[0],
+            url: {
+                notification: (() => {
+                    const sub = location.hostname.split('.')[0];
+                    const base = `https://${sub}.ikariam.gameforge.com/cdn/all/both/layout/advisors/`;
+                    return {
+                        defaultPicture: base + "mayor_premium.png",
+                        mayor: base + "mayor.png",
+                        mayor_premium: base + "mayor_premium.png",
+                        general: base + "general.png",
+                        general_premium: base + "general_premium.png",
+                        general_alert: base + "general_premium_alert.png",
+                        scientist: base + "scientist.png",
+                        scientist_premium: base + "scientist_premium.png",
+                        diplomat: base + "diplomat.png",
+                        diplomat_premium: base + "diplomat_premium.png"
+                    };
+                })()
+            }
+        },
+        storage: {
+            // NEW STRUCTURE: Own cities (existing data)
+            city: {},
+
+            // NEW STRUCTURE: Foreign cities
+            foreign: {},
+
+            // NEW STRUCTURE: Cities with spies (subset of foreign)
+            spy: {},
+
+            // NEW STRUCTURE: Avatar/player data
+            avatar: {
+                ambrosia: 0,
+                gold: 0
+            },
+
+            // NEW STRUCTURE: TNT settings (includes notification settings)
+            settings: {
+                notification: {
+                    city: false,
+                    military: false,
+                    militaryAlert: false,
+                    scientist: false,
+                    diplomat: false
+                }
+            }
+        }
+    },
+
     // UI module - handle all DOM manipulation and event binding
     ui: {
         // Create and show the options dialog
@@ -778,58 +830,6 @@ const tnt = {
     showCityLevels() {
         // Delegate to the utility function
         tnt.utils.displayCityLevels();
-    },
-
-    // Main data structure to hold all data - NEW STRUCTURE
-    data: {
-        ikariam: {
-            subDomain: location.hostname.split('.')[0],
-            url: {
-                notification: (() => {
-                    const sub = location.hostname.split('.')[0];
-                    const base = `https://${sub}.ikariam.gameforge.com/cdn/all/both/layout/advisors/`;
-                    return {
-                        defaultPicture: base + "mayor_premium.png",
-                        mayor: base + "mayor.png",
-                        mayor_premium: base + "mayor_premium.png",
-                        general: base + "general.png",
-                        general_premium: base + "general_premium.png",
-                        general_alert: base + "general_premium_alert.png",
-                        scientist: base + "scientist.png",
-                        scientist_premium: base + "scientist_premium.png",
-                        diplomat: base + "diplomat.png",
-                        diplomat_premium: base + "diplomat_premium.png"
-                    };
-                })()
-            }
-        },
-        storage: {
-            // NEW STRUCTURE: Own cities (existing data)
-            city: {},
-
-            // NEW STRUCTURE: Foreign cities
-            foreign: {},
-
-            // NEW STRUCTURE: Cities with spies (subset of foreign)
-            spy: {},
-
-            // NEW STRUCTURE: Avatar/player data
-            avatar: {
-                ambrosia: 0,
-                gold: 0
-            },
-
-            // NEW STRUCTURE: TNT settings (includes notification settings)
-            settings: {
-                notification: {
-                    city: false,
-                    military: false,
-                    militaryAlert: false,
-                    scientist: false,
-                    diplomat: false
-                }
-            }
-        }
     },
 
     // Initialize the core module
