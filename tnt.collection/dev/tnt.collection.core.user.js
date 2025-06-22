@@ -1626,25 +1626,25 @@ const tnt = {
                 }
                 if (settings.showWine) {
                     const cssClass = tnt.dataCollector.checkMinMax(city, 1);
-                    const production = tnt.calc.production(cityId, 24).wine;
+                    const production = tnt.utils.calculateProduction(cityId, 24).wine;
                     const fontWeight = city.producedTradegood == 1 ? 'font-weight:bold;' : '';
                     html += `<td class="tnt_wine${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;${fontWeight}"><span title="${production}">${city.wine.toLocaleString()}</span></td>`;
                 }
                 if (settings.showMarble) {
                     const cssClass = tnt.dataCollector.checkMinMax(city, 2);
-                    const production = tnt.calc.production(cityId, 24).marble;
+                    const production = tnt.utils.calculateProduction(cityId, 24).marble;
                     const fontWeight = city.producedTradegood == 2 ? 'font-weight:bold;' : '';
                     html += `<td class="tnt_marble${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;${fontWeight}"><span title="${production}">${city.marble.toLocaleString()}</span></td>`;
                 }
                 if (settings.showCrystal) {
                     const cssClass = tnt.dataCollector.checkMinMax(city, 3);
-                    const production = tnt.calc.production(cityId, 24).crystal;
+                    const production = tnt.utils.calculateProduction(cityId, 24).crystal;
                     const fontWeight = city.producedTradegood == 3 ? 'font-weight:bold;' : '';
                     html += `<td class="tnt_crystal${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;${fontWeight}"><span title="${production}">${city.crystal.toLocaleString()}</span></td>`;
                 }
                 if (settings.showSulfur) {
                     const cssClass = tnt.dataCollector.checkMinMax(city, 4);
-                    const production = tnt.calc.production(cityId, 24).sulfur;
+                    const production = tnt.utils.calculateProduction(cityId, 24).sulfur;
                     const fontWeight = city.producedTradegood == 4 ? 'font-weight:bold;' : '';
                     html += `<td class="tnt_sulfur${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;${fontWeight}"><span title="${production}">${city.sulfur.toLocaleString()}</span></td>`;
                 }
@@ -2219,11 +2219,6 @@ const tnt = {
         maxCapacity: () => tnt.game.resources.getCapacity().max,
         wineSpending: () => tnt.game.resources.getCapacity().wineSpending,
         construction: () => tnt.utils.hasConstruction()
-    },
-
-    // Add missing calc object that tableBuilder expects
-    calc: {
-        production: (cityID, hours) => tnt.utils.calculateProduction(cityID, hours)
     },
 
     // Add missing has object 
