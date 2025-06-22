@@ -67,11 +67,11 @@ const TNT_BUILDING_DEFINITIONS = [
     { key: 'shrineOfOlympus', name: 'Gods\' Shrine', icon: '/cdn/all/both/img/city/shrineOfOlympus_l.png', buildingId: 34, helpId: 1 },
 
     // Resource reducers
-    { key: 'carpentering', name: 'Carpenter', icon: '/cdn/all/both/img/city/carpentering_l.png', buildingId: 23, helpId: 1 },
-    { key: 'architect', name: 'Architect\'s Office', icon: '/cdn/all/both/img/city/architect_l.png', buildingId: 24, helpId: 1 },
-    { key: 'vineyard', name: 'Wine Press', icon: '/cdn/all/both/img/city/vineyard_l.png', buildingId: 26, helpId: 1 },
-    { key: 'optician', name: 'Optician', icon: '/cdn/all/both/img/city/optician_l.png', buildingId: 25, helpId: 1 },
-    { key: 'fireworker', name: 'Firework Test Area', icon: '/cdn/all/both/img/city/fireworker_l.png', buildingId: 27, helpId: 1 },
+    { key: 'carpentering', name: 'Carpenter', icon: '/cdn/all/both/img/city/carpentering_l.png', buildingId: 23, helpId: 1, maxedLvl: 50 },
+    { key: 'architect', name: 'Architect\'s Office', icon: '/cdn/all/both/img/city/architect_l.png', buildingId: 24, helpId: 1, maxedLvl: 50 },
+    { key: 'vineyard', name: 'Wine Press', icon: '/cdn/all/both/img/city/vineyard_l.png', buildingId: 26, helpId: 1, maxedLvl: 50 },
+    { key: 'optician', name: 'Optician', icon: '/cdn/all/both/img/city/optician_l.png', buildingId: 25, helpId: 1, maxedLvl: 50 },
+    { key: 'fireworker', name: 'Firework Test Area', icon: '/cdn/all/both/img/city/fireworker_l.png', buildingId: 27, helpId: 1, maxedLvl: 50 },
 
     // Resource enhancers
     { key: 'forester', name: 'Forester\'s House', icon: '/cdn/all/both/img/city/forester_l.png', buildingId: 18, helpId: 1 },
@@ -1694,15 +1694,15 @@ const tnt = {
             const categorySpans = tnt.dataCollector.calculateCategorySpans(mergedColumns);
 
             if (sortedCityIds.length === 0) {
-                return '<div>No city data available</div>';
+                return `<div>No city data available</div>`;
             }
 
-            let html = '<table id="tnt_buildings_table" border="1" style="border-collapse:collapse;font:12px Arial,Helvetica,sans-serif;background-color:#fdf7dd;"><tbody>';
+            let html = `<table id="tnt_buildings_table" border="1" style="border-collapse:collapse;font:12px Arial,Helvetica,sans-serif;background-color:#fdf7dd;"><tbody>`;
 
             // Category header row
-            html += '<tr class="tnt_category_header">';
-            html += '<th class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;width:60px;"></th>';
-            html += '<th class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">City</th>';
+            html += `<tr class="tnt_category_header">`;
+            html += `<th class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;width:60px;"></th>`;
+            html += `<th class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">City</th>`;
             Object.entries(categorySpans).forEach(([category, span]) => {
                 if (span > 0) {
                     let displayName = category.replace(/([A-Z])/g, ' $1')
@@ -1712,52 +1712,45 @@ const tnt = {
                     html += `<th colspan="${span}" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">${displayName}</th>`;
                 }
             });
-            html += '</tr>';
+            html += `</tr>`;
 
             // Subcategory header row
-            html += '<tr class="tnt_subcategory_header">';
-            html += '<th class="tnt_center tnt_bold" style="position:relative;text-align:center;padding:4px;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-            html += '<div style="position:relative; min-width:120px; text-align:center;">';
-            html += '<span style="display:inline-block; text-align:center; min-width:60px;">City</span>';
-            html += '</div></th>';
+            html += `<tr class="tnt_subcategory_header">`;
+            html += `<th class="tnt_center tnt_bold" style="position:relative;text-align:center;padding:4px;font-weight:bold;border:1px solid #000;background-color:#faeac6;">`;
+            html += `<div style="position:relative; min-width:120px; text-align:center;">`;
+            html += `<span style="display:inline-block; text-align:center; min-width:60px;">City</span>`;
+            html += `</div></th>`;
 
             // Building column headers
             mergedColumns.forEach(building => {
                 if (building.key === 'palaceOrColony') {
-                    html += '<th class="tnt_center tnt_bold" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                    html += `<a href="#" onclick="ajaxHandlerCall('?view=buildingDetail&buildingId=11&helpId=1');return false;" title="Learn more about Palace...">`;
+                    html += `<th class="tnt_center tnt_bold" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">`;
+                    html += `<a href="#" onclick="ajaxHandlerCall('?view=buildingDetail&buildingId=11&helpId=1');return false;">`;
                     html += `<img class="tnt_resource_icon tnt_building_icon" title="Palace" src="${building.icon}">`;
-                    html += '</a>';
-                    html += `<a href="#" onclick="ajaxHandlerCall('?view=buildingDetail&buildingId=17&helpId=1');return false;" title="Learn more about Governor's Residence...">`;
+                    html += `</a>`;
+                    html += `<a href="#" onclick="ajaxHandlerCall('?view=buildingDetail&buildingId=17&helpId=1');return false;">`;
                     html += `<img class="tnt_resource_icon tnt_building_icon" title="Governor's Residence" src="${building.icon2}">`;
-                    html += '</a></th>';
+                    html += `</a></th>`;
                 } else {
-                    html += '<th class="tnt_center tnt_bold" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                    html += `<a href="#" onclick="ajaxHandlerCall('?view=buildingDetail&buildingId=${building.buildingId}&helpId=${building.helpId}');return false;" title="Learn more about ${building.name}...">`;
+                    html += `<th class="tnt_center tnt_bold" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">`;
+                    html += `<a href="#" onclick="ajaxHandlerCall('?view=buildingDetail&buildingId=${building.buildingId}&helpId=${building.helpId}');return false;">`;
                     html += `<img class="tnt_resource_icon tnt_building_icon" title="${building.name}" src="${building.icon}">`;
-                    html += '</a></th>';
+                    html += `</a></th>`;
                 }
             });
-            html += '</tr>';
+            html += `</tr>`;
 
             // Data rows
             sortedCityIds.forEach(cityId => {
                 const city = cities[cityId];
                 if (!city) return;
 
+                // Determine city state
                 const isCurrentCity = (cityId == currentCityId);
                 const hasConstruction = city.hasConstruction;
                 const isVisited = tnt.citySwitcher.isActive && tnt.citySwitcher.visitedCities.includes(cityId);
                 const progressClass = this.getProgressClass(cityId, isCurrentCity, hasConstruction, isVisited);
                 const rowClass = isCurrentCity ? ' class="tnt_selected"' : '';
-
-                // DEBUG: Enhanced logging for visual state tracking (buildings table)
-                // console.log(`[TNT DEBUG Buildings] City ${cityId}:`);
-                // console.log(`  - Current: ${isCurrentCity}`);
-                // console.log(`  - Construction: ${hasConstruction}`);
-                // console.log(`  - Visited: ${isVisited}`);
-                // console.log(`  - Progress Class: "${progressClass}"`);
-                // console.log(`  - Row Class: "${rowClass}"`);
 
                 html += `<tr${rowClass}>`;
 
