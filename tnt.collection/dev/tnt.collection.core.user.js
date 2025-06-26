@@ -1851,6 +1851,10 @@ const tnt = {
                                 allMaxed = arr.every(b => ((b.currentLevel || b.level || b.targetLevel || 0) >= buildingDef.maxedLvl));
                             }
                             if (allMaxed) tdClass += " tnt_building_maxed";
+
+                            // Add green class if any building is upgradable
+                            if (arr.some(b => b.upgradable)) tdClass += " green";
+                            
                             // Always show the sum of current levels (never show dash for existing buildings)
                             const sumLevel = arr.reduce((acc, b) => {
                                 let lvl = (typeof b.currentLevel === 'number' && b.currentLevel > 0)
