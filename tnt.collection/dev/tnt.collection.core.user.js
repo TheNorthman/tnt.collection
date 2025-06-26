@@ -724,14 +724,50 @@ const tnt = {
 
             $positions.each((index, element) => {
                 const $pos = $(element);
-
-                // Extract basic building information
                 const position = this.extractPositionFromElement($pos);
                 if (!position) return;
 
-                let buildingType = this.detectBuildingType($pos);
+                // Special handling for Town Hall (position 20)
+                if (position == 20) {
+                    let level = 0;
+                    let underConstruction = $pos.hasClass('constructionSite');
+                    let upgradable = false;
+                    if (underConstruction) {
+                        // Under construction: get level from the link's title
+                        const $link = $("#js_CityPosition20Link");
+                        if ($link.length) {
+                            const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
+                            if (m) level = parseInt(m[1], 10);
+                        }
+                    } else {
+                        // Not under construction: get level from the visible span
+                        const $levelSpan = $("#js_CityPosition20Level");
+                        if ($levelSpan.length) {
+                            const txt = $levelSpan.text().trim();
+                            if (/^\d+$/.test(txt)) level = parseInt(txt, 10);
+                        }
+                        // Upgradable: check if the scroll name is green
+                        const $scrollName = $("#js_CityPosition20ScrollName");
+                        if ($scrollName.length && $scrollName.hasClass("green")) upgradable = true;
+                    }
+                    // Always save Town Hall if level > 0 or under construction
+                    if (level > 0 || underConstruction) {
+                        const buildingData = {
+                            position: 20,
+                            level: level,
+                            currentLevel: level,
+                            targetLevel: undefined,
+                            name: 'townHall',
+                            underConstruction: underConstruction,
+                            upgradable: upgradable
+                        };
+                        this.addBuildingToCollection(foundBuildings, buildingData);
+                    }
+                    return;
+                }
 
-                // If not found and under construction, try to extract from <a href="?view=TYPE">
+                // Default logic for all other buildings
+                let buildingType = this.detectBuildingType($pos);
                 if (!buildingType && $pos.hasClass('constructionSite')) {
                     const $a = $pos.find('a[href*="view="]');
                     if ($a.length > 0) {
@@ -739,7 +775,6 @@ const tnt = {
                         const match = href && href.match(/view=([a-zA-Z]+)/);
                         if (match && match[1]) {
                             const viewName = match[1];
-                            // Find TNT key by viewName in TNT_BUILDING_DEFINITIONS
                             const def = (typeof TNT_BUILDING_DEFINITIONS !== 'undefined' ? TNT_BUILDING_DEFINITIONS : (window.TNT_BUILDING_DEFINITIONS || []))
                                 .find(b => b.viewName === viewName);
                             buildingType = def ? def.key : null;
@@ -749,12 +784,7 @@ const tnt = {
                 if (!buildingType) return;
 
                 const levelInfo = this.extractBuildingLevel($pos);
-
-                // Always save the building if under construction, even if level is 0
                 if (levelInfo.level <= 0 && !levelInfo.underConstruction) return;
-
-                // If under construction, always save the building, even if level is 0
-                // If not under construction, only save if level > 0
                 if (levelInfo.level > 0 || levelInfo.underConstruction) {
                     const buildingData = this.createBuildingData(position, buildingType, levelInfo);
                     this.addBuildingToCollection(foundBuildings, buildingData);
@@ -1846,7 +1876,7 @@ const tnt = {
                         // Handle other building types
                         const arr = cityBuildings[building.key];
 
-                        // Check for maxed levels
+                        // Show cell if any building exists, even if only under construction
                         if (Array.isArray(arr) && arr.length > 0) {
                             let allMaxed = false;
                             if (
@@ -1854,34 +1884,49 @@ const tnt = {
                                 typeof buildingDef.maxedLvl === 'number' &&
                                 arr.length > 0
                             ) {
-                                allMaxed = arr.every(b => ((b.currentLevel || b.level || b.targetLevel || 0) >= buildingDef.maxedLvl));
+                                allMaxed = arr.every(b => ((b.currentLevel || b.level || 0) >= buildingDef.maxedLvl));
                             }
                             if (allMaxed) tdClass += " tnt_building_maxed";
 
                             // Add green class if any building is upgradable
                             if (arr.some(b => b.upgradable)) tdClass += " green";
 
-                            // Always show the sum of current levels (never show dash for existing buildings)
+                            // Always show the sum of current levels (never show dash for existing or under-construction buildings)
                             const sumLevel = arr.reduce((acc, b) => {
-                                let lvl = (typeof b.currentLevel === 'number' && b.currentLevel > 0)
-                                    ? b.currentLevel
-                                    : (typeof b.level === 'number' && b.level > 0)
-                                        ? b.level
-                                        : 0;
+                                let lvl = 0;
+                                if (typeof b.currentLevel === 'number' && b.currentLevel > 0) {
+                                    lvl = b.currentLevel;
+                                } else if (typeof b.level === 'number' && b.level > 0) {
+                                    lvl = b.level;
+                                } else if (b.underConstruction) {
+                                    // Try to get previous level from the building link's title
+                                    const $link = $("#js_CityPosition" + b.position + "Link");
+                                    if ($link.length) {
+                                        const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
+                                        if (m) lvl = parseInt(m[1], 10);
+                                    }
+                                }
                                 return acc + lvl;
                             }, 0);
                             const tooltip = arr.map(b => {
-                                let shownLevel = (typeof b.currentLevel === 'number' && b.currentLevel > 0)
-                                    ? b.currentLevel
-                                    : (typeof b.level === 'number' && b.level > 0)
-                                        ? b.level
-                                        : 0;
+                                let shownLevel = 0;
+                                if (typeof b.currentLevel === 'number' && b.currentLevel > 0) {
+                                    shownLevel = b.currentLevel;
+                                } else if (typeof b.level === 'number' && b.level > 0) {
+                                    shownLevel = b.level;
+                                } else if (b.underConstruction) {
+                                    const $link = $("#js_CityPosition" + b.position + "Link");
+                                    if ($link.length) {
+                                        const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
+                                        if (m) shownLevel = parseInt(m[1], 10);
+                                    }
+                                }
                                 let text = 'Pos ' + b.position + ': lvl ' + shownLevel;
                                 if (b.underConstruction) {
-                                    text += ' (Upgrading to ' + b.targetLevel + ')';
+                                    text += ' (Upgrading to ' + (shownLevel + 1) + ')';
                                 }
                                 return text;
-                            }).join('\n');
+                            }).join('\\n');
                             bgColor = arr.some(building => building.underConstruction) ? '#80404050' : '#fdf7dd';
 
                             html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};" title="${tooltip.replace(/"/g, '&quot;')}">${sumLevel > 0 ? sumLevel : ''}</td>`;
