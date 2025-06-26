@@ -1651,10 +1651,13 @@ const tnt = {
 
                 // Town Hall level
                 let townHallLevel = '-';
+                let townHallGreen = false;
                 if (city.buildings && Array.isArray(city.buildings['townHall']) && city.buildings['townHall'].length > 0) {
-                    townHallLevel = city.buildings['townHall'].reduce((acc, b) => acc + (parseInt(b.level) || 0), 0);
+                    const arr = city.buildings['townHall'];
+                    townHallLevel = arr.reduce((acc, b) => acc + (parseInt(b.level) || 0), 0);
+                    if (arr.some(b => b.upgradable)) townHallGreen = true;
                 }
-                html += `<td class="tnt_building_level" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;">${townHallLevel}</td>`;
+                html += `<td class="tnt_building_level${townHallGreen ? ' green' : ''}" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;">${townHallLevel}</td>`;
 
                 // Optional data columns
                 if (settings.showPopulation) {
