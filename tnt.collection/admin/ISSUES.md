@@ -16,7 +16,7 @@
 - **Description**: Resource indicators are not functioning as expected. No background colors are seen in the resource table.
 - **Affected**: Resource display system
 - **Workaround**: None currently
-- **Notes**: Need to investigate which specific indicators are failing
+- **Notes**: Min/max is solved. Still need to look at tnt_storage_danger (storage_danger is used by Ikariam)
 
 ### **#003 Population/Citizen should be shown as Integer in the total row**
 - **Status**: 📋 Confirmed
