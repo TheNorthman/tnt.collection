@@ -43,80 +43,56 @@ const template = {
 // Move large data blocks to separate internal modules for better organization
 const TNT_BUILDING_DEFINITIONS = [
     // Government
-    { key: 'townHall', name: 'Town Hall', icon: '/cdn/all/both/img/city/townhall_l.png', buildingId: 0, helpId: 1 },
-    { key: 'palace', name: 'Palace', icon: '/cdn/all/both/img/city/palace_l.png', buildingId: 11, helpId: 1 },
-    { key: 'palaceColony', name: 'Governor\'s Residence', icon: '/cdn/all/both/img/city/palaceColony_l.png', buildingId: 17, helpId: 1 },
-    { key: 'embassy', name: 'Embassy', icon: '/cdn/all/both/img/city/embassy_l.png', buildingId: 12, helpId: 1 },
-    { key: 'chronosForge', name: 'Chronos\' Forge', icon: '/cdn/all/both/img/city/chronosForge_l.png', buildingId: 35, helpId: 1 },
+    { key: 'townHall', name: 'Town Hall', viewName: 'townHall', icon: '/cdn/all/both/img/city/townhall_l.png', buildingId: 0, helpId: 1, maxedLvl: 40 },
+    { key: 'palace', name: 'Palace', viewName: 'palace', icon: '/cdn/all/both/img/city/palace_l.png', buildingId: 11, helpId: 1, maxedLvl: 20 },
+    { key: 'palaceColony', name: 'Governor\'s Residence', viewName: 'palaceColony', icon: '/cdn/all/both/img/city/palaceColony_l.png', buildingId: 17, helpId: 1, maxedLvl: 20 },
+    { key: 'embassy', name: 'Embassy', viewName: 'embassy', icon: '/cdn/all/both/img/city/embassy_l.png', buildingId: 12, helpId: 1 },
+    { key: 'chronosForge', name: 'Chronos\' Forge', viewName: 'chronosForge', icon: '/cdn/all/both/img/city/chronosForge_l.png', buildingId: 35, helpId: 1, maxedLvl: 3 },
 
     // Resource storage
-    { key: 'warehouse', name: 'Warehouse', icon: '/cdn/all/both/img/city/warehouse_l.png', buildingId: 7, helpId: 1 },
-    { key: 'dump', name: 'Depot', icon: '/cdn/all/both/img/city/dump_l.png', buildingId: 29, helpId: 1 },
+    { key: 'warehouse', name: 'Warehouse', viewName: 'warehouse', icon: '/cdn/all/both/img/city/warehouse_l.png', buildingId: 7, helpId: 1, maxedLvl: 43 },
+    { key: 'dump', name: 'Depot', viewName: 'dump', icon: '/cdn/all/both/img/city/dump_l.png', buildingId: 29, helpId: 1, maxedLvl: 43 },
 
     // Trade & Diplomacy
-    { key: 'port', name: 'Trading Port', icon: '/cdn/all/both/img/city/port_l.png', buildingId: 3, helpId: 1 },
-    { key: 'dockyard', name: 'Dockyard', icon: '/cdn/all/both/img/city/dockyard_l.png', buildingId: 33, helpId: 1 },
-    { key: 'marineChartArchive', name: 'Sea Chart Archive', icon: '/cdn/all/both/img/city/marinechartarchive_l.png', buildingId: 32, helpId: 1 },
-    { key: 'branchOffice', name: 'Trading Post', icon: '/cdn/all/both/img/city/branchoffice_l.png', buildingId: 13, helpId: 1 },
+    { key: 'port', name: 'Trading Port', viewName: 'port', icon: '/cdn/all/both/img/city/port_l.png', buildingId: 3, helpId: 1, maxedLvl: 47 },
+    { key: 'dockyard', name: 'Dockyard', viewName: 'dockyard', icon: '/cdn/all/both/img/city/dockyard_l.png', buildingId: 33, helpId: 1 },
+    { key: 'marineChartArchive', name: 'Sea Chart Archive', viewName: 'marineChartArchive', icon: '/cdn/all/both/img/city/marinechartarchive_l.png', buildingId: 32, helpId: 1 },
+    { key: 'branchOffice', name: 'Trading Post', viewName: 'tradingPost', icon: '/cdn/all/both/img/city/branchoffice_l.png', buildingId: 13, helpId: 1 },
 
     // Culture & Research
-    { key: 'academy', name: 'Academy', icon: '/cdn/all/both/img/city/academy_l.png', buildingId: 4, helpId: 1 },
-    { key: 'museum', name: 'Museum', icon: '/cdn/all/both/img/city/museum_l.png', buildingId: 10, helpId: 1 },
-    { key: 'tavern', name: 'Tavern', icon: '/cdn/all/both/img/city/taverne_l.png', buildingId: 9, helpId: 1 },
-    { key: 'temple', name: 'Temple', icon: '/cdn/all/both/img/city/temple_l.png', buildingId: 28, helpId: 1 },
-    { key: 'shrineOfOlympus', name: 'Gods\' Shrine', icon: '/cdn/all/both/img/city/shrineOfOlympus_l.png', buildingId: 34, helpId: 1 },
+    { key: 'academy', name: 'Academy', viewName: 'academy', icon: '/cdn/all/both/img/city/academy_l.png', buildingId: 4, helpId: 1 },
+    { key: 'museum', name: 'Museum', viewName: 'museum', icon: '/cdn/all/both/img/city/museum_l.png', buildingId: 10, helpId: 1, maxedLvl: 21},
+    { key: 'tavern', name: 'Tavern', viewName: 'tavern', icon: '/cdn/all/both/img/city/taverne_l.png', buildingId: 9, helpId: 1 },
+    { key: 'temple', name: 'Temple', viewName: 'temple', icon: '/cdn/all/both/img/city/temple_l.png', buildingId: 28, helpId: 1 },
+    { key: 'shrineOfOlympus', name: 'Gods\' Shrine', viewName: 'shrineOfOlympus', icon: '/cdn/all/both/img/city/shrineOfOlympus_l.png', buildingId: 34, helpId: 1 },
 
     // Resource reducers
-    { key: 'carpentering', name: 'Carpenter', icon: '/cdn/all/both/img/city/carpentering_l.png', buildingId: 23, helpId: 1, maxedLvl: 50 },
-    { key: 'architect', name: 'Architect\'s Office', icon: '/cdn/all/both/img/city/architect_l.png', buildingId: 24, helpId: 1, maxedLvl: 50 },
-    { key: 'vineyard', name: 'Wine Press', icon: '/cdn/all/both/img/city/vineyard_l.png', buildingId: 26, helpId: 1, maxedLvl: 50 },
-    { key: 'optician', name: 'Optician', icon: '/cdn/all/both/img/city/optician_l.png', buildingId: 25, helpId: 1, maxedLvl: 50 },
-    { key: 'fireworker', name: 'Firework Test Area', icon: '/cdn/all/both/img/city/fireworker_l.png', buildingId: 27, helpId: 1, maxedLvl: 50 },
+    { key: 'carpentering', name: 'Carpenter', viewName: 'carpentering', icon: '/cdn/all/both/img/city/carpentering_l.png', buildingId: 23, helpId: 1, maxedLvl: 50 },
+    { key: 'architect', name: 'Architect\'s Office', viewName: 'architect', icon: '/cdn/all/both/img/city/architect_l.png', buildingId: 24, helpId: 1, maxedLvl: 50 },
+    { key: 'vineyard', name: 'Wine Press', viewName: 'vineyard', icon: '/cdn/all/both/img/city/vineyard_l.png', buildingId: 26, helpId: 1, maxedLvl: 50 },
+    { key: 'optician', name: 'Optician', viewName: 'optician', icon: '/cdn/all/both/img/city/optician_l.png', buildingId: 25, helpId: 1, maxedLvl: 50 },
+    { key: 'fireworker', name: 'Firework Test Area', viewName: 'fireworker', icon: '/cdn/all/both/img/city/fireworker_l.png', buildingId: 27, helpId: 1, maxedLvl: 50 },
 
     // Resource enhancers
-    { key: 'forester', name: 'Forester\'s House', icon: '/cdn/all/both/img/city/forester_l.png', buildingId: 18, helpId: 1 },
-    { key: 'stonemason', name: 'Stonemason', icon: '/cdn/all/both/img/city/stonemason_l.png', buildingId: 19, helpId: 1 },
-    { key: 'winegrower', name: 'Winegrower', icon: '/cdn/all/both/img/city/winegrower_l.png', buildingId: 21, helpId: 1 },
-    { key: 'glassblowing', name: 'Glassblower', icon: '/cdn/all/both/img/city/glassblowing_l.png', buildingId: 20, helpId: 1 },
-    { key: 'alchemist', name: 'Alchemist\'s Tower', icon: '/cdn/all/both/img/city/alchemist_l.png', buildingId: 22, helpId: 1 },
+    { key: 'forester', name: 'Forester\'s House', viewName: 'forester', icon: '/cdn/all/both/img/city/forester_l.png', buildingId: 18, helpId: 1 },
+    { key: 'stonemason', name: 'Stonemason', viewName: 'stonemason', icon: '/cdn/all/both/img/city/stonemason_l.png', buildingId: 19, helpId: 1 },
+    { key: 'winegrower', name: 'Winegrower', viewName: 'winegrower', icon: '/cdn/all/both/img/city/winegrower_l.png', buildingId: 21, helpId: 1 },
+    { key: 'glassblowing', name: 'Glassblower', viewName: 'glassblowing', icon: '/cdn/all/both/img/city/glassblowing_l.png', buildingId: 20, helpId: 1 },
+    { key: 'alchemist', name: 'Alchemist\'s Tower', viewName: 'alchemist', icon: '/cdn/all/both/img/city/alchemist_l.png', buildingId: 22, helpId: 1 },
 
     // Military
-    { key: 'wall', name: 'Wall', icon: '/cdn/all/both/img/city/wall.png', buildingId: 8, helpId: 1 },
-    { key: 'barracks', name: 'Barracks', icon: '/cdn/all/both/img/city/barracks_l.png', buildingId: 6, helpId: 1 },
-    { key: 'safehouse', name: 'Hideout', icon: '/cdn/all/both/img/city/safehouse_l.png', buildingId: 16, helpId: 1 },
-    { key: 'workshop', name: 'Workshop', icon: '/cdn/all/both/img/city/workshop_l.png', buildingId: 15, helpId: 1 },
-    { key: 'shipyard', name: 'Shipyard', icon: '/cdn/all/both/img/city/shipyard_l.png', buildingId: 5, helpId: 1 },
+    { key: 'wall', name: 'Wall', viewName: 'wall', icon: '/cdn/all/both/img/city/wall.png', buildingId: 8, helpId: 1 },
+    { key: 'barracks', name: 'Barracks', viewName: 'barracks', icon: '/cdn/all/both/img/city/barracks_l.png', buildingId: 6, helpId: 1, maxedLvl: 49 },
+    { key: 'safehouse', name: 'Hideout', viewName: 'safehouse', icon: '/cdn/all/both/img/city/safehouse_l.png', buildingId: 16, helpId: 1 },
+    { key: 'workshop', name: 'Workshop', viewName: 'workshop', icon: '/cdn/all/both/img/city/workshop_l.png', buildingId: 15, helpId: 1, maxedLvl: 32 },
+    { key: 'shipyard', name: 'Shipyard', viewName: 'shipyard', icon: '/cdn/all/both/img/city/shipyard_l.png', buildingId: 5, helpId: 1, maxedLvl: 49 },
 
     // Special buildings
-    { key: 'pirateFortress', name: 'Pirate Fortress', icon: '/cdn/all/both/img/city/pirateFortress_l.png', buildingId: 30, helpId: 1 },
-    { key: 'blackMarket', name: 'Black Market', icon: '/cdn/all/both/img/city/blackmarket_l.png', buildingId: 31, helpId: 1 }
+    { key: 'pirateFortress', name: 'Pirate Fortress', viewName: 'pirateFortress', icon: '/cdn/all/both/img/city/pirateFortress_l.png', buildingId: 30, helpId: 1 },
+    { key: 'blackMarket', name: 'Black Market', viewName: 'blackMarket', icon: '/cdn/all/both/img/city/blackmarket_l.png', buildingId: 31, helpId: 1 }
 ];
 
 const TNT_STYLES = `
-    /* Show level styles */
-    .tntLvl{
-        position:relative;
-        top:10px;
-        left:10px;
-        background-color: rgba(255, 255, 255, 0.8);
-        border: 1px solid #000;
-        padding: 2px 4px;
-        border-radius: 3px;
-        font-size: 10px;
-        z-index: 10;
-    }
-    
-    /* Construction status highlighting */
-    .tnt_construction {
-        background-color: #80404050 !important;
-        border-left: 2px solid #804040 !important;
-    }
-
-    /* Visual progress styles */
-    .tnt_progress_visited {
-        background-color: #d4edda !important;
-        color: #155724 !important;
-    }
 `;
 
 const tnt = {
@@ -215,7 +191,7 @@ const tnt = {
         }
     },
 
-    // Main data structure to hold all data - NEW STRUCTURE
+    // Main data structure to hold all data
     data: {
         ikariam: {
             subDomain: location.hostname.split('.')[0],
@@ -385,7 +361,7 @@ const tnt = {
             }
 
             if (settings.removeFlyingShop && $("body").attr("id") === "city") {
-                $('.premiumOfferBox').hide();
+                this.removeFlyingShop();
             }
         },
 
@@ -639,29 +615,77 @@ const tnt = {
 
         // Extract building level information
         extractBuildingLevel($element) {
-            const underConstruction = this.isUnderConstruction($element);
-            const classes = ($element.attr('class') || '').split(/\s+/);
-            let level = 0;
-            let targetLevel = 0;
-
-            if (underConstruction) {
-                // For buildings under construction, try to get current and target levels
-                const $level = $element.find('.level');
-                const currentLevelText = $level.text();
-                level = parseInt(currentLevelText.match(/\d+/)?.[0] || '0');
-
-                // Try to get target level from title or construction info
-                const title = $element.find('a').attr('title') || '';
-                const titleMatch = title.match(/\((\d+)\)/);
-                targetLevel = titleMatch ? parseInt(titleMatch[1]) : level + 1;
+            // Extract the current level from .level element or class
+            let currentLevel = 0;
+            let targetLevel = undefined;
+            const $level = $element.find('.level');
+            if ($level.length > 0) {
+                const levelText = $level.text();
+                const match = levelText.match(/\d+/);
+                if (match) currentLevel = parseInt(match[0], 10);
+                // Try to extract target level if under construction and text like "0 → 1"
+                const arrowMatch = levelText.match(/→\s*(\d+)/);
+                if (arrowMatch) targetLevel = parseInt(arrowMatch[1], 10);
             } else {
+                // Fallback: try to extract from class
+                const classes = ($element.attr('class') || '').split(/\s+/);
                 const levelClass = classes.find(c => c.startsWith('level'));
-                const $level = $element.find('.level');
-                level = parseInt(levelClass?.match(/\d+$/)?.[0] || $level.text().match(/\d+/)?.[0] || '0');
-                targetLevel = level;
+                if (levelClass) {
+                    const match = levelClass.match(/\d+$/);
+                    if (match) currentLevel = parseInt(match[0], 10);
+                }
             }
 
-            return { level, targetLevel, underConstruction };
+            // Check if under construction
+            const underConstruction = $element.hasClass('constructionSite');
+
+            // Try to extract target level from a .nextLevel or similar element if available
+            if (underConstruction && typeof targetLevel === 'undefined') {
+                const $next = $element.find('.nextLevel');
+                if ($next.length > 0) {
+                    const nextText = $next.text();
+                    const nextMatch = nextText.match(/\d+/);
+                    if (nextMatch) targetLevel = parseInt(nextMatch[0], 10);
+                }
+            }
+
+            // If under construction and targetLevel found, use it as the level
+            if (underConstruction && typeof targetLevel === 'number' && targetLevel > 0) {
+                currentLevel = targetLevel;
+            }
+
+
+
+            // Detect upgradable (green) state from scroll name
+            let upgradable = false;
+            // Robustly determine the position (data-position, data-id, or from id attribute)
+            let position = $element.data('position');
+            if (typeof position === 'undefined') {
+                position = $element.data('id');
+                if (typeof position === 'undefined') {
+                    const idAttr = $element.attr('id');
+                    if (idAttr) {
+                        const match = idAttr.match(/(\d+)$/);
+                        if (match) position = match[1];
+                    }
+                }
+            }
+            if (typeof position !== 'undefined') {
+                const $scrollName = $('#js_CityPosition' + position + 'ScrollName');
+                if ($scrollName.length > 0 && $scrollName.hasClass('green')) {
+                    upgradable = true;
+                }
+            }
+            // Fallback: check descendants (legacy, rarely needed)
+            if (!upgradable && $element.find('.green').length > 0) upgradable = true;
+
+            return {
+                currentLevel,
+                level: currentLevel, // for compatibility
+                underConstruction,
+                targetLevel,
+                upgradable
+            };
         },
 
         // Create building data object
@@ -672,7 +696,8 @@ const tnt = {
                 currentLevel: levelInfo.level,
                 targetLevel: levelInfo.targetLevel,
                 name: buildingType,
-                underConstruction: levelInfo.underConstruction
+                underConstruction: levelInfo.underConstruction,
+                upgradable: levelInfo.upgradable // Store upgradable state
             };
         },
 
@@ -704,15 +729,36 @@ const tnt = {
                 const position = this.extractPositionFromElement($pos);
                 if (!position) return;
 
-                const buildingType = this.detectBuildingType($pos);
+                let buildingType = this.detectBuildingType($pos);
+
+                // If not found and under construction, try to extract from <a href="?view=TYPE">
+                if (!buildingType && $pos.hasClass('constructionSite')) {
+                    const $a = $pos.find('a[href*="view="]');
+                    if ($a.length > 0) {
+                        const href = $a.attr('href');
+                        const match = href && href.match(/view=([a-zA-Z]+)/);
+                        if (match && match[1]) {
+                            const viewName = match[1];
+                            // Find TNT key by viewName in TNT_BUILDING_DEFINITIONS
+                            const def = (typeof TNT_BUILDING_DEFINITIONS !== 'undefined' ? TNT_BUILDING_DEFINITIONS : (window.TNT_BUILDING_DEFINITIONS || []))
+                                .find(b => b.viewName === viewName);
+                            buildingType = def ? def.key : null;
+                        }
+                    }
+                }
                 if (!buildingType) return;
 
                 const levelInfo = this.extractBuildingLevel($pos);
-                if (levelInfo.level <= 0 && levelInfo.targetLevel <= 0) return;
 
-                // Create and add building data
-                const buildingData = this.createBuildingData(position, buildingType, levelInfo);
-                this.addBuildingToCollection(foundBuildings, buildingData);
+                // Always save the building if under construction, even if level is 0
+                if (levelInfo.level <= 0 && !levelInfo.underConstruction) return;
+
+                // If under construction, always save the building, even if level is 0
+                // If not under construction, only save if level > 0
+                if (levelInfo.level > 0 || levelInfo.underConstruction) {
+                    const buildingData = this.createBuildingData(position, buildingType, levelInfo);
+                    this.addBuildingToCollection(foundBuildings, buildingData);
+                }
             });
 
             return {
@@ -971,7 +1017,7 @@ const tnt = {
                         tnt.data.storage.version = tnt.version;
                         tnt.core.storage.save();
 
-                        // Smart auto-start for new users with 200ms delay  
+                        // Smart auto-start for new users with 200ms delay
                         setTimeout(() => {
                             const cityList = tnt.get.cityList();
                             const cityCount = Object.keys(cityList).length;
@@ -994,7 +1040,7 @@ const tnt = {
 
                     // Check when city list becomes available
                     const cityList = tnt.get.cityList();
-                    // console.log(`[TNT Timing] City list ready: ${(performance.now() - scriptStartTime).toFixed(2)}ms (${Object.keys(cityList).length} cities)`);
+                    // console.log(`[TNT Timing] City list ready: ${(performance.now() - scriptStartTime).toFixed(2)}ms (${Object.keys(cityList).length} cities)`;
 
                 } catch (e) {
                     tnt.core.debug.log("Error parsing tnt_storage: " + e.message);
@@ -1067,7 +1113,7 @@ const tnt = {
                         // Check notifications
                         tnt.core.notification.check();
 
-                        // Collect data  
+                        // Collect data
                         tnt.dataCollector.update();
 
                         // Run tnt.all() to handle all common tasks
@@ -1167,7 +1213,7 @@ const tnt = {
                                     const freeTransporters = tnt.get.transporters.free();
                                     $('#extraTransporter').val(freeTransporters);
 
-                                    // Prevent 0 transporters when min is clicked 
+                                    // Prevent 0 transporters when min is clicked
                                     $('#selectArmy .assignUnits .setMin').on('click', function () {
                                         if (parseInt($('#extraTransporter').val()) === 0) {
                                             $('#extraTransporter').val(tnt.get.transporters.free());
@@ -1662,6 +1708,7 @@ const tnt = {
                 html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totals.population.toLocaleString()}</td>`;
             }
             if (settings.showCitizens) {
+
                 html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totals.citizens.toLocaleString()}</td>`;
             }
             if (settings.showWood) {
@@ -1702,7 +1749,7 @@ const tnt = {
             // Category header row
             html += `<tr class="tnt_category_header">`;
             html += `<th class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;width:60px;"></th>`;
-            html += `<th class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">City</th>`;
+            // html += `<th class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">City</th>`;
             Object.entries(categorySpans).forEach(([category, span]) => {
                 if (span > 0) {
                     let displayName = category.replace(/([A-Z])/g, ' $1')
@@ -1763,36 +1810,74 @@ const tnt = {
                 // Building level cells
                 mergedColumns.forEach(building => {
                     const cityBuildings = city.buildings || {};
+                    let tdClass = "tnt_building_level";
+                    let bgColor = "#fdf7dd";
+                    let sumLevel = 0;
+                    let tooltip = "";
+
+                    // Find the building definition for maxedLvl
+                    const buildingDef = buildingDefs.find(def => def.key === building.key);
+
+                    // Check for palace/colony buildings
                     if (building.key === 'palaceOrColony') {
                         const palaceArr = Array.isArray(cityBuildings['palace']) ? cityBuildings['palace'] : [];
                         const colonyArr = Array.isArray(cityBuildings['palaceColony']) ? cityBuildings['palaceColony'] : [];
                         const buildingData = palaceArr.concat(colonyArr);
 
+                        // Check for maxed levels
                         if (buildingData.length > 0) {
-                            const sumLevel = buildingData.reduce((acc, building) => acc + (parseInt(building.level) || 0), 0);
-                            const tooltip = buildingData.map(building =>
+                            sumLevel = buildingData.reduce((acc, building) => acc + (parseInt(building.level) || 0), 0);
+                            tooltip = buildingData.map(building =>
                                 (building.name === 'palace' ? 'Palace' : "Governor's Residence") +
                                 ' (Pos ' + building.position + '): lvl ' + building.level
                             ).join('\\n');
-                            html += `<td class="tnt_building_level" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;" title="${tooltip.replace(/"/g, '&quot;')}">${sumLevel}</td>`;
+                            // Optional: handle maxedLvl for palace/colony if needed
+                            html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;" title="${tooltip.replace(/"/g, '&quot;')}">${sumLevel}</td>`;
                         } else {
                             html += '<td class="tnt_building_level" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;">-</td>';
                         }
                     } else {
+                        // Handle other building types
                         const arr = cityBuildings[building.key];
+
+                        // Check for maxed levels
                         if (Array.isArray(arr) && arr.length > 0) {
-                            const sumLevel = arr.reduce((acc, building) => acc + (building.level || 0), 0);
-                            const tooltip = arr.map(building => {
-                                let text = 'Pos ' + building.position + ': lvl ' + building.level;
-                                if (building.underConstruction) {
-                                    text += ' (Upgrading from ' + building.currentLevel + ' to ' + building.targetLevel + ')';
+                            let allMaxed = false;
+                            if (
+                                buildingDef &&
+                                typeof buildingDef.maxedLvl === 'number' &&
+                                arr.length > 0
+                            ) {
+                                allMaxed = arr.every(b => ((b.currentLevel || b.level || b.targetLevel || 0) >= buildingDef.maxedLvl));
+                            }
+                            if (allMaxed) tdClass += " tnt_building_maxed";
+                            // Always show the sum of current levels (never show dash for existing buildings)
+                            const sumLevel = arr.reduce((acc, b) => {
+                                let lvl = (typeof b.currentLevel === 'number' && b.currentLevel > 0)
+                                    ? b.currentLevel
+                                    : (typeof b.level === 'number' && b.level > 0)
+                                        ? b.level
+                                        : 0;
+                                return acc + lvl;
+                            }, 0);
+                            const tooltip = arr.map(b => {
+                                let shownLevel = (typeof b.currentLevel === 'number' && b.currentLevel > 0)
+                                    ? b.currentLevel
+                                    : (typeof b.level === 'number' && b.level > 0)
+                                        ? b.level
+                                        : 0;
+                                let text = 'Pos ' + b.position + ': lvl ' + shownLevel;
+                                if (b.underConstruction) {
+                                    text += ' (Upgrading to ' + b.targetLevel + ')';
                                 }
                                 return text;
-                            }).join('\\n');
-                            const bgColor = arr.some(building => building.underConstruction) ? '#80404050' : '#fdf7dd';
-                            html += `<td class="tnt_building_level" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};" title="${tooltip.replace(/"/g, '&quot;')}">${sumLevel}</td>`;
+                            }).join('\n');
+                            bgColor = arr.some(building => building.underConstruction) ? '#80404050' : '#fdf7dd';
+
+                            html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};" title="${tooltip.replace(/"/g, '&quot;')}">${sumLevel > 0 ? sumLevel : ''}</td>`;
                         } else {
-                            html += '<td class="tnt_building_level" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;"></td>';
+                            // Only show blank if truly no building exists
+                            html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;"></td>`;
                         }
                     }
                 });
@@ -2214,7 +2299,7 @@ const tnt = {
         construction: () => tnt.utils.hasConstruction()
     },
 
-    // Add missing has object 
+    // Add missing has object
     has: {
         construction: () => tnt.utils.hasConstruction()
     }

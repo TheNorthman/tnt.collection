@@ -27,9 +27,9 @@ GM_addStyle(`
     .tntLvl{
         position: absolute !important;
         top: 32px !important;
-        left: 40px !important;
+        left: 44px !important;
         color: #000 !important;
-        line-height: 14px !important;
+        line-height: 16px !important;
         background-color: #DBBE8C !important;
         font-size: 9px !important;
         font-weight: bold !important;
@@ -44,7 +44,6 @@ GM_addStyle(`
         z-index: 1000 !important;
         pointer-events: none !important;
     }
-    
     .tntLvl:hover {
         background-color: #faeac6 !important;
         transform: scale(1.05) !important;
@@ -353,10 +352,13 @@ GM_addStyle(`
         display: none !important;
     }
     /* Construction status styling applies to the first cell in any row across all tables */
-    .tnt_construction{
+    // .tnt_construction{
+    //     background-color: #80404050 !important;
+    // }
+    .tnt_construction {
         background-color: #80404050 !important;
-    }
-    
+        border-left: 2px solid #804040 !important;
+    }    
     /* Phase 4: Visual progress indicators */
     .tnt_progress_visited {
         background-color: #90EE9050 !important;
@@ -371,11 +373,14 @@ GM_addStyle(`
     }
     
     /* Progress indicator takes precedence over construction during active switching */
+    // .tnt_progress_visited.tnt_construction {
+    //     background-color: #90EE9050 !important;
+    //     border-left: 2px solid #32CD32 !important;
+    // }
     .tnt_progress_visited.tnt_construction {
-        background-color: #90EE9050 !important;
-        border-left: 2px solid #32CD32 !important;
-    }
-    
+        background-color: #d4edda !important;
+        color: #155724 !important;
+    }    
     /* === RESOURCE STORAGE INDICATORS (FIX FOR ISSUE #002) === */
     
     /* Storage danger - high storage warning (RED background, no borders) */
@@ -851,6 +856,9 @@ GM_addStyle(`
         vertical-align: middle !important;
         box-sizing: border-box !important;
         padding: 4px !important;
+    }
+    #tnt_info_resources .tnt_building_maxed {
+        background-color: #d4edda !important;
     }
 `);
 // Ensure the styles are applied immediately
