@@ -441,7 +441,7 @@ GM_addStyle(`
     body #tnt_info_buildings_content .tnt_selected td {
         border-top: 2px solid black !important;
         border-bottom: 2px solid black !important;
-        color: #000 !important;
+        // color: #000 !important;
     }
     body #tnt_info_resources .tnt_selected td:first-child,
     body #tnt_info_buildings_content .tnt_selected td:first-child {

@@ -1824,6 +1824,9 @@ const tnt = {
                         const colonyArr = Array.isArray(cityBuildings['palaceColony']) ? cityBuildings['palaceColony'] : [];
                         const buildingData = palaceArr.concat(colonyArr);
 
+                        // Add green class if any palace or palaceColony building is upgradable
+                        if (buildingData.some(b => b.upgradable)) tdClass += " green";
+
                         // Check for maxed levels
                         if (buildingData.length > 0) {
                             sumLevel = buildingData.reduce((acc, building) => acc + (parseInt(building.level) || 0), 0);
@@ -1832,9 +1835,9 @@ const tnt = {
                                 ' (Pos ' + building.position + '): lvl ' + building.level
                             ).join('\\n');
                             // Optional: handle maxedLvl for palace/colony if needed
-                            html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;" title="${tooltip.replace(/"/g, '&quot;')}">${sumLevel}</td>`;
+                            html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;" title="${tooltip.replace(/"/g, '&quot;')}">${sumLevel}</td>`;
                         } else {
-                            html += '<td class="tnt_building_level" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;">-</td>';
+                            html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;">-</td>`;
                         }
                     } else {
                         // Handle other building types
