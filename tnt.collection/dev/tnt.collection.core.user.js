@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection Core
-// @version      2.0.0
+// @version      2.0.1
 // @namespace    tnt.collection.core
 // @author       Ronny Jespersen
 // @description  TNT Collection Core - Stable functionality for Ikariam enhancements
@@ -615,29 +615,57 @@ const tnt = {
 
         // Extract building level information
         extractBuildingLevel($element) {
-            // Extract the current level from .level element or class
+            // Robustly determine the position (data-position, data-id, or from id attribute)
             let currentLevel = 0;
             let targetLevel = undefined;
-            const $level = $element.find('.level');
-            if ($level.length > 0) {
-                const levelText = $level.text();
-                const match = levelText.match(/\d+/);
-                if (match) currentLevel = parseInt(match[0], 10);
-                // Try to extract target level if under construction and text like "0 → 1"
-                const arrowMatch = levelText.match(/→\s*(\d+)/);
-                if (arrowMatch) targetLevel = parseInt(arrowMatch[1], 10);
-            } else {
-                // Fallback: try to extract from class
-                const classes = ($element.attr('class') || '').split(/\s+/);
-                const levelClass = classes.find(c => c.startsWith('level'));
-                if (levelClass) {
-                    const match = levelClass.match(/\d+$/);
-                    if (match) currentLevel = parseInt(match[0], 10);
+            let position = $element.data('position');
+            if (typeof position === 'undefined') {
+                position = $element.data('id');
+                if (typeof position === 'undefined') {
+                    const idAttr = $element.attr('id');
+                    if (idAttr) {
+                        const match = idAttr.match(/(\d+)$/);
+                        if (match) position = match[1];
+                    }
                 }
             }
 
             // Check if under construction
             const underConstruction = $element.hasClass('constructionSite');
+
+            // Try to use #js_CityPosition{position}Level if it exists and contains a number
+            let usedDirectLevel = false;
+            if (typeof position !== 'undefined') {
+                const $levelSpan = $("#js_CityPosition" + position + "Level");
+                if ($levelSpan.length) {
+                    const txt = $levelSpan.text().trim();
+                    if (/^\d+$/.test(txt)) {
+                        currentLevel = parseInt(txt, 10);
+                        usedDirectLevel = true;
+                    }
+                }
+            }
+
+            // If not found, fall back to .level element or class
+            if (!usedDirectLevel) {
+                const $level = $element.find('.level');
+                if ($level.length > 0) {
+                    const levelText = $level.text();
+                    const match = levelText.match(/\d+/);
+                    if (match) currentLevel = parseInt(match[0], 10);
+                    // Try to extract target level if under construction and text like "0 → 1"
+                    const arrowMatch = levelText.match(/→\s*(\d+)/);
+                    if (arrowMatch) targetLevel = parseInt(arrowMatch[1], 10);
+                } else {
+                    // Fallback: try to extract from class
+                    const classes = ($element.attr('class') || '').split(/\s+/);
+                    const levelClass = classes.find(c => c.startsWith('level'));
+                    if (levelClass) {
+                        const match = levelClass.match(/\d+$/);
+                        if (match) currentLevel = parseInt(match[0], 10);
+                    }
+                }
+            }
 
             // Try to extract target level from a .nextLevel or similar element if available
             if (underConstruction && typeof targetLevel === 'undefined') {
@@ -654,22 +682,8 @@ const tnt = {
                 currentLevel = targetLevel;
             }
 
-
-
             // Detect upgradable (green) state from scroll name
             let upgradable = false;
-            // Robustly determine the position (data-position, data-id, or from id attribute)
-            let position = $element.data('position');
-            if (typeof position === 'undefined') {
-                position = $element.data('id');
-                if (typeof position === 'undefined') {
-                    const idAttr = $element.attr('id');
-                    if (idAttr) {
-                        const match = idAttr.match(/(\d+)$/);
-                        if (match) position = match[1];
-                    }
-                }
-            }
             if (typeof position !== 'undefined') {
                 const $scrollName = $('#js_CityPosition' + position + 'ScrollName');
                 if ($scrollName.length > 0 && $scrollName.hasClass('green')) {
@@ -727,33 +741,33 @@ const tnt = {
                 const position = this.extractPositionFromElement($pos);
                 if (!position) return;
 
-                // Special handling for Town Hall (position 20)
-                if (position == 20) {
+                // Only allow Town Hall at position 0
+                if (position == 0) {
                     let level = 0;
                     let underConstruction = $pos.hasClass('constructionSite');
                     let upgradable = false;
                     if (underConstruction) {
                         // Under construction: get level from the link's title
-                        const $link = $("#js_CityPosition20Link");
+                        const $link = $("#js_CityPosition0Link");
                         if ($link.length) {
                             const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
                             if (m) level = parseInt(m[1], 10);
                         }
                     } else {
                         // Not under construction: get level from the visible span
-                        const $levelSpan = $("#js_CityPosition20Level");
+                        const $levelSpan = $("#js_CityPosition0Level");
                         if ($levelSpan.length) {
                             const txt = $levelSpan.text().trim();
                             if (/^\d+$/.test(txt)) level = parseInt(txt, 10);
                         }
                         // Upgradable: check if the scroll name is green
-                        const $scrollName = $("#js_CityPosition20ScrollName");
+                        const $scrollName = $("#js_CityPosition0ScrollName");
                         if ($scrollName.length && $scrollName.hasClass("green")) upgradable = true;
                     }
                     // Always save Town Hall if level > 0 or under construction
                     if (level > 0 || underConstruction) {
                         const buildingData = {
-                            position: 20,
+                            position: 0,
                             level: level,
                             currentLevel: level,
                             targetLevel: undefined,
@@ -763,11 +777,13 @@ const tnt = {
                         };
                         this.addBuildingToCollection(foundBuildings, buildingData);
                     }
+                    // Do not allow any other building at position 0
                     return;
                 }
 
-                // Default logic for all other buildings
+                // Default logic for all other buildings (never allow townHall at any other position)
                 let buildingType = this.detectBuildingType($pos);
+                if (buildingType === 'townHall') return;
                 if (!buildingType && $pos.hasClass('constructionSite')) {
                     const $a = $pos.find('a[href*="view="]');
                     if ($a.length > 0) {
@@ -901,11 +917,6 @@ const tnt = {
     world() {
         // World map specific functionality
         tnt.core.debug.log('World map loaded');
-    },
-
-    showCityLevels() {
-        // Delegate to the utility function
-        tnt.utils.displayCityLevels();
     },
 
     // Initialize the core module
