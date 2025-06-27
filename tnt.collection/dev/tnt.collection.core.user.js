@@ -357,7 +357,8 @@ const tnt = {
             const settings = tnt.settings.getFeatureSettings();
 
             if (settings.removeFooterNavigation) {
-                $('div#breadcrumbs, div#footer').hide();
+                // $('div#breadcrumbs').hide();
+                $('div#footer').hide();
             }
 
             if (settings.removeFlyingShop && $("body").attr("id") === "city") {
