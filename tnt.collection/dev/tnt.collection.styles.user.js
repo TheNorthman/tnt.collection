@@ -383,9 +383,10 @@ GM_addStyle(`
     }    
     /* === RESOURCE STORAGE INDICATORS (FIX FOR ISSUE #002) === */
     
-    /* Storage danger - high storage warning (RED background, no borders) */
+    /* Storage danger - high storage warning (RED text, no borders) */
     .tnt_storage_danger {
-        background-color: #ffaaaa !important;
+        //background-color: #ffaaaa !important;
+        color: #ff0000 !important;
     }
     
     /* Storage minimum - low resource warning (YELLOW background, no borders) */
@@ -396,7 +397,7 @@ GM_addStyle(`
     /* Ensure storage indicators work with TNT table styling */
     body #tnt_info_resources .tnt_storage_danger,
     body #tnt_info_buildings_content .tnt_storage_danger {
-        background-color: #ffaaaa !important;
+        //background-color: #ffaaaa !important;
     }
     
     body #tnt_info_resources .tnt_storage_min,
@@ -407,7 +408,7 @@ GM_addStyle(`
     /* Storage indicators with current city selection */
     body #tnt_info_resources .tnt_selected .tnt_storage_danger,
     body #tnt_info_buildings_content .tnt_selected .tnt_storage_danger {
-        background-color: #ffaaaa !important;
+        //background-color: #ffaaaa !important;
     }
     
     body #tnt_info_resources .tnt_selected .tnt_storage_min,
@@ -417,7 +418,7 @@ GM_addStyle(`
     
     /* Storage indicators take precedence over construction status */
     .tnt_storage_danger.tnt_construction {
-        background-color: #ffaaaa !important;
+        //background-color: #ffaaaa !important;
     }
     
     .tnt_storage_min.tnt_construction {

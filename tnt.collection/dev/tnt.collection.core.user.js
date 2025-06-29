@@ -2455,14 +2455,13 @@ const tnt = {
                 return;
             }
 
-            // Ensure BubbleTips is properly initialized
-            if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
-                BubbleTips.init();
+            // Ensure z-index is high enough to sit above TNT tables
+            if (BubbleTips.bubbleNode) {
+                $(BubbleTips.bubbleNode).css('z-index', '100000001');
             }
-
-            // Fix z-index in case Ikariam stomped over us
-            $(BubbleTips.bubbleNode).css('z-index', '100000001');
-            $(BubbleTips.infoNode).css('z-index', '100000001');
+            if (BubbleTips.infoNode) {
+                $(BubbleTips.infoNode).css('z-index', '100000001');
+            }
 
             const $containers = $('.tnt_resource_icon_container');
             tnt.core.debug.log('TNT: Adding tooltips to', $containers.length, 'resource icons');
@@ -2479,45 +2478,49 @@ const tnt = {
 
                 const html = tnt.tooltip.formatTemplateTooltip(template);
 
-                // Remove old handlers to avoid duplicate binds
+                // Remove previous handlers to avoid stacking
                 $container.off('mouseenter.tnt mouseleave.tnt');
 
                 $container.on('mouseenter.tnt', function () {
-                    if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
-                        BubbleTips.init();
-                    }
-
-                    // Reset DOM nodes in case Ikariam polluted them
-                    if (BubbleTips.infotip) {
-                        $(BubbleTips.infotip).empty();
-                    }
-                    if (BubbleTips.infoNode) {
-                        $(BubbleTips.infoNode).hide().css({
-                            display: 'block',
-                            'z-index': '100000001'
-                        });
-                    }
-
                     try {
+                        // Clean any existing tooltip state without disrupting Ikariam tooltips
+                        if (typeof BubbleTips.clear === 'function') {
+                            BubbleTips.clear();
+                        }
+
+                        // Ensure BubbleTips is initialized
+                        if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
+                            BubbleTips.init();
+                        }
+
+                        // Reapply high z-index (Ikariam might reset it)
+                        $(BubbleTips.infoNode).css({
+                            'z-index': '100000001',
+                            'display': 'block',
+                            'position': 'absolute'
+                        });
+
+                        // Bind the TNT tooltip using BubbleTips system
                         BubbleTips.bindBubbleTip(6, 13, html, null, this, false);
 
-                        // Force visibility after delay in case binding fails silently
+                        // Ensure visibility after slight delay
                         setTimeout(() => {
                             if (BubbleTips.infoNode && $(BubbleTips.infoNode).is(':hidden')) {
                                 $(BubbleTips.infoNode).show();
                             }
-                        }, 40);
+                        }, 30);
                     } catch (err) {
                         console.warn('TNT: Tooltip bind failed for', resourceType + ':', err);
                     }
                 });
 
                 $container.on('mouseleave.tnt', function () {
-                    if (BubbleTips.infoNode) {
-                        $(BubbleTips.infoNode).hide();
-                    }
-                    if (BubbleTips.infotip) {
-                        $(BubbleTips.infotip).empty();
+                    try {
+                        if (typeof BubbleTips.clear === 'function') {
+                            BubbleTips.clear();
+                        }
+                    } catch (e) {
+                        console.warn('TNT: Tooltip cleanup failed:', e);
                     }
                 });
             });
