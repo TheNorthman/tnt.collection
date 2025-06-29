@@ -78,6 +78,37 @@ const TNT_BUILDING_DEFINITIONS = Object.freeze([
 // validBuildingTypes is always in sync with TNT_BUILDING_DEFINITIONS
 const validBuildingTypes = Object.freeze(TNT_BUILDING_DEFINITIONS.map(b => b.key));
 
+const TNT_TOOLTIP_TEMPLATES = {
+  wood: {
+    title: 'Wood Resources',
+    body: 'Basic material used in nearly all construction. Gathered from forests by Foresters.'
+  },
+  wine: {
+    title: 'Wine',
+    body: 'Luxury good consumed in Taverns to keep citizens happy. Produced by Winegrowers.'
+  },
+  marble: {
+    title: 'Marble',
+    body: 'Used for structural buildings and town upgrades. Supplied by Stonemasons.'
+  },
+  crystal: {
+    title: 'Crystal Glass',
+    body: 'Essential for research and scientific progress. Refined by Opticians.'
+  },
+  sulfur: {
+    title: 'Sulfur',
+    body: 'Powerful military resource used to create weapons and explosives. Extracted by Fireworkers.'
+  },
+  population: {
+    title: 'Population',
+    body: 'Total inhabitants of your city. Affects growth, tax income, and workforce availability.'
+  },
+  citizens: {
+    title: 'Citizens',
+    body: 'Free population available for jobs, research, or military service.'
+  }
+};
+
 const template = Object.freeze({
     resources: `
         <div id="tnt_info_resources">
@@ -2986,11 +3017,14 @@ const tnt = {
 
                 console.log('TNT: Added tooltips to building table elements');
             }, 500);
+        },
+        
+        formatTemplateTooltip({ title, body }) {
+            return `<div style="padding:8px;"><strong>${title}</strong><br/>${body}</div>`;
         }
-    }
-    
-    // END: DO NOT MODIFY - Fixed logic
+    }   
 };
+// END: DO NOT MODIFY - Fixed logic
 
 
 // Initialize the TNT core
