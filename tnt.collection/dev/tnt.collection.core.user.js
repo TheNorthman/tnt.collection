@@ -22,26 +22,8 @@
 // Initialize the tnt.console
 const tntConsole = Object.assign({}, window.console);
 
-const validBuildingTypes = [
-    'townHall', 'palace', 'palaceColony', 'warehouse', 'wall', 'barracks',
-    'shipyard', 'port', 'academy', 'museum', 'temple', 'embassy', 'branchOffice',
-    'workshop', 'safehouse', 'carpentering', 'architect', 'vineyard', 'optician',
-    'fireworker', 'forester', 'stonemason', 'winegrower', 'glassblowing', 'alchemist',
-    'dump', 'tavern', 'blackMarket', 'pirateFortress', 'marineChartArchive',
-    'dockyard', 'shrineOfOlympus', 'chronosForge'
-];
-
-const template = {
-    resources: `
-        <div id="tnt_info_resources">
-            <div id="tnt_info_resources_content"></div>
-            <div id="tnt_info_buildings_content" style="display:none;"></div>
-        </div>
-    `
-};
-
 // Move large data blocks to separate internal modules for better organization
-const TNT_BUILDING_DEFINITIONS = [
+const TNT_BUILDING_DEFINITIONS = Object.freeze([
     // Government
     { key: 'townHall', name: 'Town Hall', viewName: 'townHall', icon: '/cdn/all/both/img/city/townhall_l.png', buildingId: 0, helpId: 1, maxedLvl: 40 },
     { key: 'palace', name: 'Palace', viewName: 'palace', icon: '/cdn/all/both/img/city/palace_l.png', buildingId: 11, helpId: 1, maxedLvl: 20 },
@@ -89,8 +71,21 @@ const TNT_BUILDING_DEFINITIONS = [
 
     // Special buildings
     { key: 'pirateFortress', name: 'Pirate Fortress', viewName: 'pirateFortress', icon: '/cdn/all/both/img/city/pirateFortress_l.png', buildingId: 30, helpId: 1 },
+
     { key: 'blackMarket', name: 'Black Market', viewName: 'blackMarket', icon: '/cdn/all/both/img/city/blackmarket_l.png', buildingId: 31, helpId: 1 }
-];
+]);
+
+// validBuildingTypes is always in sync with TNT_BUILDING_DEFINITIONS
+const validBuildingTypes = Object.freeze(TNT_BUILDING_DEFINITIONS.map(b => b.key));
+
+const template = Object.freeze({
+    resources: `
+        <div id="tnt_info_resources">
+            <div id="tnt_info_resources_content"></div>
+            <div id="tnt_info_buildings_content" style="display:none;"></div>
+        </div>
+    `
+});
 
 const TNT_STYLES = `
 `;
@@ -1111,6 +1106,17 @@ const tnt = {
         }
     },
 
+    // Add missing functions that are called but not defined
+    all() {
+        // Common functionality that runs on all pages
+        const settings = this.settings.getFeatureSettings();
+
+        // Apply global UI modifications
+        if (settings.removePremiumOffers) {
+            $('.premiumOfferBox').hide();
+        }
+    },
+
     city() {
         // City-specific functionality
         tnt.core.debug.log('City view loaded');
@@ -1122,9 +1128,24 @@ const tnt = {
         tnt.utils.applyLayoutDirectly();
     },
 
+    island() {
+        // Island-specific functionality
+        tnt.core.debug.log('Island view loaded');
+
+        // Show city levels if setting is enabled
+        if (tnt.settings.get("islandShowCityLvl", true)) {
+            tnt.utils.displayCityLevels();
+        }
+    },
+
     world() {
         // World map specific functionality
         tnt.core.debug.log('World map loaded');
+    },
+
+    showCityLevels() {
+        // Delegate to the utility function
+        tnt.utils.displayCityLevels();
     },
 
     // Initialize the core module
