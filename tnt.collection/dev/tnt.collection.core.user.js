@@ -1824,13 +1824,13 @@ const tnt = {
 
         getIcon(resource) {
             switch (resource) {
-                case 0: return '<img class="tnt_resource_icon" title="Wood" src="/cdn/all/both/resources/icon_wood.png">';
-                case 1: return '<img class="tnt_resource_icon" title="Wine" src="/cdn/all/both/resources/icon_wine.png">';
-                case 2: return '<img class="tnt_resource_icon" title="Marble" src="/cdn/all/both/resources/icon_marble.png">';
-                case 3: return '<img class="tnt_resource_icon" title="Crystal" src="/cdn/all/both/resources/icon_crystal.png">';
-                case 4: return '<img class="tnt_resource_icon" title="Sulfur" src="/cdn/all/both/resources/icon_sulfur.png">';
-                case 'population': return '<img class="tnt_resource_icon tnt_icon_po" title="Population" src="//gf3.geo.gfsrv.net/cdn2f/6d077d68d9ae22f9095515f282a112.png" style="width: 10px !important;">';
-                case 'citizens': return '<img class="tnt_resource_icon" title="Citizens" src="/cdn/all/both/resources/icon_population.png">';
+                case 0: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_wood.png">';
+                case 1: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_wine.png">';
+                case 2: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_marble.png">';
+                case 3: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_crystal.png">';
+                case 4: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_sulfur.png">';
+                case 'population': return '<img class="tnt_resource_icon tnt_icon_po" src="//gf3.geo.gfsrv.net/cdn2f/6d077d68d9ae22f9095515f282a112.png" style="width: 10px !important;">';
+                case 'citizens': return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_population.png">';
                 default: return '';
             }
         }
@@ -1901,31 +1901,31 @@ const tnt = {
             // Optional columns
             if (settings.showPopulation) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += tnt.dataCollector.getIcon('population') + '</th>';
+                html += '<span class="tnt_resource_icon_container">' + tnt.dataCollector.getIcon('population') + '</span></th>';
             }
             if (settings.showCitizens) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += tnt.dataCollector.getIcon('citizens') + '</th>';
+                html += '<span class="tnt_resource_icon_container">' + tnt.dataCollector.getIcon('citizens') + '</span></th>';
             }
             if (settings.showWood) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += tnt.dataCollector.getIcon(0) + '</th>';
+                html += '<span class="tnt_resource_icon_container" data-resource="wood">' + tnt.dataCollector.getIcon(0) + '</span></th>';
             }
             if (settings.showWine) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += tnt.dataCollector.getIcon(1) + '</th>';
+                html += '<span class="tnt_resource_icon_container" data-resource="wine">' + tnt.dataCollector.getIcon(1) + '</span></th>';
             }
             if (settings.showMarble) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += tnt.dataCollector.getIcon(2) + '</th>';
+                html += '<span class="tnt_resource_icon_container" data-resource="marble">' + tnt.dataCollector.getIcon(2) + '</span></th>';
             }
             if (settings.showCrystal) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += tnt.dataCollector.getIcon(3) + '</th>';
+                html += '<span class="tnt_resource_icon_container" data-resource="crystal">' + tnt.dataCollector.getIcon(3) + '</span></th>';
             }
             if (settings.showSulfur) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += tnt.dataCollector.getIcon(4) + '</th>';
+                html += '<span class="tnt_resource_icon_container" data-resource="sulfur">' + tnt.dataCollector.getIcon(4) + '</span></th>';
             }
             html += '</tr>';
 
@@ -2402,6 +2402,127 @@ const tnt = {
             $('.tnt_refresh_btn').off('click').on('click', function () {
                 tnt.citySwitcher.start();
             });
+
+            // Add tooltips to resource icons
+            this.addResourceTooltips();
+        },
+
+        addResourceTooltips() {
+            if (!tnt.tooltip.isAvailable()) {
+                console.log('TNT: BubbleTips not available');
+                return;
+            }
+
+            // CRITICAL: Ikariam's BubbleTips system has z-index conflicts with TNT tables (z-index: 100000000)
+            // Solution: Force BubbleTips nodes to have higher z-index (100000001)
+            if (typeof BubbleTips.bubbleNode !== 'undefined' && BubbleTips.bubbleNode) {
+                $(BubbleTips.bubbleNode).css('z-index', '100000001');
+            }
+            if (typeof BubbleTips.infoNode !== 'undefined' && BubbleTips.infoNode) {
+                $(BubbleTips.infoNode).css('z-index', '100000001');
+            }
+
+            // Add tooltips to resource icon containers
+            const $containers = $('.tnt_resource_icon_container');
+            console.log('TNT: Adding tooltips to', $containers.length, 'resource icons');
+
+            $containers.each(function(index) {
+                const $container = $(this);
+                const resourceType = $container.data('resource');
+                
+                if (resourceType) {
+                    let tooltipContent = '';
+                    
+                    switch (resourceType) {
+                        case 'wood':
+                            tooltipContent = '<div style="padding:8px;"><strong>Wood Resources</strong><br/>Basic building material<br/>Required for all construction<br/>Produced by Foresters</div>';
+                            break;
+                        case 'wine':
+                            tooltipContent = '<div style="padding:8px;"><strong>Wine</strong><br/>Luxury good for population<br/>Keeps citizens happy<br/>Produced by Winegrowers</div>';
+                            break;
+                        case 'marble':
+                            tooltipContent = '<div style="padding:8px;"><strong>Marble</strong><br/>Premium building material<br/>Used for advanced buildings<br/>Produced by Stonemasons</div>';
+                            break;
+                        case 'crystal':
+                            tooltipContent = '<div style="padding:8px;"><strong>Crystal Glass</strong><br/>High-tech luxury good<br/>Required for advanced research<br/>Produced by Opticians</div>';
+                            break;
+                        case 'sulfur':
+                            tooltipContent = '<div style="padding:8px;"><strong>Sulfur</strong><br/>Military resource<br/>Used for weapons and explosives<br/>Produced by Fireworkers</div>';
+                            break;
+                    }
+                    
+                    if (tooltipContent) {
+                        // Store tooltip content for each resource type
+                        $container.data('tooltipContent', tooltipContent);
+                        
+                        // Remove any existing tooltip handlers to prevent conflicts
+                        $container.off('mouseenter.tnt mouseleave.tnt');
+                        
+                        // LEARNED: BubbleTips reuses the same DOM nodes and doesn't properly clear content
+                        // Solution: Manual mouseenter/mouseleave handlers with proper cleanup and re-initialization
+                        $container.on('mouseenter.tnt', function(e) {
+                            const content = $(this).data('tooltipContent');
+                            const resType = $(this).data('resource');
+                            
+                            // CRITICAL: Always hide existing tooltip and clear content first
+                            // BubbleTips can show stale content from previous hovers
+                            if (BubbleTips.infoNode) {
+                                $(BubbleTips.infoNode).hide();
+                            }
+                            
+                            // Clear any existing content
+                            if (BubbleTips.infotip) {
+                                $(BubbleTips.infotip).empty();
+                            }
+                            
+                            // Small delay ensures BubbleTips cleanup is complete
+                            setTimeout(() => {
+                                try {
+                                    // LEARNED: BubbleTips nodes can become undefined, need re-initialization
+                                    if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
+                                        BubbleTips.init();
+                                    }
+                                    
+                                    // CRITICAL: Force CSS properties - BubbleTips doesn't always set them correctly
+                                    if (BubbleTips.infoNode) {
+                                        $(BubbleTips.infoNode).css({
+                                            'z-index': '100000001',
+                                            'position': 'absolute',
+                                            'display': 'block'
+                                        });
+                                    }
+                                    
+                                    // Bind tooltip: location=6 (custom element), type=13 (hover tooltip)
+                                    BubbleTips.bindBubbleTip(6, 13, content, null, this, false);
+                                    
+                                    // LEARNED: Sometimes tooltips don't show even after binding
+                                    // Solution: Force show after short delay
+                                    setTimeout(() => {
+                                        if (BubbleTips.infoNode && $(BubbleTips.infoNode).is(':hidden')) {
+                                            $(BubbleTips.infoNode).show();
+                                        }
+                                    }, 50);
+                                    
+                                } catch (error) {
+                                    console.warn('TNT: Tooltip binding failed for', resType + ':', error);
+                                }
+                            }, 10);
+                        });
+                        
+                        $container.on('mouseleave.tnt', function() {
+                            // CRITICAL: Proper cleanup on mouseleave prevents tooltip persistence
+                            setTimeout(() => {
+                                if (BubbleTips.infoNode) {
+                                    $(BubbleTips.infoNode).hide();
+                                }
+                                if (BubbleTips.infotip) {
+                                    $(BubbleTips.infotip).empty();
+                                }
+                            }, 50);
+                        });
+                    }
+                }
+            });
         }
     },
 
@@ -2642,6 +2763,230 @@ const tnt = {
     // Add missing has object
     has: {
         construction: () => tnt.utils.hasConstruction()
+    },
+    
+    // Tooltip/Bubbletip Testing Module
+    tooltip: {
+        // Test if Ikariam's BubbleTips system is available
+        isAvailable() {
+            return typeof BubbleTips !== 'undefined' && 
+                   typeof BubbleTips.bindBubbleTip === 'function' &&
+                   typeof BubbleTips.init === 'function';
+        },
+
+        // Initialize the tooltip system (ensure BubbleTips is ready)
+        init() {
+            if (this.isAvailable()) {
+                // Ensure BubbleTips is initialized
+                if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
+                    BubbleTips.init();
+                }
+                tnt.core.debug.log('BubbleTips system is available and initialized');
+                return true;
+            } else {
+                tnt.core.debug.log('BubbleTips system is not available');
+                return false;
+            }
+        },
+
+        // Create a simple tooltip on an element
+        // Types: 10 = success (green), 11 = info (yellow), 12 = error (red), 13 = hover tooltip
+        create(element, text, type = 13) {
+            if (!this.init()) {
+                console.warn('TNT: BubbleTips not available, cannot create tooltip');
+                return false;
+            }
+
+            try {
+                // Type 13 = hover tooltip that follows mouse
+                // Parameters: location(6=custom element), type(13=tooltip), text, null, element, minSize
+                BubbleTips.bindBubbleTip(6, type, text, null, element, false);
+                return true;
+            } catch (e) {
+                console.error('TNT: Error creating tooltip:', e);
+                return false;
+            }
+        },
+
+        // Create a feedback bubble (shows for 5 seconds)
+        createFeedback(text, type = 'info') {
+            if (!this.init()) {
+                console.warn('TNT: BubbleTips not available, cannot create feedback');
+                return false;
+            }
+
+            try {
+                let bubbleType;
+                switch (type) {
+                    case 'success': bubbleType = 10; break; // Green with checkmark
+                    case 'error': bubbleType = 12; break;   // Red with X
+                    case 'info':
+                    default: bubbleType = 11; break;        // Yellow
+                }
+
+                // Parameters: location(5=last clicked), type, text, null, null
+                BubbleTips.bindBubbleTip(5, bubbleType, text, null, null);
+                return true;
+            } catch (e) {
+                console.error('TNT: Error creating feedback bubble:', e);
+                return false;
+            }
+        },
+
+        // Test function to add tooltips to resource table
+        testResourceTableTooltips() {
+            if (!this.init()) {
+                console.warn('TNT: Cannot test tooltips - BubbleTips not available');
+                return;
+            }
+
+            // Add tooltips to resource icons in the header
+            setTimeout(() => {
+                const $table = $('#tnt_resources_table');
+                if ($table.length === 0) {
+                    console.log('TNT: Resource table not found for tooltip testing');
+                    return;
+                }
+
+                // Add tooltip to wood icon
+                const $woodIcon = $table.find('th img[src*="icon_wood.png"]').parent();
+                if ($woodIcon.length > 0) {
+                    this.create($woodIcon[0], 
+                        '<div style="padding:5px;"><strong>Wood Resources</strong><br/>Basic building material<br/>Required for all construction</div>'
+                    );
+                }
+
+                // Add tooltip to wine icon
+                const $wineIcon = $table.find('th img[src*="icon_wine.png"]').parent();
+                if ($wineIcon.length > 0) {
+                    this.create($wineIcon[0], 
+                        '<div style="padding:5px;"><strong>Wine</strong><br/>Luxury good for population<br/>Keeps citizens happy</div>'
+                    );
+                }
+
+                // Add tooltip to marble icon
+                const $marbleIcon = $table.find('th img[src*="icon_marble.png"]').parent();
+                if ($marbleIcon.length > 0) {
+                    this.create($marbleIcon[0], 
+                        '<div style="padding:5px;"><strong>Marble</strong><br/>Premium building material<br/>Used for advanced buildings</div>'
+                    );
+                }
+
+                // Add tooltip to crystal icon
+                const $crystalIcon = $table.find('th img[src*="icon_glass.png"]').parent();
+                if ($crystalIcon.length > 0) {
+                    this.create($crystalIcon[0], 
+                        '<div style="padding:5px;"><strong>Crystal Glass</strong><br/>High-tech luxury good<br/>Required for advanced research</div>'
+                    );
+                }
+
+                // Add tooltip to sulfur icon
+                const $sulfurIcon = $table.find('th img[src*="icon_sulfur.png"]').parent();
+                if ($sulfurIcon.length > 0) {
+                    this.create($sulfurIcon[0], 
+                        '<div style="padding:5px;"><strong>Sulfur</strong><br/>Military resource<br/>Used for weapons and explosives</div>'
+                    );
+                }
+
+                // Add tooltips to city links with production info
+                $table.find('.tnt_city_link').each(function() {
+                    const cityId = $(this).data('city-id');
+                    const cityData = tnt.data.storage.city[cityId];
+                    
+                    if (cityData) {
+                        const production24h = tnt.utils.calculateProduction(cityId, 24);
+                        const tooltipText = `
+                            <div style="padding:5px;">
+                                <strong>${tnt.get.cityName(cityId)}</strong><br/>
+                                <strong>24h Production:</strong><br/>
+                                Wood: ${production24h.wood}<br/>
+                                Wine: ${production24h.wine}<br/>
+                                Marble: ${production24h.marble}<br/>
+                                Crystal: ${production24h.crystal}<br/>
+                                Sulfur: ${production24h.sulfur}
+                            </div>
+                        `;
+                        
+                        tnt.tooltip.create(this, tooltipText);
+                    }
+                });
+
+                console.log('TNT: Added tooltips to resource table elements');
+            }, 500);
+        },
+
+        // Test function to show different types of feedback bubbles
+        testFeedbackBubbles() {
+            console.log('TNT: Testing feedback bubbles...');
+            
+            // Test success bubble
+            setTimeout(() => {
+                this.createFeedback('✓ Success! This is a green success bubble.', 'success');
+            }, 500);
+
+            // Test info bubble
+            setTimeout(() => {
+                this.createFeedback('ℹ Info: This is a yellow information bubble.', 'info');
+            }, 2000);
+
+            // Test error bubble
+            setTimeout(() => {
+                this.createFeedback('✗ Error: This is a red error bubble.', 'error');
+            }, 4000);
+        },
+
+        // Enhanced test function for building table tooltips
+        testBuildingTableTooltips() {
+            if (!this.init()) {
+                console.warn('TNT: Cannot test building tooltips - BubbleTips not available');
+                return;
+            }
+
+            setTimeout(() => {
+                const $buildingTable = $('#tnt_buildings_table');
+                if ($buildingTable.length === 0) {
+                    console.log('TNT: Building table not found for tooltip testing');
+                    return;
+                }
+
+                // Add tooltips to building icons in header
+                $buildingTable.find('th img.tnt_building_icon').each(function() {
+                    const $icon = $(this);
+                    const src = $icon.attr('src');
+                    const buildingName = $icon.attr('title');
+                    
+                    if (src && buildingName) {
+                        let description = '';
+                        
+                        // Get building description based on src
+                        if (src.includes('townhall')) {
+                            description = 'Administrative center of your city<br/>Higher levels unlock more building slots<br/>Required for colony management';
+                        } else if (src.includes('warehouse')) {
+                            description = 'Stores your resources safely<br/>Higher levels increase storage capacity<br/>Protects goods from raids';
+                        } else if (src.includes('port')) {
+                            description = 'Enables trading with other players<br/>Higher levels increase trade ships<br/>Connects your island to the world';
+                        } else if (src.includes('barracks')) {
+                            description = 'Trains military units<br/>Higher levels unlock advanced troops<br/>Essential for defense and conquest';
+                        } else if (src.includes('academy')) {
+                            description = 'Research new technologies<br/>Higher levels speed up research<br/>Unlocks advanced building options';
+                        } else {
+                            description = 'Important city building<br/>Upgrade to improve its benefits<br/>Check building details for specifics';
+                        }
+
+                        const tooltipText = `
+                            <div style="padding:5px;">
+                                <strong>${buildingName}</strong><br/>
+                                ${description}
+                            </div>
+                        `;
+                        
+                        tnt.tooltip.create($icon.parent()[0], tooltipText);
+                    }
+                });
+
+                console.log('TNT: Added tooltips to building table elements');
+            }, 500);
+        }
     }
     
     // END: DO NOT MODIFY - Fixed logic
