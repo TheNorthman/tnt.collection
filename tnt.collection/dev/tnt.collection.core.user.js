@@ -1172,6 +1172,17 @@ const tnt = {
     world() {
         // World map specific functionality
         tnt.core.debug.log('World map loaded');
+
+        // Apply UI modifications for world map - Found in Ikariam Map Enhancer
+        $('.cities').each(function() {
+            if(this.innerText === "0") {
+                $(this).parent().css('opacity', 0.5);
+            } else {
+                $(this).parent().css('opacity', 1);
+            }
+        });
+        $('.own, .ally').css('filter', 'drop-shadow(0px 10px 4px #000)');
+        $('.piracyInRange').css('opacity', 0.75);
     },
 
     showCityLevels() {
@@ -2444,115 +2455,71 @@ const tnt = {
                 return;
             }
 
-            // CRITICAL: Ikariam's BubbleTips system has z-index conflicts with TNT tables (z-index: 100000000)
-            // Solution: Force BubbleTips nodes to have higher z-index (100000001)
-            if (typeof BubbleTips.bubbleNode !== 'undefined' && BubbleTips.bubbleNode) {
-                $(BubbleTips.bubbleNode).css('z-index', '100000001');
-            }
-            if (typeof BubbleTips.infoNode !== 'undefined' && BubbleTips.infoNode) {
-                $(BubbleTips.infoNode).css('z-index', '100000001');
+            // Ensure BubbleTips is properly initialized
+            if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
+                BubbleTips.init();
             }
 
-            // Add tooltips to resource icon containers
+            // Fix z-index in case Ikariam stomped over us
+            $(BubbleTips.bubbleNode).css('z-index', '100000001');
+            $(BubbleTips.infoNode).css('z-index', '100000001');
+
             const $containers = $('.tnt_resource_icon_container');
-            console.log('TNT: Adding tooltips to', $containers.length, 'resource icons');
+            tnt.core.debug.log('TNT: Adding tooltips to', $containers.length, 'resource icons');
 
-            $containers.each(function(index) {
+            $containers.each(function () {
                 const $container = $(this);
                 const resourceType = $container.data('resource');
-                
-                if (resourceType) {
-                    let tooltipContent = '';
-                    
-                    switch (resourceType) {
-                        case 'wood':
-                            tooltipContent = '<div style="padding:8px;"><strong>Wood Resources</strong><br/>Basic building material<br/>Required for all construction<br/>Produced by Foresters</div>';
-                            break;
-                        case 'wine':
-                            tooltipContent = '<div style="padding:8px;"><strong>Wine</strong><br/>Luxury good for population<br/>Keeps citizens happy<br/>Produced by Winegrowers</div>';
-                            break;
-                        case 'marble':
-                            tooltipContent = '<div style="padding:8px;"><strong>Marble</strong><br/>Premium building material<br/>Used for advanced buildings<br/>Produced by Stonemasons</div>';
-                            break;
-                        case 'crystal':
-                            tooltipContent = '<div style="padding:8px;"><strong>Crystal Glass</strong><br/>High-tech luxury good<br/>Required for advanced research<br/>Produced by Opticians</div>';
-                            break;
-                        case 'sulfur':
-                            tooltipContent = '<div style="padding:8px;"><strong>Sulfur</strong><br/>Military resource<br/>Used for weapons and explosives<br/>Produced by Fireworkers</div>';
-                            break;
-                    }
-                    
-                    if (tooltipContent) {
-                        // Store tooltip content for each resource type
-                        $container.data('tooltipContent', tooltipContent);
-                        
-                        // Remove any existing tooltip handlers to prevent conflicts
-                        $container.off('mouseenter.tnt mouseleave.tnt');
-                        
-                        // LEARNED: BubbleTips reuses the same DOM nodes and doesn't properly clear content
-                        // Solution: Manual mouseenter/mouseleave handlers with proper cleanup and re-initialization
-                        $container.on('mouseenter.tnt', function(e) {
-                            const content = $(this).data('tooltipContent');
-                            const resType = $(this).data('resource');
-                            
-                            // CRITICAL: Always hide existing tooltip and clear content first
-                            // BubbleTips can show stale content from previous hovers
-                            if (BubbleTips.infoNode) {
-                                $(BubbleTips.infoNode).hide();
-                            }
-                            
-                            // Clear any existing content
-                            if (BubbleTips.infotip) {
-                                $(BubbleTips.infotip).empty();
-                            }
-                            
-                            // Small delay ensures BubbleTips cleanup is complete
-                            setTimeout(() => {
-                                try {
-                                    // LEARNED: BubbleTips nodes can become undefined, need re-initialization
-                                    if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
-                                        BubbleTips.init();
-                                    }
-                                    
-                                    // CRITICAL: Force CSS properties - BubbleTips doesn't always set them correctly
-                                    if (BubbleTips.infoNode) {
-                                        $(BubbleTips.infoNode).css({
-                                            'z-index': '100000001',
-                                            'position': 'absolute',
-                                            'display': 'block'
-                                        });
-                                    }
-                                    
-                                    // Bind tooltip: location=6 (custom element), type=13 (hover tooltip)
-                                    BubbleTips.bindBubbleTip(6, 13, content, null, this, false);
-                                    
-                                    // LEARNED: Sometimes tooltips don't show even after binding
-                                    // Solution: Force show after short delay
-                                    setTimeout(() => {
-                                        if (BubbleTips.infoNode && $(BubbleTips.infoNode).is(':hidden')) {
-                                            $(BubbleTips.infoNode).show();
-                                        }
-                                    }, 50);
-                                    
-                                } catch (error) {
-                                    console.warn('TNT: Tooltip binding failed for', resType + ':', error);
-                                }
-                            }, 10);
-                        });
-                        
-                        $container.on('mouseleave.tnt', function() {
-                            // CRITICAL: Proper cleanup on mouseleave prevents tooltip persistence
-                            setTimeout(() => {
-                                if (BubbleTips.infoNode) {
-                                    $(BubbleTips.infoNode).hide();
-                                }
-                                if (BubbleTips.infotip) {
-                                    $(BubbleTips.infotip).empty();
-                                }
-                            }, 50);
-                        });
-                    }
+                const template = TNT_TOOLTIP_TEMPLATES[resourceType];
+
+                if (!template) {
+                    tnt.core.debug.log('Tooltip template missing for resource:', resourceType);
+                    return;
                 }
+
+                const html = tnt.tooltip.formatTemplateTooltip(template);
+
+                // Remove old handlers to avoid duplicate binds
+                $container.off('mouseenter.tnt mouseleave.tnt');
+
+                $container.on('mouseenter.tnt', function () {
+                    if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
+                        BubbleTips.init();
+                    }
+
+                    // Reset DOM nodes in case Ikariam polluted them
+                    if (BubbleTips.infotip) {
+                        $(BubbleTips.infotip).empty();
+                    }
+                    if (BubbleTips.infoNode) {
+                        $(BubbleTips.infoNode).hide().css({
+                            display: 'block',
+                            'z-index': '100000001'
+                        });
+                    }
+
+                    try {
+                        BubbleTips.bindBubbleTip(6, 13, html, null, this, false);
+
+                        // Force visibility after delay in case binding fails silently
+                        setTimeout(() => {
+                            if (BubbleTips.infoNode && $(BubbleTips.infoNode).is(':hidden')) {
+                                $(BubbleTips.infoNode).show();
+                            }
+                        }, 40);
+                    } catch (err) {
+                        console.warn('TNT: Tooltip bind failed for', resourceType + ':', err);
+                    }
+                });
+
+                $container.on('mouseleave.tnt', function () {
+                    if (BubbleTips.infoNode) {
+                        $(BubbleTips.infoNode).hide();
+                    }
+                    if (BubbleTips.infotip) {
+                        $(BubbleTips.infotip).empty();
+                    }
+                });
             });
         }
     },
@@ -2694,106 +2661,6 @@ const tnt = {
                 }
             }
         }
-    },
-
-    // Add missing functions that are called but not defined
-    all() {
-        // Common functionality that runs on all pages
-        const settings = this.settings.getFeatureSettings();
-
-        // Apply global UI modifications
-        if (settings.removePremiumOffers) {
-            $('.premiumOfferBox').hide();
-        }
-    },
-
-    // BEGIN: DO NOT MODIFY - Fixed logic
-    // Legacy compatibility - Here all the communication with Ikariam is handled
-    // Should only be changed by the core team
-    // These has to work for the rest of the code to work properly. We keep them here so we only have to change them in one place.
-
-    get: {
-        playerId: () => tnt.game.player.getId(),
-        cityId() {
-            // Method 1: From URL parameters (most reliable during city switches)
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlCityId = urlParams.get('cityId') || urlParams.get('currentCityId');
-
-            if (urlCityId && urlCityId !== 'undefined' && urlCityId !== '') {
-                return urlCityId;
-            }
-
-            // Method 2: From Ikariam model
-            let modelCityId;
-            try {
-                modelCityId = ikariam.model.relatedCityData.selectedCity.replace(/[^\d-]+/g, "");
-                if (modelCityId && modelCityId !== 'undefined' && modelCityId !== '') {
-                    return modelCityId;
-                }
-            } catch (e) {
-                // Continue to next method
-            }
-
-            // Method 3: From global menu (fallback)
-            const menuCityId = $('#js_GlobalMenu_citySelect').attr('name');
-            if (menuCityId && menuCityId !== 'undefined' && menuCityId !== '') {
-                return menuCityId;
-            }
-
-            // Method 4: Fallback to first city from city list
-            const cities = this.cityList();
-            const cityIds = Object.keys(cities);
-            if (cityIds.length > 0) {
-                // Clean up debug logging
-                // tnt.core.debug.log('Using fallback city ID: ' + cityIds[0]);
-                return cityIds[0];
-            }
-
-            // Clean up debug logging - only log real errors
-            console.warn('TNT: No valid city ID found');
-            return null;
-        },
-
-        cityLvl: () => tnt.game.city.getLevel(),
-        cityIslandCoords: () => tnt.game.city.getCoordinates(),
-        cityName: (id) => tnt.game.city.getName(id),
-        producedTradegood: () => tnt.game.city.getProducedTradegood(),
-        cityList: () => tnt.game.city.getList(),
-
-        alliance: {
-            Id: () => tnt.game.player.getAlliance().id
-        },
-
-        transporters: {
-            free: () => tnt.game.military.getTransporters().free,
-            max: () => tnt.game.military.getTransporters().max
-        },
-
-        resources: {
-            wood: () => tnt.game.resources.getCurrent().wood,
-            wine: () => tnt.game.resources.getCurrent().wine,
-            marble: () => tnt.game.resources.getCurrent().marble,
-            crystal: () => tnt.game.resources.getCurrent().crystal,
-            sulfur: () => tnt.game.resources.getCurrent().sulfur
-        },
-
-        population: () => tnt.game.resources.getCurrent().population,
-        citizens: () => tnt.game.resources.getCurrent().citizens,
-        income: () => tnt.game.economy.getFinances().income,
-        upkeep: () => tnt.game.economy.getFinances().upkeep,
-        scientistsUpkeep: () => tnt.game.economy.getFinances().scientistsUpkeep,
-        godGoldResult: () => tnt.game.economy.getFinances().godGoldResult,
-        resourceProduction: () => tnt.game.resources.getProduction().resource,
-        tradegoodProduction: () => tnt.game.resources.getProduction().tradegood,
-        hasAlly: () => tnt.game.player.getAlliance().hasAlly,
-        maxCapacity: () => tnt.game.resources.getCapacity().max,
-        wineSpending: () => tnt.game.resources.getCapacity().wineSpending,
-        construction: () => tnt.utils.hasConstruction()
-    },
-
-    // Add missing has object
-    has: {
-        construction: () => tnt.utils.hasConstruction()
     },
     
     // Tooltip/Bubbletip Testing Module
@@ -3022,9 +2889,98 @@ const tnt = {
         formatTemplateTooltip({ title, body }) {
             return `<div style="padding:8px;"><strong>${title}</strong><br/>${body}</div>`;
         }
-    }   
+    },
+
+    // BEGIN: DO NOT MODIFY - Fixed logic
+    // Legacy compatibility - Here all the communication with Ikariam is handled
+    // Should only be changed by the core team
+    // These has to work for the rest of the code to work properly. We keep them here so we only have to change them in one place.
+
+    get: {
+        playerId: () => tnt.game.player.getId(),
+        cityId() {
+            // Method 1: From URL parameters (most reliable during city switches)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlCityId = urlParams.get('cityId') || urlParams.get('currentCityId');
+
+            if (urlCityId && urlCityId !== 'undefined' && urlCityId !== '') {
+                return urlCityId;
+            }
+
+            // Method 2: From Ikariam model
+            let modelCityId;
+            try {
+                modelCityId = ikariam.model.relatedCityData.selectedCity.replace(/[^\d-]+/g, "");
+                if (modelCityId && modelCityId !== 'undefined' && modelCityId !== '') {
+                    return modelCityId;
+                }
+            } catch (e) {
+                // Continue to next method
+            }
+
+            // Method 3: From global menu (fallback)
+            const menuCityId = $('#js_GlobalMenu_citySelect').attr('name');
+            if (menuCityId && menuCityId !== 'undefined' && menuCityId !== '') {
+                return menuCityId;
+            }
+
+            // Method 4: Fallback to first city from city list
+            const cities = this.cityList();
+            const cityIds = Object.keys(cities);
+            if (cityIds.length > 0) {
+                // Clean up debug logging
+                // tnt.core.debug.log('Using fallback city ID: ' + cityIds[0]);
+                return cityIds[0];
+            }
+
+            // Clean up debug logging - only log real errors
+            console.warn('TNT: No valid city ID found');
+            return null;
+        },
+
+        cityLvl: () => tnt.game.city.getLevel(),
+        cityIslandCoords: () => tnt.game.city.getCoordinates(),
+        cityName: (id) => tnt.game.city.getName(id),
+        producedTradegood: () => tnt.game.city.getProducedTradegood(),
+        cityList: () => tnt.game.city.getList(),
+
+        alliance: {
+            Id: () => tnt.game.player.getAlliance().id
+        },
+
+        transporters: {
+            free: () => tnt.game.military.getTransporters().free,
+            max: () => tnt.game.military.getTransporters().max
+        },
+
+        resources: {
+            wood: () => tnt.game.resources.getCurrent().wood,
+            wine: () => tnt.game.resources.getCurrent().wine,
+            marble: () => tnt.game.resources.getCurrent().marble,
+            crystal: () => tnt.game.resources.getCurrent().crystal,
+            sulfur: () => tnt.game.resources.getCurrent().sulfur
+        },
+
+        population: () => tnt.game.resources.getCurrent().population,
+        citizens: () => tnt.game.resources.getCurrent().citizens,
+        income: () => tnt.game.economy.getFinances().income,
+        upkeep: () => tnt.game.economy.getFinances().upkeep,
+        scientistsUpkeep: () => tnt.game.economy.getFinances().scientistsUpkeep,
+        godGoldResult: () => tnt.game.economy.getFinances().godGoldResult,
+        resourceProduction: () => tnt.game.resources.getProduction().resource,
+        tradegoodProduction: () => tnt.game.resources.getProduction().tradegood,
+        hasAlly: () => tnt.game.player.getAlliance().hasAlly,
+        maxCapacity: () => tnt.game.resources.getCapacity().max,
+        wineSpending: () => tnt.game.resources.getCapacity().wineSpending,
+        construction: () => tnt.utils.hasConstruction()
+    },
+
+    // Add missing has object
+    has: {
+        construction: () => tnt.utils.hasConstruction()
+    }
+    // END: DO NOT MODIFY - Fixed logic
 };
-// END: DO NOT MODIFY - Fixed logic
 
 
 // Initialize the TNT core
