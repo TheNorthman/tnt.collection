@@ -129,6 +129,73 @@ const tnt = {
             return !current;
         },
 
+        // Get layout preferences
+        getLayoutPrefs() {
+            return this.get("layoutPrefs", {
+                maintainLayout: false,
+                url: "",
+                layout: null
+            });
+        },
+
+        // Set layout preferences
+        setLayoutPrefs(prefs) {
+            this.set("layoutPrefs", prefs);
+        },
+
+        // Clear layout preferences
+        clearLayoutPrefs() {
+            this.set("layoutPrefs", {
+                maintainLayout: false,
+                url: "",
+                layout: null
+            });
+        },
+
+        // Parse Ikariam URL and extract layout parameters
+        parseLayoutFromUrl(url) {
+            try {
+                const urlObj = new URL(url);
+                const params = urlObj.searchParams;
+
+                // Extract layout parameters
+                const layout = {
+                    citymap: {},
+                    mainbox: {},
+                    sidebar: {}
+                };
+
+                // City map (offsets and zoom)
+                const cityTop = params.get('cityTop');
+                const cityLeft = params.get('cityLeft');
+                const cityWorldviewScale = params.get('cityWorldviewScale');
+                if (cityTop) layout.citymap.top = parseInt(cityTop.replace('px', ''));
+                if (cityLeft) layout.citymap.left = parseInt(cityLeft.replace('px', ''));
+                if (cityWorldviewScale) layout.citymap.zoom = parseFloat(cityWorldviewScale);
+
+                // Mainbox parameters
+                const mainboxX = params.get('mainbox_x');
+                const mainboxY = params.get('mainbox_y');
+                const mainboxZ = params.get('mainbox_z');
+                if (mainboxX) layout.mainbox.x = parseInt(mainboxX);
+                if (mainboxY) layout.mainbox.y = parseInt(mainboxY);
+                if (mainboxZ) layout.mainbox.z = parseInt(mainboxZ);
+
+                // Sidebar parameters
+                const sidebarX = params.get('sidebar_x');
+                const sidebarY = params.get('sidebar_y');
+                const sidebarZ = params.get('sidebar_z');
+                if (sidebarX) layout.sidebar.x = parseInt(sidebarX);
+                if (sidebarY) layout.sidebar.y = parseInt(sidebarY);
+                if (sidebarZ) layout.sidebar.z = parseInt(sidebarZ);
+
+                return layout;
+            } catch (e) {
+                console.warn('TNT: Failed to parse layout URL:', e.message);
+                return null;
+            }
+        },
+
         // Get all resource display settings
         getResourceDisplaySettings() {
             return {
@@ -156,6 +223,17 @@ const tnt = {
             };
         },
 
+        // Validate if URL is a valid Ikariam URL
+        isValidIkariamUrl(url) {
+            try {
+                const urlObj = new URL(url);
+                return urlObj.hostname.includes('ikariam') && 
+                       urlObj.hostname.includes('gameforge.com');
+            } catch (e) {
+                return false;
+            }
+        },
+
         // Initialize default settings - simplified without migration
         initDefaults() {
             const defaults = {
@@ -177,7 +255,12 @@ const tnt = {
                 "citySwitcherActive": false,
                 "citySwitcherStartCity": null,
                 "citySwitcherVisited": [],
-                "debugEnabled": true
+                "debugEnabled": true,
+                "layoutPrefs": {
+                    maintainLayout: false,
+                    url: "",
+                    layout: null
+                }
             };
 
             // Initialize defaults for any missing settings
@@ -265,6 +348,27 @@ const tnt = {
         buildOptionsHtml() {
             const settings = tnt.settings.getFeatureSettings();
             const resourceSettings = tnt.settings.getResourceDisplaySettings();
+            const layoutPrefs = tnt.settings.getLayoutPrefs();
+
+            // Prepare extracted layout data display
+            let layoutDataHtml = '';
+            if (layoutPrefs.layout) {
+                // Helper to flatten and format an object as key1:val1, key2:val2
+                function fmt(obj) {
+                    if (!obj || typeof obj !== 'object') return '';
+                    return Object.entries(obj)
+                        .map(([k, v]) => `${k}:${v}`)
+                        .join(', ');
+                }
+                const citymap = fmt(layoutPrefs.layout.citymap);
+                const mainbox = fmt(layoutPrefs.layout.mainbox);
+                const sidebar = fmt(layoutPrefs.layout.sidebar);
+                layoutDataHtml = `<div id="tntLayoutCurrentData" style="margin-top:5px;font-size:10px;color:#666;word-break:break-all;line-height:1.4;">
+                    <span><b>citymap</b>: ${citymap || '-'}</span><br/>
+                    <span><b>mainbox</b>: ${mainbox || '-'}</span><br/>
+                    <span><b>sidebar</b>: ${sidebar || '-'}</span>
+                </div>`;
+            }
 
             return `
                 <div id="tntUpdateLine" align="center" style="padding-bottom:5px;">
@@ -304,6 +408,15 @@ const tnt = {
                     </div>
                     <div class="tnt_left" style="float:left;width:50%;">
                         <legend>World Map:</legend>
+                    </div>
+                    <div class="tnt_left" style="float:left;width:50%;">
+                        <legend>Layout:</legend>
+                        ${this.createCheckbox('tntLayoutMaintain', 'Maintain layout from URL', layoutPrefs.maintainLayout)}
+                        <div id="tntLayoutUrlSection" style="padding-left:20px;${layoutPrefs.maintainLayout ? '' : 'display:none;'}">
+                            <label for="tntLayoutUrl" style="display:block;margin-top:5px;font-size:11px;">Paste Ikariam layout URL:</label>
+                            <input id="tntLayoutUrl" type="text" style="width:90%;margin-top:2px;font-size:11px;" placeholder="https://s##-us.ikariam.gameforge.com/?view=city&..." />
+                            ${layoutDataHtml}
+                        </div>
                     </div>
                 </div>
                 <div align="center" style="clear:both;">
@@ -349,6 +462,79 @@ const tnt = {
             // Special handler for notification sound (different toggle logic)
             $("#tntNotificationSound").on("change", () => {
                 tnt.settings.set("notificationSound", !tnt.settings.get("notificationSound"));
+            });
+
+            // Layout maintenance checkbox handler
+            $("#tntLayoutMaintain").on("change", () => {
+                const isChecked = $("#tntLayoutMaintain").is(':checked');
+                const layoutPrefs = tnt.settings.getLayoutPrefs();
+                
+                if (isChecked) {
+                    layoutPrefs.maintainLayout = true;
+                    $("#tntLayoutUrlSection").show();
+                } else {
+                    // Clear layout preferences when unchecked
+                    tnt.settings.clearLayoutPrefs();
+                    $("#tntLayoutUrlSection").hide();
+                }
+                
+                if (isChecked) {
+                    tnt.settings.setLayoutPrefs(layoutPrefs);
+                }
+            });
+
+            // Layout URL input handler
+            $("#tntLayoutUrl").on("paste blur keypress", function(e) {
+                // Handle paste, blur, or Enter key
+                if (e.type === 'keypress' && e.which !== 13) return;
+
+                setTimeout(() => {
+                    const url = $(this).val().trim();
+
+                    if (url && tnt.settings.isValidIkariamUrl(url)) {
+                        const layout = tnt.settings.parseLayoutFromUrl(url);
+
+                        if (layout) {
+                            const layoutPrefs = {
+                                maintainLayout: true,
+                                url: url,
+                                layout: layout
+                            };
+
+                            tnt.settings.setLayoutPrefs(layoutPrefs);
+
+                            // Show extracted layout data in compact format
+                            function fmt(obj) {
+                                if (!obj || typeof obj !== 'object') return '';
+                                return Object.entries(obj)
+                                    .map(([k, v]) => `${k}:${v}`)
+                                    .join(', ');
+                            }
+                            const citymap = fmt(layout.citymap);
+                            const mainbox = fmt(layout.mainbox);
+                            const sidebar = fmt(layout.sidebar);
+                            const layoutDataHtml = `<div id="tntLayoutCurrentData" style="margin-top:5px;font-size:10px;color:#666;word-break:break-all;line-height:1.4;">
+                                <span><b>citymap</b>: ${citymap || '-'}</span><br/>
+                                <span><b>mainbox</b>: ${mainbox || '-'}</span><br/>
+                                <span><b>sidebar</b>: ${sidebar || '-'}</span>
+                            </div>`;
+                            if ($("#tntLayoutCurrentData").length) {
+                                $("#tntLayoutCurrentData").replaceWith(layoutDataHtml);
+                            } else {
+                                $("#tntLayoutUrlSection").append(layoutDataHtml);
+                            }
+
+                            // Clear the input after successful processing
+                            $(this).val('');
+
+                            console.log('TNT: Layout preferences saved:', layoutPrefs);
+                        } else {
+                            alert('Failed to parse layout parameters from URL');
+                        }
+                    } else if (url) {
+                        alert('Please enter a valid Ikariam URL');
+                    }
+                }, 10);
             });
         },
 
