@@ -1069,27 +1069,45 @@ const tnt = {
             }
 
             return false;
-        }
-    },
+        },
 
-    // Add missing functions that are called but not defined
-    all() {
-        // Common functionality that runs on all pages
-        const settings = this.settings.getFeatureSettings();
+        // Apply layout directly using inline styles (Phase 2)
+        applyLayoutDirectly() {
+            const layoutPrefs = tnt.data.storage.settings?.layoutPrefs;
+            if (!layoutPrefs || !layoutPrefs.maintainLayout || !layoutPrefs.layout) return;
 
-        // Apply global UI modifications
-        if (settings.removePremiumOffers) {
-            $('.premiumOfferBox').hide();
-        }
-    },
-
-    island() {
-        // Island-specific functionality
-        tnt.core.debug.log('Island view loaded');
-
-        // Show city levels if setting is enabled
-        if (tnt.settings.get("islandShowCityLvl", true)) {
-            tnt.utils.displayCityLevels();
+            const layout = layoutPrefs.layout;
+            // Defensive checks for each section
+            if (layout.citymap) {
+                const mapOffset = layout.citymap;
+                if (typeof mapOffset.top === 'number' && typeof mapOffset.left === 'number') {
+                    $('#js_CityContainer').css({
+                        top: mapOffset.top + 'px',
+                        left: mapOffset.left + 'px'
+                    });
+                }
+            }
+            if (layout.mainbox) {
+                const mainbox = layout.mainbox;
+                if (typeof mainbox.x === 'number' && typeof mainbox.y === 'number') {
+                    $('#mainview').css({
+                        top: mainbox.y + 'px',
+                        left: mainbox.x + 'px',
+                        'z-index': typeof mainbox.z === 'number' ? mainbox.z : ''
+                    });
+                }
+            }
+            if (layout.sidebar) {
+                const sidebar = layout.sidebar;
+                if (typeof sidebar.x === 'number' && typeof sidebar.y === 'number') {
+                    $('#container2').css({
+                        top: sidebar.y + 'px',
+                        left: sidebar.x + 'px',
+                        'z-index': typeof sidebar.z === 'number' ? sidebar.z : ''
+                    });
+                }
+            }
+            tnt.core.debug.log('Layout applied');
         }
     },
 
@@ -1099,6 +1117,9 @@ const tnt = {
 
         // Apply city-specific modifications
         tnt.ui.removeFlyingShop();
+
+        // PHASE 2: Apply layout after DOM is rendered
+        tnt.utils.applyLayoutDirectly();
     },
 
     world() {
@@ -1392,10 +1413,44 @@ const tnt = {
                     ajax.Responder.tntChangeView = ajax.Responder.changeView;
                     ajax.Responder.changeView = function (response) {
                         var view = $('body').attr('id');
+
+                        // PHASE 1: Set early Ikariam properties before rendering
+                        try {
+                            if (ikariam.templateView && ikariam.templateView.id === "city") {
+                                const layoutPrefs = tnt.data.storage.settings?.layoutPrefs;
+                                if (layoutPrefs && layoutPrefs.maintainLayout && layoutPrefs.layout) {
+                                    const layout = layoutPrefs.layout;
+                                    // Defensive null checks
+                                    if (layout.mainbox) {
+                                        if (typeof layout.mainbox.x === 'number') ikariam.mainbox_x = layout.mainbox.x;
+                                        if (typeof layout.mainbox.y === 'number') ikariam.mainbox_y = layout.mainbox.y;
+                                        if (typeof layout.mainbox.z === 'number') ikariam.mainbox_z = layout.mainbox.z;
+                                    }
+                                    if (layout.sidebar) {
+                                        if (typeof layout.sidebar.x === 'number') ikariam.sidebar_x = layout.sidebar.x;
+                                        if (typeof layout.sidebar.y === 'number') ikariam.sidebar_y = layout.sidebar.y;
+                                        if (typeof layout.sidebar.z === 'number') ikariam.sidebar_z = layout.sidebar.z;
+                                    }
+                                    if (layout.citymap && typeof layout.citymap.zoom === 'number') {
+                                        localStorage.setItem('cityWorldviewScale', layout.citymap.zoom.toString());
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            // Defensive: ignore errors
+                        }
+
                         tnt.core.debug.log("changeView (View: " + view + ")", 3);
 
                         // Let Ikariam do its stuff
                         ajax.Responder.tntChangeView(response);
+
+                        // PHASE 2: Apply layout with inline styles after rendering
+                        try {
+                            if (ikariam.templateView && ikariam.templateView.id === "city") {
+                                tnt.utils.applyLayoutDirectly();
+                            }
+                        } catch (e) {}
 
                         // Check notifications
                         tnt.core.notification.check();
@@ -2465,6 +2520,17 @@ const tnt = {
                     this.restoreNormalVisualState();
                 }
             }
+        }
+    },
+
+    // Add missing functions that are called but not defined
+    all() {
+        // Common functionality that runs on all pages
+        const settings = this.settings.getFeatureSettings();
+
+        // Apply global UI modifications
+        if (settings.removePremiumOffers) {
+            $('.premiumOfferBox').hide();
         }
     },
 
