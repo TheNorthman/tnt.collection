@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection Core
-// @version      2.0.2
+// @version      2.0.3
 // @namespace    tnt.collection.core
 // @author       Ronny Jespersen
 // @description  TNT Collection Core - Stable functionality for Ikariam enhancements
@@ -25,54 +25,53 @@ const tntConsole = Object.assign({}, window.console);
 // Move large data blocks to separate internal modules for better organization
 const TNT_BUILDING_DEFINITIONS = Object.freeze([
     // Government
-    { key: 'townHall', name: 'Town Hall', viewName: 'townHall', icon: '/cdn/all/both/img/city/townhall_l.png', buildingId: 0, helpId: 1, maxedLvl: 34 },
-    { key: 'palace', name: 'Palace', viewName: 'palace', icon: '/cdn/all/both/img/city/palace_l.png', buildingId: 11, helpId: 1, maxedLvl: 12 },
-    { key: 'palaceColony', name: 'Governor\'s Residence', viewName: 'palaceColony', icon: '/cdn/all/both/img/city/palaceColony_l.png', buildingId: 17, helpId: 1, maxedLvl: 12 },
-    { key: 'embassy', name: 'Embassy', viewName: 'embassy', icon: '/cdn/all/both/img/city/embassy_l.png', buildingId: 12, helpId: 1 },
-    { key: 'chronosForge', name: 'Chronos\' Forge', viewName: 'chronosForge', icon: '/cdn/all/both/img/city/chronosForge_l.png', buildingId: 35, helpId: 1, maxedLvl: 3 },
+    { key: 'townHall', name: 'Town Hall', viewName: 'townHall', icon: '/cdn/all/both/img/city/townhall_l.png', buildingId: 0, helpId: 1, maxedLvl: 34, category: 'government' },
+    { key: 'palace', name: 'Palace', viewName: 'palace', icon: '/cdn/all/both/img/city/palace_l.png', buildingId: 11, helpId: 1, maxedLvl: 12, category: 'government' },
+    { key: 'palaceColony', name: 'Governor\'s Residence', viewName: 'palaceColony', icon: '/cdn/all/both/img/city/palaceColony_l.png', buildingId: 17, helpId: 1, maxedLvl: 12, category: 'government' },
+    { key: 'embassy', name: 'Embassy', viewName: 'embassy', icon: '/cdn/all/both/img/city/embassy_l.png', buildingId: 12, helpId: 1, category: 'government' },
+    { key: 'chronosForge', name: 'Chronos\' Forge', viewName: 'chronosForge', icon: '/cdn/all/both/img/city/chronosForge_l.png', buildingId: 35, helpId: 1, maxedLvl: 3, category: 'government' },
 
     // Resource storage
-    { key: 'warehouse', name: 'Warehouse', viewName: 'warehouse', icon: '/cdn/all/both/img/city/warehouse_l.png', buildingId: 7, helpId: 1, maxedLvl: 43 },
-    { key: 'dump', name: 'Depot', viewName: 'dump', icon: '/cdn/all/both/img/city/dump_l.png', buildingId: 29, helpId: 1, maxedLvl: 43 },
+    { key: 'warehouse', name: 'Warehouse', viewName: 'warehouse', icon: '/cdn/all/both/img/city/warehouse_l.png', buildingId: 7, helpId: 1, maxedLvl: 43, category: 'trade' },
+    { key: 'dump', name: 'Depot', viewName: 'dump', icon: '/cdn/all/both/img/city/dump_l.png', buildingId: 29, helpId: 1, maxedLvl: 43, category: 'trade' },
 
     // Trade & Diplomacy
-    { key: 'port', name: 'Trading Port', viewName: 'port', icon: '/cdn/all/both/img/city/port_l.png', buildingId: 3, helpId: 1, maxedLvl: 32 },
-    { key: 'dockyard', name: 'Dockyard', viewName: 'dockyard', icon: '/cdn/all/both/img/city/dockyard_l.png', buildingId: 33, helpId: 1, maxedLvl: 3 },
-    { key: 'marineChartArchive', name: 'Sea Chart Archive', viewName: 'marineChartArchive', icon: '/cdn/all/both/img/city/marinechartarchive_l.png', buildingId: 32, helpId: 1, maxedLvl: 18 },
-    { key: 'branchOffice', name: 'Trading Post', viewName: 'tradingPost', icon: '/cdn/all/both/img/city/branchoffice_l.png', buildingId: 13, helpId: 1, maxedLvl: 20 },
+    { key: 'port', name: 'Trading Port', viewName: 'port', icon: '/cdn/all/both/img/city/port_l.png', buildingId: 3, helpId: 1, maxedLvl: 32, category: 'trade' },
+    { key: 'dockyard', name: 'Dockyard', viewName: 'dockyard', icon: '/cdn/all/both/img/city/dockyard_l.png', buildingId: 33, helpId: 1, maxedLvl: 3, category: 'trade' },
+    { key: 'marineChartArchive', name: 'Sea Chart Archive', viewName: 'marineChartArchive', icon: '/cdn/all/both/img/city/marinechartarchive_l.png', buildingId: 32, helpId: 1, maxedLvl: 18, category: 'trade' },
+    { key: 'branchOffice', name: 'Trading Post', viewName: 'tradingPost', icon: '/cdn/all/both/img/city/branchoffice_l.png', buildingId: 13, helpId: 1, maxedLvl: 20, category: 'trade' },
 
     // Culture & Research
-    { key: 'academy', name: 'Academy', viewName: 'academy', icon: '/cdn/all/both/img/city/academy_l.png', buildingId: 4, helpId: 1, maxedLvl: 32 },
-    { key: 'museum', name: 'Museum', viewName: 'museum', icon: '/cdn/all/both/img/city/museum_l.png', buildingId: 10, helpId: 1, maxedLvl: 21},
-    { key: 'tavern', name: 'Tavern', viewName: 'tavern', icon: '/cdn/all/both/img/city/taverne_l.png', buildingId: 9, helpId: 1, maxedLvl: 32 },
-    { key: 'temple', name: 'Temple', viewName: 'temple', icon: '/cdn/all/both/img/city/temple_l.png', buildingId: 28, helpId: 1, maxedLvl: 24 },
-    { key: 'shrineOfOlympus', name: 'Gods\' Shrine', viewName: 'shrineOfOlympus', icon: '/cdn/all/both/img/city/shrineOfOlympus_l.png', buildingId: 34, helpId: 1, maxedLvl: 20 },
+    { key: 'academy', name: 'Academy', viewName: 'academy', icon: '/cdn/all/both/img/city/academy_l.png', buildingId: 4, helpId: 1, maxedLvl: 32, category: 'culture' },
+    { key: 'museum', name: 'Museum', viewName: 'museum', icon: '/cdn/all/both/img/city/museum_l.png', buildingId: 10, helpId: 1, maxedLvl: 21, category: 'culture' },
+    { key: 'tavern', name: 'Tavern', viewName: 'tavern', icon: '/cdn/all/both/img/city/taverne_l.png', buildingId: 9, helpId: 1, maxedLvl: 32, category: 'culture' },
+    { key: 'temple', name: 'Temple', viewName: 'temple', icon: '/cdn/all/both/img/city/temple_l.png', buildingId: 28, helpId: 1, maxedLvl: 24, category: 'culture' },
+    { key: 'shrineOfOlympus', name: 'Gods\' Shrine', viewName: 'shrineOfOlympus', icon: '/cdn/all/both/img/city/shrineOfOlympus_l.png', buildingId: 34, helpId: 1, maxedLvl: 20, category: 'culture' },
 
     // Resource reducers
-    { key: 'carpentering', name: 'Carpenter', viewName: 'carpentering', icon: '/cdn/all/both/img/city/carpentering_l.png', buildingId: 23, helpId: 1, maxedLvl: 50 },
-    { key: 'architect', name: 'Architect\'s Office', viewName: 'architect', icon: '/cdn/all/both/img/city/architect_l.png', buildingId: 24, helpId: 1, maxedLvl: 50 },
-    { key: 'vineyard', name: 'Wine Press', viewName: 'vineyard', icon: '/cdn/all/both/img/city/vineyard_l.png', buildingId: 26, helpId: 1, maxedLvl: 50 },
-    { key: 'optician', name: 'Optician', viewName: 'optician', icon: '/cdn/all/both/img/city/optician_l.png', buildingId: 25, helpId: 1, maxedLvl: 50 },
-    { key: 'fireworker', name: 'Firework Test Area', viewName: 'fireworker', icon: '/cdn/all/both/img/city/fireworker_l.png', buildingId: 27, helpId: 1, maxedLvl: 50 },
+    { key: 'carpentering', name: 'Carpenter', viewName: 'carpentering', icon: '/cdn/all/both/img/city/carpentering_l.png', buildingId: 23, helpId: 1, maxedLvl: 50, category: 'resourceReducer' },
+    { key: 'architect', name: 'Architect\'s Office', viewName: 'architect', icon: '/cdn/all/both/img/city/architect_l.png', buildingId: 24, helpId: 1, maxedLvl: 50, category: 'resourceReducer' },
+    { key: 'vineyard', name: 'Wine Press', viewName: 'vineyard', icon: '/cdn/all/both/img/city/vineyard_l.png', buildingId: 26, helpId: 1, maxedLvl: 50, category: 'resourceReducer' },
+    { key: 'optician', name: 'Optician', viewName: 'optician', icon: '/cdn/all/both/img/city/optician_l.png', buildingId: 25, helpId: 1, maxedLvl: 50, category: 'resourceReducer' },
+    { key: 'fireworker', name: 'Firework Test Area', viewName: 'fireworker', icon: '/cdn/all/both/img/city/fireworker_l.png', buildingId: 27, helpId: 1, maxedLvl: 50, category: 'resourceReducer' },
 
     // Resource enhancers
-    { key: 'forester', name: 'Forester\'s House', viewName: 'forester', icon: '/cdn/all/both/img/city/forester_l.png', buildingId: 18, helpId: 1, maxedLvl: 32},
-    { key: 'stonemason', name: 'Stonemason', viewName: 'stonemason', icon: '/cdn/all/both/img/city/stonemason_l.png', buildingId: 19, helpId: 1, maxedLvl: 32 },
-    { key: 'winegrower', name: 'Winegrower', viewName: 'winegrower', icon: '/cdn/all/both/img/city/winegrower_l.png', buildingId: 21, helpId: 1, maxedLvl: 32 },
-    { key: 'glassblowing', name: 'Glassblower', viewName: 'glassblowing', icon: '/cdn/all/both/img/city/glassblowing_l.png', buildingId: 20, helpId: 1, maxedLvl: 32 },
-    { key: 'alchemist', name: 'Alchemist\'s Tower', viewName: 'alchemist', icon: '/cdn/all/both/img/city/alchemist_l.png', buildingId: 22, helpId: 1, maxedLvl: 32 },
+    { key: 'forester', name: 'Forester\'s House', viewName: 'forester', icon: '/cdn/all/both/img/city/forester_l.png', buildingId: 18, helpId: 1, maxedLvl: 32, category: 'resourceEnhancer' },
+    { key: 'stonemason', name: 'Stonemason', viewName: 'stonemason', icon: '/cdn/all/both/img/city/stonemason_l.png', buildingId: 19, helpId: 1, maxedLvl: 32, category: 'resourceEnhancer' },
+    { key: 'winegrower', name: 'Winegrower', viewName: 'winegrower', icon: '/cdn/all/both/img/city/winegrower_l.png', buildingId: 21, helpId: 1, maxedLvl: 32, category: 'resourceEnhancer' },
+    { key: 'glassblowing', name: 'Glassblower', viewName: 'glassblowing', icon: '/cdn/all/both/img/city/glassblowing_l.png', buildingId: 20, helpId: 1, maxedLvl: 32, category: 'resourceEnhancer' },
+    { key: 'alchemist', name: 'Alchemist\'s Tower', viewName: 'alchemist', icon: '/cdn/all/both/img/city/alchemist_l.png', buildingId: 22, helpId: 1, maxedLvl: 32, category: 'resourceEnhancer' },
 
     // Military
-    { key: 'wall', name: 'Wall', viewName: 'wall', icon: '/cdn/all/both/img/city/wall.png', buildingId: 8, helpId: 1, maxedLvl: 32 },
-    { key: 'barracks', name: 'Barracks', viewName: 'barracks', icon: '/cdn/all/both/img/city/barracks_l.png', buildingId: 6, helpId: 1, maxedLvl: 32 },
-    { key: 'safehouse', name: 'Hideout', viewName: 'safehouse', icon: '/cdn/all/both/img/city/safehouse_l.png', buildingId: 16, helpId: 1, maxedLvl: 42 },
-    { key: 'workshop', name: 'Workshop', viewName: 'workshop', icon: '/cdn/all/both/img/city/workshop_l.png', buildingId: 15, helpId: 1, maxedLvl: 32 },
-    { key: 'shipyard', name: 'Shipyard', viewName: 'shipyard', icon: '/cdn/all/both/img/city/shipyard_l.png', buildingId: 5, helpId: 1, maxedLvl: 32 },
+    { key: 'wall', name: 'Wall', viewName: 'wall', icon: '/cdn/all/both/img/city/wall.png', buildingId: 8, helpId: 1, maxedLvl: 32, category: 'military' },
+    { key: 'barracks', name: 'Barracks', viewName: 'barracks', icon: '/cdn/all/both/img/city/barracks_l.png', buildingId: 6, helpId: 1, maxedLvl: 32, category: 'military' },
+    { key: 'safehouse', name: 'Hideout', viewName: 'safehouse', icon: '/cdn/all/both/img/city/safehouse_l.png', buildingId: 16, helpId: 1, maxedLvl: 42, category: 'military' },
+    { key: 'workshop', name: 'Workshop', viewName: 'workshop', icon: '/cdn/all/both/img/city/workshop_l.png', buildingId: 15, helpId: 1, maxedLvl: 32, category: 'military' },
+    { key: 'shipyard', name: 'Shipyard', viewName: 'shipyard', icon: '/cdn/all/both/img/city/shipyard_l.png', buildingId: 5, helpId: 1, maxedLvl: 32, category: 'military' },
 
     // Special buildings
-    { key: 'pirateFortress', name: 'Pirate Fortress', viewName: 'pirateFortress', icon: '/cdn/all/both/img/city/pirateFortress_l.png', buildingId: 30, helpId: 1 },
-
-    { key: 'blackMarket', name: 'Black Market', viewName: 'blackMarket', icon: '/cdn/all/both/img/city/blackmarket_l.png', buildingId: 31, helpId: 1 }
+    { key: 'pirateFortress', name: 'Pirate Fortress', viewName: 'pirateFortress', icon: '/cdn/all/both/img/city/pirateFortress_l.png', buildingId: 30, helpId: 1, category: 'special' },
+    { key: 'blackMarket', name: 'Black Market', viewName: 'blackMarket', icon: '/cdn/all/both/img/city/blackmarket_l.png', buildingId: 31, helpId: 1, category: 'special' }
 ]);
 
 // validBuildingTypes is always in sync with TNT_BUILDING_DEFINITIONS
@@ -569,142 +568,12 @@ const tnt = {
             const settings = tnt.settings.getFeatureSettings();
 
             if (settings.removeFooterNavigation) {
-                // $('div#breadcrumbs').hide();
                 $('div#footer').hide();
             }
 
             if (settings.removeFlyingShop && $("body").attr("id") === "city") {
-                this.removeFlyingShop();
-            }
-        },
-
-        // Dedicated function to remove flying shop elements
-        removeFlyingShop() {
-            const settings = tnt.settings.getFeatureSettings();
-            if (settings.removeFlyingShop) {
                 $('.premiumOfferBox').hide();
                 $('.expandable.resourceShop, .expandable.slot1, .expandable.slot2').remove();
-            }
-        }
-    },
-
-    // Game data getters with better organization and error handling
-    game: {
-        player: {
-            getId() {
-                return tnt.utils.safeGet(() => parseInt(ikariam.model.avatarId), 0);
-            },
-
-            getAlliance() {
-                return {
-                    id: tnt.utils.safeGet(() => parseInt(ikariam.model.avatarAllyId), 0),
-                    hasAlly: tnt.utils.safeGet(() => ikariam.model.hasAlly, false)
-                };
-            }
-        },
-
-        city: {
-            getId() {
-                return tnt.utils.safeGet(() =>
-                    ikariam.model.relatedCityData.selectedCity.replace(/[^\d-]+/g, ""), ""
-                );
-            },
-
-            getName(id) {
-                return tnt.utils.safeGet(() => {
-                    if (id) {
-                        return ikariam.model.relatedCityData["city_" + id].name;
-                    }
-                    return $("#citySelect option:selected").text().split("] ")[1];
-                }, "Unknown City");
-            },
-
-            getLevel() {
-                return $("#js_CityPosition0Level").text();
-            },
-
-            getCoordinates() {
-                return $("#js_islandBreadCoords").text();
-            },
-
-            getProducedTradegood() {
-                return tnt.utils.safeGet(() => ikariam.model.producedTradegood, 0);
-            },
-
-            isOwn() {
-                return tnt.utils.safeGet(() => ikariam.model.isOwnCity, false);
-            },
-
-            getList() {
-                return tnt.utils.safeGet(() => {
-                    const cityList = {};
-                    for (const key in ikariam.model.relatedCityData) {
-                        if (key.startsWith("city_")) {
-                            const cityId = key.replace("city_", "");
-                            cityList[cityId] = {
-                                name: ikariam.model.relatedCityData[key].name,
-                                coordinates: ikariam.model.relatedCityData[key].coords
-                            };
-                        }
-                    }
-                    return cityList;
-                }, {});
-            }
-        },
-
-        resources: {
-            getCurrent() {
-                return {
-                    wood: tnt.utils.safeGet(() => ikariam.model.currentResources.resource, 0),
-                    wine: tnt.utils.safeGet(() => ikariam.model.currentResources[1], 0),
-                    marble: tnt.utils.safeGet(() => ikariam.model.currentResources[2], 0),
-                    crystal: tnt.utils.safeGet(() => ikariam.model.currentResources[3], 0),
-                    sulfur: tnt.utils.safeGet(() => ikariam.model.currentResources[4], 0),
-                    population: tnt.utils.safeGet(() => ikariam.model.currentResources.population, 0),
-                    citizens: tnt.utils.safeGet(() => ikariam.model.currentResources.citizens, 0)
-                };
-            },
-
-            getProduction() {
-                return {
-                    resource: tnt.utils.safeGet(() => ikariam.model.resourceProduction, 0),
-                    tradegood: tnt.utils.safeGet(() => ikariam.model.tradegoodProduction, 0)
-                };
-            },
-
-            getCapacity() {
-                return {
-                    max: tnt.utils.safeGet(() => ikariam.model.maxResources.resource, 0),
-                    wineSpending: tnt.utils.safeGet(() => ikariam.model.wineSpending, 0)
-                };
-            }
-        },
-
-        economy: {
-            getGold() {
-                return tnt.utils.safeGet(() => parseInt(ikariam.model.gold), 0);
-            },
-
-            getAmbrosia() {
-                return tnt.utils.safeGet(() => ikariam.model.ambrosia, 0);
-            },
-
-            getFinances() {
-                return {
-                    income: tnt.utils.safeGet(() => ikariam.model.income, 0),
-                    upkeep: tnt.utils.safeGet(() => ikariam.model.upkeep, 0),
-                    scientistsUpkeep: tnt.utils.safeGet(() => ikariam.model.sciencetistsUpkeep, 0),
-                    godGoldResult: tnt.utils.safeGet(() => ikariam.model.godGoldResult, 0)
-                };
-            }
-        },
-
-        military: {
-            getTransporters() {
-                return {
-                    free: tnt.utils.safeGet(() => ikariam.model.freeTransporters, 0),
-                    max: tnt.utils.safeGet(() => ikariam.model.maxTransporters, 0)
-                };
             }
         }
     },
@@ -1099,6 +968,7 @@ const tnt = {
 
         // Apply layout directly using inline styles (Phase 2)
         applyLayoutDirectly() {
+            const settings = tnt.settings.getLayoutPrefs();
             const layoutPrefs = tnt.data.storage.settings?.layoutPrefs;
             if (!layoutPrefs || !layoutPrefs.maintainLayout || !layoutPrefs.layout) return;
 
@@ -1113,31 +983,44 @@ const tnt = {
                     });
                 }
             }
+
+            // IMPORTANT: Enforce mainbox position if enabled in settings. Do NOT modify or remove this! IT WORKS!
             if (layout.mainbox) {
                 const mainbox = layout.mainbox;
-                if (typeof mainbox.x === 'number' && typeof mainbox.y === 'number') {
-                    $('#mainview').css({
-                        top: mainbox.y + 'px',
-                        left: mainbox.x + 'px',
-                        'z-index': typeof mainbox.z === 'number' ? mainbox.z : ''
-                    });
+                if (ikariam && settings.maintainLayout && mainbox) {
+                    // Apply specific adjustments for Ikariam
+                    if (ikariam.mainbox_x !== mainbox.x) {
+                        ikariam.mainbox_x = mainbox.x;
+                        tnt.core.debug.log(`Ikariam mainbox_x adjusted to ${mainbox.x}`);
+                    }
+                    if (ikariam.mainbox_z !== mainbox.z) {
+                        ikariam.mainbox_z = mainbox.z;
+                        tnt.core.debug.log(`Ikariam mainbox_z adjusted to ${mainbox.z}`);
+                    }
+                } else {
+                    tnt.core.debug.log('Non-Ikariam layout adjustments');
                 }
             }
+
+            // IMPORTANT: Enforce sidebar position if enabled in settings. Do NOT modify or remove this! IT WORKS!
             if (layout.sidebar) {
                 const sidebar = layout.sidebar;
-                if (typeof sidebar.x === 'number' && typeof sidebar.y === 'number') {
-                    $('#container2').css({
-                        top: sidebar.y + 'px',
-                        left: sidebar.x + 'px',
-                        'z-index': typeof sidebar.z === 'number' ? sidebar.z : ''
-                    });
+                if (settings.maintainLayout && sidebar) {
+                    // Apply specific adjustments for Ikariam
+                    if (ikariam.sidebar_x !== sidebar.x) {
+                        ikariam.sidebar_x = sidebar.x;
+                        tnt.core.debug.log(`Ikariam sidebar_x adjusted to ${sidebar.x}`);
+                    }
+                    if (ikariam.sidebar_z !== sidebar.z) {
+                        ikariam.sidebar_z = sidebar.z;
+                        tnt.core.debug.log(`Ikariam sidebar_z adjusted to ${sidebar.z}`);
+                    }
                 }
             }
-            tnt.core.debug.log('Layout applied');
         }
     },
 
-    // Add missing functions that are called but not defined
+    // IMPORTANT: Common functionality that runs on all pages
     all() {
         // Common functionality that runs on all pages
         const settings = this.settings.getFeatureSettings();
@@ -1148,20 +1031,19 @@ const tnt = {
         }
     },
 
+    // IMPORTANT: City-specific functionality
     city() {
-        // City-specific functionality
-        tnt.core.debug.log('City view loaded');
-
         // Apply city-specific modifications
-        tnt.ui.removeFlyingShop();
+        tnt.ui.applyUIModifications();
 
-        // PHASE 2: Apply layout after DOM is rendered
+        // Apply layout after DOM is rendered. This set mainbox to user defined position, if enabled, so it has effect before dialogs are opened
         tnt.utils.applyLayoutDirectly();
     },
 
+    // IMPORTANT: Island-specific functionality
     island() {
         // Island-specific functionality
-        tnt.core.debug.log('Island view loaded');
+        tnt.core.debug.log('[TNT] Island view loaded');
 
         // Show city levels if setting is enabled
         if (tnt.settings.get("islandShowCityLvl", true)) {
@@ -1169,9 +1051,10 @@ const tnt = {
         }
     },
 
+    // IMPORTANT: World-specific functionality
     world() {
         // World map specific functionality
-        tnt.core.debug.log('World map loaded');
+        tnt.core.debug.log('[TNT] World map loaded');
 
         // Apply UI modifications for world map - Found in Ikariam Map Enhancer
         $('.cities').each(function() {
@@ -1185,10 +1068,10 @@ const tnt = {
         $('.piracyInRange').css('opacity', 0.75);
     },
 
-    showCityLevels() {
-        // Delegate to the utility function
-        tnt.utils.displayCityLevels();
-    },
+    // showCityLevels() {
+    //     // Delegate to the utility function
+    //     tnt.utils.displayCityLevels();
+    // },
 
     // Initialize the core module
     core: {
@@ -1394,8 +1277,8 @@ const tnt = {
                 return;
             },
             check() {
-                return; // Disable notifications for now
-                // ...existing notification check code...
+                // Disable notifications for now
+                return;
             }
         },
 
@@ -1444,9 +1327,9 @@ const tnt = {
                         // Check notifications
                         tnt.core.notification.check();
 
-                        // Apply removeFlyingShop during background updates
+                        // Apply removeFlyingShop/sidebar slots removal, during background updates
                         if (view === "city") {
-                            tnt.ui.removeFlyingShop();
+                            tnt.ui.applyUIModifications();
                         }
 
                         switch (view) {
@@ -1596,7 +1479,7 @@ const tnt = {
                 return;
             }
 
-            const isOwnCity = tnt.game.city.isOwn();
+            const isOwnCity = tnt.is.ownCity();
 
             if (isOwnCity) {
                 this.collectOwnCityData(currentCityId);
@@ -1621,9 +1504,9 @@ const tnt = {
                 buildings: {},
                 cityIslandCoords: tnt.get.cityIslandCoords(),
                 producedTradegood: parseInt(tnt.get.producedTradegood()),
-                population: tnt.get.population(),
-                citizens: tnt.get.citizens(),
-                max: tnt.utils.safeGet(() => ikariam.model.maxResources.resource, 0),
+                population: tnt.get.resources.population(),
+                citizens: tnt.get.resources.citizens(),
+                max: tnt.get.resources.max(),
                 wood: tnt.get.resources.wood(),
                 wine: tnt.get.resources.wine(),
                 marble: tnt.get.resources.marble(),
@@ -1697,7 +1580,7 @@ const tnt = {
             // Only show resource tables for own cities
             if (tnt.settings.getResourceDisplaySettings().showResources &&
                 $("body").attr("id") == "city" &&
-                tnt.game.city.isOwn()) {
+                tnt.is.ownCity()) {
 
                 // console.log('[TNT] Showing resource tables');
 
@@ -1724,7 +1607,7 @@ const tnt = {
                 // console.log('[TNT] Created city links:', $cityLinks.length);
             } else {
                 // console.log('[TNT] Not showing resource tables - conditions not met');
-                if (!tnt.game.city.isOwn()) {
+                if (!tnt.is.ownCity()) {
                     // console.log('[TNT] Foreign city detected - not showing own city tables');
                 }
             }
@@ -1815,16 +1698,12 @@ const tnt = {
         },
 
         calculateCategorySpans(mergedColumns) {
-            const buildingCategories = {
-                government: ['townHall', 'palace', 'palaceColony', 'embassy', 'chronosForge'],
-                storage: ['warehouse', 'dump'],
-                trade: ['port', 'dockyard', 'marineChartArchive', 'branchOffice'],
-                resourceReducers: ['carpentering', 'architect', 'vineyard', 'optician', 'fireworker'],
-                resourceEnhancers: ['forester', 'stonemason', 'winegrower', 'glassblowing', 'alchemist'],
-                military: ['wall', 'barracks', 'safehouse', 'workshop', 'shipyard'],
-                culture: ['tavern', 'museum', 'academy', 'temple', 'shrineOfOlympus'],
-                special: ['pirateFortress', 'blackMarket']
-            };
+            // Dynamically generate buildingCategories from TNT_BUILDING_DEFINITIONS
+            const buildingCategories = TNT_BUILDING_DEFINITIONS.reduce((acc, b) => {
+                if (!acc[b.category]) acc[b.category] = [];
+                acc[b.category].push(b.key);
+                return acc;
+            }, {});
 
             const categorySpans = {};
             mergedColumns.forEach(col => {
@@ -2894,54 +2773,178 @@ const tnt = {
         }
     },
 
+    // Game data getters with better organization and error handling
+    game: {
+        player: {
+            getId() {
+                return tnt.get.player.id();
+            },
+
+            getAlliance() {
+                return {
+                    id: tnt.utils.safeGet(() => parseInt(ikariam.model.avatarAllyId), 0),
+                    hasAlly: tnt.utils.safeGet(() => ikariam.model.hasAlly, false)
+                };
+            }
+        },
+
+        city: {
+            getId() {
+                return tnt.utils.safeGet(() =>
+                    ikariam.model.relatedCityData.selectedCity.replace(/[^\d-]+/g, ""), ""
+                );
+            },
+
+            getName(id) {
+                return tnt.utils.safeGet(() => {
+                    if (id) {
+                        return ikariam.model.relatedCityData["city_" + id].name;
+                    }
+                    return $("#citySelect option:selected").text().split("] ")[1];
+                }, "Unknown City");
+            },
+
+            // Use: tnt.get.city.level()
+            // getLevel() { return tnt.get.cityLvl(); },
+
+            getCoordinates() {
+                return $("#js_islandBreadCoords").text();
+            },
+
+            getProducedTradegood() {
+                return tnt.utils.safeGet(() => ikariam.model.producedTradegood, 0);
+            },
+
+            isOwn() { return tnt.is.ownCity(); },
+
+            getList() {
+                return tnt.utils.safeGet(() => {
+                    const cityList = {};
+                    for (const key in ikariam.model.relatedCityData) {
+                        if (key.startsWith("city_")) {
+                            const cityId = key.replace("city_", "");
+                            cityList[cityId] = {
+                                name: ikariam.model.relatedCityData[key].name,
+                                coordinates: ikariam.model.relatedCityData[key].coords
+                            };
+                        }
+                    }
+                    return cityList;
+                }, {});
+            }
+        },
+
+        resources: {
+            getCurrent() {
+                return {
+                    wood: tnt.get.resources.wood(),
+                    wine: tnt.get.resources.wine(),
+                    marble: tnt.get.resources.marble(),
+                    crystal: tnt.get.resources.crystal(),
+                    sulfur: tnt.get.resources.sulfur(),
+                    population: tnt.get.resources.population(),
+                    citizens: tnt.get.resources.citizens()
+                };
+            },
+
+            getProduction() {
+                return {
+                    resource: tnt.utils.safeGet(() => ikariam.model.resourceProduction, 0),
+                    tradegood: tnt.utils.safeGet(() => ikariam.model.tradegoodProduction, 0)
+                };
+            },
+
+            getCapacity() {
+                return {
+                    max: tnt.utils.safeGet(() => ikariam.model.maxResources.resource, 0),
+                    wineSpending: tnt.utils.safeGet(() => ikariam.model.wineSpending, 0)
+                };
+            }
+        },
+
+        economy: {
+            getGold() {
+                return tnt.utils.safeGet(() => parseInt(ikariam.model.gold), 0);
+            },
+
+            getAmbrosia() {
+                return tnt.utils.safeGet(() => ikariam.model.ambrosia, 0);
+            },
+
+            getFinances() {
+                return {
+                    income: tnt.utils.safeGet(() => ikariam.model.income, 0),
+                    upkeep: tnt.utils.safeGet(() => ikariam.model.upkeep, 0),
+                    scientistsUpkeep: tnt.utils.safeGet(() => ikariam.model.sciencetistsUpkeep, 0),
+                    godGoldResult: tnt.utils.safeGet(() => ikariam.model.godGoldResult, 0)
+                };
+            }
+        },
+
+        military: {
+            getTransporters() {
+                return {
+                    free: tnt.utils.safeGet(() => ikariam.model.freeTransporters, 0),
+                    max: tnt.utils.safeGet(() => ikariam.model.maxTransporters, 0)
+                };
+            }
+        }
+    },
+
     // BEGIN: DO NOT MODIFY - Fixed logic
     // Legacy compatibility - Here all the communication with Ikariam is handled
     // Should only be changed by the core team
     // These has to work for the rest of the code to work properly. We keep them here so we only have to change them in one place.
 
     get: {
-        playerId: () => tnt.game.player.getId(),
-        cityId() {
-            // Method 1: From URL parameters (most reliable during city switches)
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlCityId = urlParams.get('cityId') || urlParams.get('currentCityId');
-
-            if (urlCityId && urlCityId !== 'undefined' && urlCityId !== '') {
-                return urlCityId;
-            }
-
-            // Method 2: From Ikariam model
-            let modelCityId;
-            try {
-                modelCityId = ikariam.model.relatedCityData.selectedCity.replace(/[^\d-]+/g, "");
-                if (modelCityId && modelCityId !== 'undefined' && modelCityId !== '') {
-                    return modelCityId;
-                }
-            } catch (e) {
-                // Continue to next method
-            }
-
-            // Method 3: From global menu (fallback)
-            const menuCityId = $('#js_GlobalMenu_citySelect').attr('name');
-            if (menuCityId && menuCityId !== 'undefined' && menuCityId !== '') {
-                return menuCityId;
-            }
-
-            // Method 4: Fallback to first city from city list
-            const cities = this.cityList();
-            const cityIds = Object.keys(cities);
-            if (cityIds.length > 0) {
-                // Clean up debug logging
-                // tnt.core.debug.log('Using fallback city ID: ' + cityIds[0]);
-                return cityIds[0];
-            }
-
-            // Clean up debug logging - only log real errors
-            console.warn('TNT: No valid city ID found');
-            return null;
+        playerId: () => tnt.get.player.id(),
+        player: {
+            id: () => tnt.utils.safeGet(() => parseInt(ikariam.model.avatarId), 0),
         },
+        cityId: () => tnt.get.city.id(),
+        city: {
+            level: () => $("js_CityPosition0Level").text(),
+            id: () => {
+                // Method 1: From URL parameters (most reliable during city switches)
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlCityId = urlParams.get('cityId') || urlParams.get('currentCityId');
 
-        cityLvl: () => tnt.game.city.getLevel(),
+                if (urlCityId && urlCityId !== 'undefined' && urlCityId !== '') {
+                    return urlCityId;
+                }
+
+                // Method 2: From Ikariam model
+                let modelCityId;
+                try {
+                    modelCityId = ikariam.model.relatedCityData.selectedCity.replace(/[^\d-]+/g, "");
+                    if (modelCityId && modelCityId !== 'undefined' && modelCityId !== '') {
+                        return modelCityId;
+                    }
+                } catch (e) {
+                    // Continue to next method
+                }
+
+                // Method 3: From global menu (fallback)
+                const menuCityId = $('#js_GlobalMenu_citySelect').attr('name');
+                if (menuCityId && menuCityId !== 'undefined' && menuCityId !== '') {
+                    return menuCityId;
+                }
+
+                // Method 4: Fallback to first city from city list
+                const cities = this.cityList();
+                const cityIds = Object.keys(cities);
+                if (cityIds.length > 0) {
+                    // Clean up debug logging
+                    // tnt.core.debug.log('Using fallback city ID: ' + cityIds[0]);
+                    return cityIds[0];
+                }
+
+                // Clean up debug logging - only log real errors
+                console.warn('TNT: No valid city ID found');
+                return null;
+            }
+        },
+        cityLvl: () => tnt.get.city.level(),
         cityIslandCoords: () => tnt.game.city.getCoordinates(),
         cityName: (id) => tnt.game.city.getName(id),
         producedTradegood: () => tnt.game.city.getProducedTradegood(),
@@ -2957,15 +2960,23 @@ const tnt = {
         },
 
         resources: {
-            wood: () => tnt.game.resources.getCurrent().wood,
-            wine: () => tnt.game.resources.getCurrent().wine,
-            marble: () => tnt.game.resources.getCurrent().marble,
-            crystal: () => tnt.game.resources.getCurrent().crystal,
-            sulfur: () => tnt.game.resources.getCurrent().sulfur
+            // Current resource levels
+            wood: () => tnt.utils.safeGet(() => ikariam.model.currentResources.resource, 0),
+            wine: () => tnt.utils.safeGet(() => ikariam.model.currentResources[1], 0),
+            marble: () => tnt.utils.safeGet(() => ikariam.model.currentResources[2], 0),
+            crystal: () => tnt.utils.safeGet(() => ikariam.model.currentResources[3], 0),
+            sulfur: () => tnt.utils.safeGet(() => ikariam.model.currentResources[4], 0),
+            // Current population and citizens
+            population: () => tnt.utils.safeGet(() => ikariam.model.currentResources.population, 0),
+            citizens: () => tnt.utils.safeGet(() => ikariam.model.currentResources.citizens, 0),
+
+            // Current max resource capacities
+            max: () => tnt.utils.safeGet(() => ikariam.model.maxResources.resource, 0)
         },
 
-        population: () => tnt.game.resources.getCurrent().population,
-        citizens: () => tnt.game.resources.getCurrent().citizens,
+        population: () => tnt.get.resources.population(),
+        citizens: () => tnt.get.resources.citizens(),
+
         income: () => tnt.game.economy.getFinances().income,
         upkeep: () => tnt.game.economy.getFinances().upkeep,
         scientistsUpkeep: () => tnt.game.economy.getFinances().scientistsUpkeep,
@@ -2978,6 +2989,10 @@ const tnt = {
         construction: () => tnt.utils.hasConstruction()
     },
 
+    is: {
+        // Check if the current city is the player's own city
+        ownCity: () => tnt.utils.safeGet(() => ikariam.model.isOwnCity, false)
+    },
     // Add missing has object
     has: {
         construction: () => tnt.utils.hasConstruction()
