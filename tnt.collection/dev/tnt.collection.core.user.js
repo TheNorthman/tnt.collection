@@ -978,7 +978,6 @@ const tnt = {
             if (layout.citymap) {
                 const citymap = layout.citymap;
                 if (citymap) {
-                    tnt.core.debug.log(`Applying citymap position: top=${citymap.top}, left=${citymap.left}`);
                     $('#worldmap').css({
                         top: citymap.top + 'px',
                         left: citymap.left + 'px',
@@ -998,8 +997,6 @@ const tnt = {
                     if (ikariam.mainbox_z !== mainbox.z) {
                         ikariam.mainbox_z = mainbox.z;
                     }
-                } else {
-                    tnt.core.debug.log('Non-Ikariam layout adjustments');
                 }
             }
 
@@ -1010,11 +1007,9 @@ const tnt = {
                     // Apply specific adjustments for Ikariam
                     if (ikariam.sidebar_x !== sidebar.x) {
                         ikariam.sidebar_x = sidebar.x;
-                        tnt.core.debug.log(`Ikariam sidebar_x adjusted to ${sidebar.x}`);
                     }
                     if (ikariam.sidebar_z !== sidebar.z) {
                         ikariam.sidebar_z = sidebar.z;
-                        tnt.core.debug.log(`Ikariam sidebar_z adjusted to ${sidebar.z}`);
                     }
                 }
             }
@@ -1473,7 +1468,7 @@ const tnt = {
     // dataCollector = Collects and stores resource data
     dataCollector: {
         update() {
-            const currentCityId = tnt.get.cityId();
+            const currentCityId = tnt.get.city.id();
 
             // Skip data collection if no valid city ID
             if (!currentCityId || currentCityId === 'undefined') {
@@ -1514,7 +1509,7 @@ const tnt = {
                 crystal: tnt.get.resources.crystal(),
                 sulfur: tnt.get.resources.sulfur(),
                 hasConstruction: false,
-                cityLvl: tnt.get.cityLvl(),
+                cityLvl: tnt.get.city.level(),
                 resourceProduction: tnt.get.resourceProduction(),
                 tradegoodProduction: tnt.get.tradegoodProduction(),
                 lastUpdate: Date.now(),
@@ -1549,7 +1544,7 @@ const tnt = {
                 ownerName: ownerName,
                 ownerId: parseInt(ownerId),
                 cityIslandCoords: tnt.get.cityIslandCoords(),
-                cityLvl: tnt.get.cityLvl(),
+                cityLvl: tnt.get.city.level(),
                 producedTradegood: parseInt(tnt.get.producedTradegood()),
                 hasSpyAccess: hasSpyAccess,
                 buildings: {},
@@ -1773,7 +1768,7 @@ const tnt = {
             const cities = tnt.data.storage.city || {};
             const sortedCityIds = tnt.dataCollector.sortCities();
             const settings = tnt.settings.getResourceDisplaySettings();
-            const currentCityId = tnt.get.cityId();
+            const currentCityId = tnt.get.city.id();
 
             // console.log('[TNT] Building resource table with cities:', Object.keys(cities).length);
             // console.log('[TNT] Current city ID:', currentCityId);
@@ -1964,7 +1959,7 @@ const tnt = {
         buildBuildingTable() {
             const cities = tnt.data.storage.city || {};
             const sortedCityIds = tnt.dataCollector.sortCities();
-            const currentCityId = tnt.get.cityId();
+            const currentCityId = tnt.get.city.id();
             const buildingDefs = tnt.dataCollector.getBuildingDefinitions();
             const mergedColumns = tnt.dataCollector.getMergedBuildingColumns(buildingDefs);
             const categorySpans = tnt.dataCollector.calculateCategorySpans(mergedColumns);
@@ -2414,7 +2409,7 @@ const tnt = {
         visitedCities: [],
 
         start() {
-            this.startCityId = tnt.get.cityId();
+            this.startCityId = tnt.get.city.id();
 
             if (!this.startCityId) {
                 // console.log('[TNT] Cannot start - no valid city ID detected');
@@ -2483,10 +2478,9 @@ const tnt = {
         },
 
         updateVisualProgress() {
-            // console.log(`[TNT] Visual update - Active: ${this.isActive}, Current: ${tnt.get.cityId()}`);
-
+            // 
             if ($('#tnt_info_resources').is(':visible') && $("body").attr("id") === "city") {
-                setTimeout(() => {
+                // setTimeout(() => {
                     const resourceTable = tnt.tableBuilder.buildTable('resources');
                     $('#tnt_info_resources_content').html(resourceTable);
 
@@ -2494,8 +2488,7 @@ const tnt = {
                     $('#tnt_info_buildings_content').html(buildingTable);
 
                     tnt.tableBuilder.attachEventHandlers();
-                    // console.log('[TNT] Tables updated');
-                }, 300);
+                // }, 300);
             }
         },
 
@@ -2805,9 +2798,6 @@ const tnt = {
                 }, "Unknown City");
             },
 
-            // Use: tnt.get.city.level()
-            // getLevel() { return tnt.get.cityLvl(); },
-
             getCoordinates() {
                 return $("#js_islandBreadCoords").text();
             },
@@ -2898,7 +2888,6 @@ const tnt = {
     // These has to work for the rest of the code to work properly. We keep them here so we only have to change them in one place.
 
     get: {
-        playerId: () => tnt.get.player.id(),
         player: {
             id: () => tnt.utils.safeGet(() => parseInt(ikariam.model.avatarId), 0),
         },
@@ -2945,7 +2934,6 @@ const tnt = {
                 return null;
             }
         },
-        cityLvl: () => tnt.get.city.level(),
         cityIslandCoords: () => tnt.game.city.getCoordinates(),
         cityName: (id) => tnt.game.city.getName(id),
         producedTradegood: () => tnt.game.city.getProducedTradegood(),
