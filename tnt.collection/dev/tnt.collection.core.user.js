@@ -968,18 +968,21 @@ const tnt = {
 
         // Apply layout directly using inline styles (Phase 2)
         applyLayoutDirectly() {
-            const settings = tnt.settings.getLayoutPrefs();
-            const layoutPrefs = tnt.data.storage.settings?.layoutPrefs;
-            if (!layoutPrefs || !layoutPrefs.maintainLayout || !layoutPrefs.layout) return;
-
+            const layoutPrefs = tnt.settings.getLayoutPrefs();
             const layout = layoutPrefs.layout;
-            // Defensive checks for each section
+
+            // If the maintainLayout is not enabled or we don't have a layout, we can't apply it
+            if (!layoutPrefs || !layoutPrefs.maintainLayout || !layout) return;
+
+            // IMPORTANT: Enforce citymap position if enabled in settings. Do NOT modify or remove this! IT WORKS!
             if (layout.citymap) {
-                const mapOffset = layout.citymap;
-                if (typeof mapOffset.top === 'number' && typeof mapOffset.left === 'number') {
-                    $('#js_CityContainer').css({
-                        top: mapOffset.top + 'px',
-                        left: mapOffset.left + 'px'
+                const citymap = layout.citymap;
+                if (citymap) {
+                    tnt.core.debug.log(`Applying citymap position: top=${citymap.top}, left=${citymap.left}`);
+                    $('#worldmap').css({
+                        top: citymap.top + 'px',
+                        left: citymap.left + 'px',
+                        transform: `scale(${citymap.zoom || 1})` // Apply zoom if available
                     });
                 }
             }
@@ -987,15 +990,13 @@ const tnt = {
             // IMPORTANT: Enforce mainbox position if enabled in settings. Do NOT modify or remove this! IT WORKS!
             if (layout.mainbox) {
                 const mainbox = layout.mainbox;
-                if (ikariam && settings.maintainLayout && mainbox) {
+                if (ikariam && layout.maintainLayout && mainbox) {
                     // Apply specific adjustments for Ikariam
                     if (ikariam.mainbox_x !== mainbox.x) {
                         ikariam.mainbox_x = mainbox.x;
-                        tnt.core.debug.log(`Ikariam mainbox_x adjusted to ${mainbox.x}`);
                     }
                     if (ikariam.mainbox_z !== mainbox.z) {
                         ikariam.mainbox_z = mainbox.z;
-                        tnt.core.debug.log(`Ikariam mainbox_z adjusted to ${mainbox.z}`);
                     }
                 } else {
                     tnt.core.debug.log('Non-Ikariam layout adjustments');
@@ -1005,7 +1006,7 @@ const tnt = {
             // IMPORTANT: Enforce sidebar position if enabled in settings. Do NOT modify or remove this! IT WORKS!
             if (layout.sidebar) {
                 const sidebar = layout.sidebar;
-                if (settings.maintainLayout && sidebar) {
+                if (layout.maintainLayout && sidebar) {
                     // Apply specific adjustments for Ikariam
                     if (ikariam.sidebar_x !== sidebar.x) {
                         ikariam.sidebar_x = sidebar.x;
@@ -1367,19 +1368,19 @@ const tnt = {
                                 if (layoutPrefs && layoutPrefs.maintainLayout && layoutPrefs.layout) {
                                     const layout = layoutPrefs.layout;
                                     // Defensive null checks
-                                    if (layout.mainbox) {
-                                        if (typeof layout.mainbox.x === 'number') ikariam.mainbox_x = layout.mainbox.x;
-                                        if (typeof layout.mainbox.y === 'number') ikariam.mainbox_y = layout.mainbox.y;
-                                        if (typeof layout.mainbox.z === 'number') ikariam.mainbox_z = layout.mainbox.z;
-                                    }
-                                    if (layout.sidebar) {
-                                        if (typeof layout.sidebar.x === 'number') ikariam.sidebar_x = layout.sidebar.x;
-                                        if (typeof layout.sidebar.y === 'number') ikariam.sidebar_y = layout.sidebar.y;
-                                        if (typeof layout.sidebar.z === 'number') ikariam.sidebar_z = layout.sidebar.z;
-                                    }
-                                    if (layout.citymap && typeof layout.citymap.zoom === 'number') {
-                                        localStorage.setItem('cityWorldviewScale', layout.citymap.zoom.toString());
-                                    }
+                                    // if (layout.mainbox) {
+                                    //     if (typeof layout.mainbox.x === 'number') ikariam.mainbox_x = layout.mainbox.x;
+                                    //     if (typeof layout.mainbox.y === 'number') ikariam.mainbox_y = layout.mainbox.y;
+                                    //     if (typeof layout.mainbox.z === 'number') ikariam.mainbox_z = layout.mainbox.z;
+                                    // }
+                                    // if (layout.sidebar) {
+                                    //     if (typeof layout.sidebar.x === 'number') ikariam.sidebar_x = layout.sidebar.x;
+                                    //     if (typeof layout.sidebar.y === 'number') ikariam.sidebar_y = layout.sidebar.y;
+                                    //     if (typeof layout.sidebar.z === 'number') ikariam.sidebar_z = layout.sidebar.z;
+                                    // }
+                                    // if (layout.citymap && typeof layout.citymap.zoom === 'number') {
+                                    //     localStorage.setItem('cityWorldviewScale', layout.citymap.zoom.toString());
+                                    // }
                                 }
                             }
                         } catch (e) {
