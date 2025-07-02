@@ -42,7 +42,7 @@ const TNT_BUILDING_DEFINITIONS = Object.freeze([
     { key: 'branchOffice', name: 'Trading Post', viewName: 'tradingPost', icon: '/cdn/all/both/img/city/branchoffice_l.png', buildingId: 13, helpId: 1, maxedLvl: 20, category: 'trade' },
 
     // Culture & Research
-    { key: 'academy', name: 'Academy', viewName: 'academy', icon: '/cdn/all/both/img/city/academy_l.png', buildingId: 4, helpId: 1, maxedLvl: 32, category: 'culture' },
+    { key: 'academy', name: 'Academy', viewName: 'academy', icon: '/cdn/all/both/img/city/academy_l.png', buildingId: 4, helpId: 1, maxedLvl: 24, category: 'culture' },
     { key: 'museum', name: 'Museum', viewName: 'museum', icon: '/cdn/all/both/img/city/museum_l.png', buildingId: 10, helpId: 1, maxedLvl: 21, category: 'culture' },
     { key: 'tavern', name: 'Tavern', viewName: 'tavern', icon: '/cdn/all/both/img/city/taverne_l.png', buildingId: 9, helpId: 1, maxedLvl: 32, category: 'culture' },
     { key: 'temple', name: 'Temple', viewName: 'temple', icon: '/cdn/all/both/img/city/temple_l.png', buildingId: 28, helpId: 1, maxedLvl: 24, category: 'culture' },
@@ -1335,15 +1335,19 @@ const tnt = {
                             case "city":
                                 break;
                             case "plunder":
+                                case "deploymentFleet":
+                                case "deployment":
+                                case "plunderFleet":
                                 // Select all units when pillaging
                                 setTimeout(() => {
                                     // Set all units to max
-                                    $('#selectArmy .assignUnits .setMax').trigger("click");
+                                    $('#selectArmy .setMax').trigger("click");
+                                    $('#fleetDeploymentForm .setMax').trigger("click");
 
                                     // Set extra transporters to available count
                                     const freeTransporters = parseInt($("#js_GlobalMenu_freeTransporters").text()) || 0;
                                     $('#extraTransporter').val(freeTransporters);
-                                }, 1000);
+                                }, 1500);
                                 break;
                             case 'tradeAdvisor':
                                 tnt.core.debug.log("tradeAdvisor", 3);
@@ -1427,25 +1431,27 @@ const tnt = {
                                     $('.pulldown .btn').trigger('click');
                                 }, 250);
                                 break;
-                            case "deployment":
                             case "plunder":
-                                // Wait for dialog to be ready
-                                setTimeout(() => {
-                                    // Select all units
-                                    $('#selectArmy .assignUnits .setMax').trigger("click");
+                            case "deployment":
+                            case "plunderFleet":
+                            // Wait for dialog to be ready
+                            setTimeout(() => {
+                                // Select all units
+                                $('#selectArmy .assignUnits .setMax').trigger("click");
+                                $('#fleetDeploymentForm .setMax').trigger("click");
 
-                                    // Set initial transporter count
-                                    const freeTransporters = tnt.get.transporters.free();
-                                    $('#extraTransporter').val(freeTransporters);
+                                // Set initial transporter count
+                                const freeTransporters = tnt.get.transporters.free();
+                                $('#extraTransporter').val(freeTransporters);
 
-                                    // Prevent 0 transporters when min is clicked
-                                    $('#selectArmy .assignUnits .setMin').on('click', function () {
-                                        if (parseInt($('#extraTransporter').val()) === 0) {
-                                            $('#extraTransporter').val(tnt.get.transporters.free());
-                                        }
-                                    });
-                                }, 200);
-                                break;
+                                // Prevent 0 transporters when min is clicked
+                                $('#selectArmy .assignUnits .setMin').on('click', function () {
+                                    if (parseInt($('#extraTransporter').val()) === 0) {
+                                        $('#extraTransporter').val(tnt.get.transporters.free());
+                                    }
+                                });
+                            }, 1200);
+                            break;
                         }
 
                         // Run tnt.all() to handle all common tasks
