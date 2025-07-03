@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection Core
-// @version      2.0.3
+// @version      2.0.4
 // @namespace    tnt.collection.core
 // @author       Ronny Jespersen
 // @description  TNT Collection Core - Stable functionality for Ikariam enhancements
@@ -574,6 +574,9 @@ const tnt = {
             if (settings.removeFlyingShop && $("body").attr("id") === "city") {
                 $('.premiumOfferBox').hide();
                 $('.expandable.resourceShop, .expandable.slot1, .expandable.slot2').remove();
+                $('#js_viewCityMenu').css({
+                    'top': '195px'
+                });
             }
         }
     },
@@ -886,6 +889,14 @@ const tnt = {
                 if (levelInfo.level > 0 || levelInfo.underConstruction) {
                     const buildingData = this.createBuildingData(position, buildingType, levelInfo);
                     this.addBuildingToCollection(foundBuildings, buildingData);
+                }
+            });
+
+            // Ensure every building type is present in the collection, even if empty
+            const buildingDefs = TNT_BUILDING_DEFINITIONS || [];
+            buildingDefs.forEach(def => {
+                if (!foundBuildings.hasOwnProperty(def.key)) {
+                    foundBuildings[def.key] = [];
                 }
             });
 
@@ -1660,10 +1671,6 @@ const tnt = {
             return total;
         },
 
-        getBuildingDefinitions() {
-            return TNT_BUILDING_DEFINITIONS;
-        },
-
         getMergedBuildingColumns(buildingColumns) {
             // Determine which building columns are used in any city
             const usedColumns = buildingColumns.filter(function (col) {
@@ -1966,7 +1973,7 @@ const tnt = {
             const cities = tnt.data.storage.city || {};
             const sortedCityIds = tnt.dataCollector.sortCities();
             const currentCityId = tnt.get.city.id();
-            const buildingDefs = tnt.dataCollector.getBuildingDefinitions();
+            const buildingDefs = TNT_BUILDING_DEFINITIONS;
             const mergedColumns = tnt.dataCollector.getMergedBuildingColumns(buildingDefs);
             const categorySpans = tnt.dataCollector.calculateCategorySpans(mergedColumns);
 
