@@ -1038,6 +1038,12 @@ const tnt = {
                     }
                 }
             }
+        },
+
+        buildingExistsInAnyCity(buildingKey, cities) {
+            return Object.values(cities).some(city =>
+                city.buildings && Array.isArray(city.buildings[buildingKey]) && city.buildings[buildingKey].length > 0
+            );
         }
     },
 
