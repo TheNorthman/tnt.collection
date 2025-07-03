@@ -1478,7 +1478,7 @@ const tnt = {
             }
         }
     },
-
+    
     // dataCollector = Collects and stores resource data
     dataCollector: {
         update() {
@@ -1774,17 +1774,16 @@ const tnt = {
             return '';
         },
 
+        // Build the buildings table
         buildResourceTable() {
+            // Ensure we have the necessary data
             const cities = tnt.data.storage.city || {};
             const sortedCityIds = tnt.dataCollector.sortCities();
             const settings = tnt.settings.getResourceDisplaySettings();
             const currentCityId = tnt.get.city.id();
 
-            // console.log('[TNT] Building resource table with cities:', Object.keys(cities).length);
-            // console.log('[TNT] Current city ID:', currentCityId);
-
+            // If no cities or no resources to display, return empty table
             if (sortedCityIds.length === 0) {
-                // console.log('[TNT] No sorted cities available');
                 return '<div>No city data available</div>';
             }
 
@@ -2077,60 +2076,75 @@ const tnt = {
                         // Handle other building types
                         const arr = cityBuildings[building.key];
 
-                        // Show cell if any building exists, even if only under construction
-                        if (Array.isArray(arr) && arr.length > 0) {
-                            let allMaxed = false;
-                            if (
-                                buildingDef &&
-                                typeof buildingDef.maxedLvl === 'number' &&
-                                arr.length > 0
-                            ) {
-                                allMaxed = arr.every(b => ((b.level || 0) >= buildingDef.maxedLvl));
-                            }
-                            if (allMaxed) tdClass += " tnt_building_maxed";
+                    // Show cell if any building exists, even if only under construction
+                    if (Array.isArray(arr) && arr.length > 0) {
+                        let allMaxed = false;
+                        if (
+                            buildingDef &&
+                            typeof buildingDef.maxedLvl === 'number' &&
+                            arr.length > 0
+                        ) {
+                            allMaxed = arr.every(b => ((b.level || 0) >= buildingDef.maxedLvl));
+                        }
+                        if (allMaxed) tdClass += " tnt_building_maxed";
 
-                            // Add green class if any building is upgradable
-                            if (arr.some(b => b.upgradable)) tdClass += " green";
+                        // Add green class if any building is upgradable
+                        if (arr.some(b => b.upgradable)) tdClass += " green";
 
-                            // Always show the sum of current levels (never show dash for existing or under-construction buildings)
-                            const sumLevel = arr.reduce((acc, b) => {
-                                let lvl = 0;
-                                if (typeof b.level === 'number' && b.level > 0) {
-                                    lvl = b.level;
-                                } else if (b.underConstruction) {
-                                    // Try to get previous level from the building link's title
+                        // Always show the sum of current levels (never show dash for existing or under-construction buildings)
+                        // For all cities except the current one, always use stored data (never try DOM)
+                        const isCurrentCity = (cityId == currentCityId);
+                        const sumLevel = arr.reduce((acc, b) => {
+                            let lvl = 0;
+                            if (typeof b.level === 'number' && b.level > 0) {
+                                lvl = b.level;
+                            } else if (b.underConstruction) {
+                                if (isCurrentCity) {
+                                    // Only for current city, try to get previous level from the building link's title
                                     const $link = $("#js_CityPosition" + b.position + "Link");
                                     if ($link.length) {
                                         const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
                                         if (m) lvl = parseInt(m[1], 10);
                                     }
                                 }
-                                return acc + lvl;
-                            }, 0);
-                            const tooltip = arr.map(b => {
-                                let shownLevel = 0;
-                                if (typeof b.level === 'number' && b.level > 0) {
-                                    shownLevel = b.level;
-                                } else if (b.underConstruction) {
+                                // If not found or not current city, use level if available, else fallback to 0
+                                if (lvl === 0) {
+                                    lvl = b.level;
+                                }
+                            }
+                            return acc + lvl;
+                        }, 0);
+
+                        const tooltip = arr.map(b => {
+                            let shownLevel = 0;
+                            if (typeof b.level === 'number' && b.level > 0) {
+                                shownLevel = b.level;
+                            } else if (b.underConstruction) {
+                                if (isCurrentCity) {
                                     const $link = $("#js_CityPosition" + b.position + "Link");
                                     if ($link.length) {
                                         const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
                                         if (m) shownLevel = parseInt(m[1], 10);
                                     }
                                 }
-                                let text = 'Pos ' + b.position + ': lvl ' + shownLevel;
-                                if (b.underConstruction) {
-                                    text += ' (Upgrading to ' + (shownLevel + 1) + ')';
+                                // If not found or not current city, use level if available, else fallback to 0
+                                if (shownLevel === 0 && typeof b.level === 'number') {
+                                    shownLevel = b.level;
                                 }
-                                return text;
-                            }).join('\\n');
-                            bgColor = arr.some(building => building.underConstruction) ? '#80404050' : '#fdf7dd';
+                            }
+                            let text = 'Pos ' + b.position + ': lvl ' + shownLevel;
+                            if (b.underConstruction) {
+                                text += ' (Upgrading to ' + (shownLevel + 1) + ')';
+                            }
+                            return text;
+                        }).join('\n');
+                        bgColor = arr.some(building => building.underConstruction) ? '#80404050' : '#fdf7dd';
 
-                            html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};" title="${tooltip.replace(/"/g, '&quot;')}">${sumLevel > 0 ? sumLevel : ''}</td>`;
-                        } else {
-                            // Only show blank if truly no building exists
-                            html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;"></td>`;
-                        }
+                        html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};" title="${tooltip.replace(/"/g, '&quot;')}">${sumLevel > 0 ? sumLevel : ''}</td>`;
+                    } else {
+                        // Only show blank if truly no building exists
+                        html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;"></td>`;
+                    }
                     }
                 });
 
