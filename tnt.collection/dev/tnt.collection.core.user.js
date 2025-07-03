@@ -593,12 +593,13 @@ const tnt = {
             }
         },
 
-        // Check if city has construction - simplified
+        // Returns true if any building in the city is currently under construction.
         hasConstruction() {
             return $('.constructionSite').length > 0;
         },
 
-        // Calculate production for a city over time - update to use new storage structure
+        // Calculates resource and tradegood production for a city over a given number of hours.
+        // Returns an object with formatted string values for each resource.
         calculateProduction(cityID, hours) {
             const city = tnt.data.storage.city[cityID]; // Use new storage structure
             if (city && city.hasOwnProperty('resourceProduction') && city.hasOwnProperty('tradegoodProduction')) {
@@ -619,14 +620,15 @@ const tnt = {
             return { wood: "0", wine: "0", marble: "0", crystal: "0", sulfur: "0" };
         },
 
-        // Extract level from CSS classes pattern
+        // Extracts the building level from the element's CSS class (e.g., "level12").
+        // Returns the level as a string or '?' if not found.
         extractLevelFromElement($element) {
             const classes = $element.attr('class') || '';
             const levelMatch = classes.match(/level(\d+)/);
             return levelMatch ? levelMatch[1] : '?';
         },
 
-        // Create level indicator element
+        // Creates a DOM element to visually display the city level.
         createLevelIndicator(level) {
             return $('<div class="tntLvl">' + level + '</div>');
         },
@@ -658,7 +660,8 @@ const tnt = {
             }
         },
 
-        // Complete city level display logic
+        // Displays level indicators for all player cities on the island view.
+        // Skips non-city elements and avoids duplicate indicators.
         displayCityLevels() {
             // Only run on island view
             if (!this.isIslandView()) return;
@@ -698,11 +701,11 @@ const tnt = {
             return $element.hasClass('constructionSite');
         },
 
-        // Extract building level information
+        // Extracts the current level, under construction, and upgradable state for a building element.
+        // Handles multiple DOM patterns and fallback cases for robustness.
         extractBuildingLevel($element) {
             // Robustly determine the position (data-position, data-id, or from id attribute)
-            let currentLevel = 0;
-            let targetLevel = undefined;
+            let level = 0;
             let position = $element.data('position');
             if (typeof position === 'undefined') {
                 position = $element.data('id');
@@ -725,7 +728,7 @@ const tnt = {
                 if ($levelSpan.length) {
                     const txt = $levelSpan.text().trim();
                     if (/^\d+$/.test(txt)) {
-                        currentLevel = parseInt(txt, 10);
+                        level = parseInt(txt, 10);
                         usedDirectLevel = true;
                     }
                 }
@@ -737,34 +740,16 @@ const tnt = {
                 if ($level.length > 0) {
                     const levelText = $level.text();
                     const match = levelText.match(/\d+/);
-                    if (match) currentLevel = parseInt(match[0], 10);
-                    // Try to extract target level if under construction and text like "0 → 1"
-                    const arrowMatch = levelText.match(/→\s*(\d+)/);
-                    if (arrowMatch) targetLevel = parseInt(arrowMatch[1], 10);
+                    if (match) level = parseInt(match[0], 10);
                 } else {
                     // Fallback: try to extract from class
                     const classes = ($element.attr('class') || '').split(/\s+/);
                     const levelClass = classes.find(c => c.startsWith('level'));
                     if (levelClass) {
                         const match = levelClass.match(/\d+$/);
-                        if (match) currentLevel = parseInt(match[0], 10);
+                        if (match) level = parseInt(match[0], 10);
                     }
                 }
-            }
-
-            // Try to extract target level from a .nextLevel or similar element if available
-            if (underConstruction && typeof targetLevel === 'undefined') {
-                const $next = $element.find('.nextLevel');
-                if ($next.length > 0) {
-                    const nextText = $next.text();
-                    const nextMatch = nextText.match(/\d+/);
-                    if (nextMatch) targetLevel = parseInt(nextMatch[0], 10);
-                }
-            }
-
-            // If under construction and targetLevel found, use it as the level
-            if (underConstruction && typeof targetLevel === 'number' && targetLevel > 0) {
-                currentLevel = targetLevel;
             }
 
             // Detect upgradable (green) state from scroll name
@@ -779,10 +764,8 @@ const tnt = {
             if (!upgradable && $element.find('.green').length > 0) upgradable = true;
 
             return {
-                currentLevel,
-                level: currentLevel, // for compatibility
+                level,
                 underConstruction,
-                targetLevel,
                 upgradable
             };
         },
@@ -791,16 +774,14 @@ const tnt = {
         createBuildingData(position, buildingType, levelInfo) {
             return {
                 position,
-                level: levelInfo.targetLevel || levelInfo.level,
-                currentLevel: levelInfo.level,
-                targetLevel: levelInfo.targetLevel,
+                level: levelInfo.level,
                 name: buildingType,
                 underConstruction: levelInfo.underConstruction,
                 upgradable: levelInfo.upgradable // Store upgradable state
             };
         },
 
-        // Add building to collection
+        // Adds or updates a building entry in the provided collection by building type and position.
         addBuildingToCollection(collection, buildingData) {
             const buildingType = buildingData.name;
             collection[buildingType] = collection[buildingType] || [];
@@ -813,7 +794,9 @@ const tnt = {
             }
         },
 
-        // Complete building detection for current city
+        // Scans all building positions in the current city and returns a collection of detected buildings.
+        // Ensures under-construction buildings are always included, even if level is 0.
+        // Guarantees every building type is present in the result, even if not found.
         scanAllBuildings() {
             const $positions = $('div[id^="position"].building, div[id^="js_CityPosition"].building');
             if (!$positions.length) return { buildings: {}, hasConstruction: false };
@@ -854,8 +837,6 @@ const tnt = {
                         const buildingData = {
                             position: 0,
                             level: level,
-                            currentLevel: level,
-                            targetLevel: undefined,
                             name: 'townHall',
                             underConstruction: underConstruction,
                             upgradable: upgradable
@@ -893,7 +874,6 @@ const tnt = {
                     // For buildings under construction with level 0, set level to 0 but mark as under construction
                     if (isUnderConstruction && levelInfo.level <= 0) {
                         levelInfo.level = 0;
-                        levelInfo.currentLevel = 0;
                     }
 
                     const buildingData = this.createBuildingData(position, buildingType, levelInfo);
@@ -920,7 +900,8 @@ const tnt = {
             };
         },
 
-        // City switching utility function - extracted from tableBuilder.attachEventHandlers
+        // Attempts to switch to the specified city using several fallback methods.
+        // Tries AJAX, dropdown, and direct URL navigation for maximum compatibility.
         switchToCity(cityId) {
             // tntConsole.log('[TNT] Utils switching to city:', cityId);
 
@@ -991,7 +972,8 @@ const tnt = {
             return false;
         },
 
-        // Apply layout directly using inline styles (Phase 2)
+        // Applies user-defined layout preferences to the city view using inline styles.
+        // Only applies if layout maintenance is enabled and layout data is available.
         applyLayoutDirectly() {
             const layoutPrefs = tnt.settings.getLayoutPrefs();
             const layout = layoutPrefs.layout;
@@ -1094,11 +1076,6 @@ const tnt = {
         $('.own, .ally').css('filter', 'drop-shadow(0px 10px 4px #000)');
         $('.piracyInRange').css('opacity', 0.75);
     },
-
-    // showCityLevels() {
-    //     // Delegate to the utility function
-    //     tnt.utils.displayCityLevels();
-    // },
 
     // Initialize the core module
     core: {
@@ -2108,7 +2085,7 @@ const tnt = {
                                 typeof buildingDef.maxedLvl === 'number' &&
                                 arr.length > 0
                             ) {
-                                allMaxed = arr.every(b => ((b.currentLevel || b.level || 0) >= buildingDef.maxedLvl));
+                                allMaxed = arr.every(b => ((b.level || 0) >= buildingDef.maxedLvl));
                             }
                             if (allMaxed) tdClass += " tnt_building_maxed";
 
@@ -2118,9 +2095,7 @@ const tnt = {
                             // Always show the sum of current levels (never show dash for existing or under-construction buildings)
                             const sumLevel = arr.reduce((acc, b) => {
                                 let lvl = 0;
-                                if (typeof b.currentLevel === 'number' && b.currentLevel > 0) {
-                                    lvl = b.currentLevel;
-                                } else if (typeof b.level === 'number' && b.level > 0) {
+                                if (typeof b.level === 'number' && b.level > 0) {
                                     lvl = b.level;
                                 } else if (b.underConstruction) {
                                     // Try to get previous level from the building link's title
@@ -2134,9 +2109,7 @@ const tnt = {
                             }, 0);
                             const tooltip = arr.map(b => {
                                 let shownLevel = 0;
-                                if (typeof b.currentLevel === 'number' && b.currentLevel > 0) {
-                                    shownLevel = b.currentLevel;
-                                } else if (typeof b.level === 'number' && b.level > 0) {
+                                if (typeof b.level === 'number' && b.level > 0) {
                                     shownLevel = b.level;
                                 } else if (b.underConstruction) {
                                     const $link = $("#js_CityPosition" + b.position + "Link");
