@@ -704,24 +704,21 @@ const tnt = {
         // Extracts the current level, under construction, and upgradable state for a building element.
         // Handles multiple DOM patterns and fallback cases for robustness.
         extractBuildingLevel($element) {
-            // Robustly determine the position (data-position, data-id, or from id attribute)
             let level = 0;
             let position = $element.data('position');
+
             if (typeof position === 'undefined') {
                 position = $element.data('id');
                 if (typeof position === 'undefined') {
                     const idAttr = $element.attr('id');
-                    if (idAttr) {
-                        const match = idAttr.match(/(\d+)$/);
-                        if (match) position = match[1];
-                    }
+                    const match = idAttr && idAttr.match(/(\d+)$/);
+                    if (match) position = match[1];
                 }
             }
 
-            // Check if under construction
             const underConstruction = $element.hasClass('constructionSite');
 
-            // Try to use #js_CityPosition{position}Level if it exists and contains a number
+            // Try direct level via #js_CityPositionXLevel
             let usedDirectLevel = false;
             if (typeof position !== 'undefined') {
                 const $levelSpan = $("#js_CityPosition" + position + "Level");
@@ -734,15 +731,13 @@ const tnt = {
                 }
             }
 
-            // If not found, fall back to .level element or class
+            // If not found, try from .level span or class fallback
             if (!usedDirectLevel) {
                 const $level = $element.find('.level');
                 if ($level.length > 0) {
-                    const levelText = $level.text();
-                    const match = levelText.match(/\d+/);
+                    const match = $level.text().match(/\d+/);
                     if (match) level = parseInt(match[0], 10);
                 } else {
-                    // Fallback: try to extract from class
                     const classes = ($element.attr('class') || '').split(/\s+/);
                     const levelClass = classes.find(c => c.startsWith('level'));
                     if (levelClass) {
@@ -752,16 +747,26 @@ const tnt = {
                 }
             }
 
-            // Detect upgradable (green) state from scroll name
+            // NEW: fallback if level is still 0 and it's under construction
+            if (underConstruction && level <= 0 && typeof position !== 'undefined') {
+                const $link = $("#js_CityPosition" + position + "Link");
+                if ($link.length) {
+                    const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
+                    if (m) level = parseInt(m[1], 10);
+                }
+            }
+
+            // Check upgradable (scrollName green)
             let upgradable = false;
             if (typeof position !== 'undefined') {
-                const $scrollName = $('#js_CityPosition' + position + 'ScrollName');
-                if ($scrollName.length > 0 && $scrollName.hasClass('green')) {
+                const $scrollName = $("#js_CityPosition" + position + "ScrollName");
+                if ($scrollName.length && $scrollName.hasClass("green")) {
                     upgradable = true;
                 }
             }
-            // Fallback: check descendants (legacy, rarely needed)
-            if (!upgradable && $element.find('.green').length > 0) upgradable = true;
+            if (!upgradable && $element.find('.green').length > 0) {
+                upgradable = true;
+            }
 
             return {
                 level,
@@ -2040,111 +2045,18 @@ const tnt = {
                 html += tnt.dataCollector.getIcon(city.producedTradegood) + ' ' + tnt.get.cityName(cityId);
                 html += '</a></td>';
 
-                // Building level cells
+                // Add building level cells for each merged column
                 mergedColumns.forEach(building => {
-                    const cityBuildings = city.buildings || {};
-                    let tdClass = "tnt_building_level";
-                    let bgColor = "#fdf7dd";
-                    let sumLevel = 0;
-                    let tooltip = "";
+                    const buildingArray = city.buildings?.[building.key] || [];
 
-                    // Find the building definition for maxedLvl
-                    const buildingDef = buildingDefs.find(def => def.key === building.key);
-
-                    // Check for palace/colony buildings
+                    // Special merge handling for palace + palaceColony
                     if (building.key === 'palaceOrColony') {
-                        const palaceArr = Array.isArray(cityBuildings['palace']) ? cityBuildings['palace'] : [];
-                        const colonyArr = Array.isArray(cityBuildings['palaceColony']) ? cityBuildings['palaceColony'] : [];
-                        const buildingData = palaceArr.concat(colonyArr);
-
-                        // Add green class if any palace or palaceColony building is upgradable
-                        if (buildingData.some(b => b.upgradable)) tdClass += " green";
-
-                        // Check for maxed levels
-                        if (buildingData.length > 0) {
-                            sumLevel = buildingData.reduce((acc, building) => acc + (parseInt(building.level) || 0), 0);
-                            tooltip = buildingData.map(building =>
-                                (building.name === 'palace' ? 'Palace' : "Governor's Residence") +
-                                ' (Pos ' + building.position + '): lvl ' + building.level
-                            ).join('\\n');
-                            // Optional: handle maxedLvl for palace/colony if needed
-                            html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;" title="${tooltip.replace(/"/g, '&quot;')}">${sumLevel}</td>`;
-                        } else {
-                            html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;">-</td>`;
-                        }
+                        const palace = city.buildings?.palace || [];
+                        const colony = city.buildings?.palaceColony || [];
+                        const merged = palace.concat(colony);
+                        html += tnt.tableBuilder.renderBuildingLevelCell(merged, building.key, cityId);
                     } else {
-                        // Handle other building types
-                        const arr = cityBuildings[building.key];
-
-                    // Show cell if any building exists, even if only under construction
-                    if (Array.isArray(arr) && arr.length > 0) {
-                        let allMaxed = false;
-                        if (
-                            buildingDef &&
-                            typeof buildingDef.maxedLvl === 'number' &&
-                            arr.length > 0
-                        ) {
-                            allMaxed = arr.every(b => ((b.level || 0) >= buildingDef.maxedLvl));
-                        }
-                        if (allMaxed) tdClass += " tnt_building_maxed";
-
-                        // Add green class if any building is upgradable
-                        if (arr.some(b => b.upgradable)) tdClass += " green";
-
-                        // Always show the sum of current levels (never show dash for existing or under-construction buildings)
-                        // For all cities except the current one, always use stored data (never try DOM)
-                        const isCurrentCity = (cityId == currentCityId);
-                        const sumLevel = arr.reduce((acc, b) => {
-                            let lvl = 0;
-                            if (typeof b.level === 'number' && b.level > 0) {
-                                lvl = b.level;
-                            } else if (b.underConstruction) {
-                                if (isCurrentCity) {
-                                    // Only for current city, try to get previous level from the building link's title
-                                    const $link = $("#js_CityPosition" + b.position + "Link");
-                                    if ($link.length) {
-                                        const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
-                                        if (m) lvl = parseInt(m[1], 10);
-                                    }
-                                }
-                                // If not found or not current city, use level if available, else fallback to 0
-                                if (lvl === 0) {
-                                    lvl = b.level;
-                                }
-                            }
-                            return acc + lvl;
-                        }, 0);
-
-                        const tooltip = arr.map(b => {
-                            let shownLevel = 0;
-                            if (typeof b.level === 'number' && b.level > 0) {
-                                shownLevel = b.level;
-                            } else if (b.underConstruction) {
-                                if (isCurrentCity) {
-                                    const $link = $("#js_CityPosition" + b.position + "Link");
-                                    if ($link.length) {
-                                        const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
-                                        if (m) shownLevel = parseInt(m[1], 10);
-                                    }
-                                }
-                                // If not found or not current city, use level if available, else fallback to 0
-                                if (shownLevel === 0 && typeof b.level === 'number') {
-                                    shownLevel = b.level;
-                                }
-                            }
-                            let text = 'Pos ' + b.position + ': lvl ' + shownLevel;
-                            if (b.underConstruction) {
-                                text += ' (Upgrading to ' + (shownLevel + 1) + ')';
-                            }
-                            return text;
-                        }).join('\n');
-                        bgColor = arr.some(building => building.underConstruction) ? '#80404050' : '#fdf7dd';
-
-                        html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};" title="${tooltip.replace(/"/g, '&quot;')}">${sumLevel > 0 ? sumLevel : ''}</td>`;
-                    } else {
-                        // Only show blank if truly no building exists
-                        html += `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;"></td>`;
-                    }
+                        html += tnt.tableBuilder.renderBuildingLevelCell(buildingArray, building.key, cityId);
                     }
                 });
 
@@ -2162,8 +2074,40 @@ const tnt = {
             html += '</tbody></table>';
             return html;
         },
+        
+        renderBuildingLevelCell(buildingArray, buildingKey, cityId) {
+            let tdClass = "tnt_building_level";
+            let bgColor = "#fdf7dd";
+            let tooltip = "";
+            let levelSum = 0;
+            let hasConstruction = false;
+            let upgradable = false;
 
-        // Phase 4: Visual progress class determination
+            if (!Array.isArray(buildingArray) || buildingArray.length === 0) {
+                return `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};"></td>`;
+            }
+
+            const buildingDef = TNT_BUILDING_DEFINITIONS.find(def => def.key === buildingKey);
+
+            buildingArray.forEach(b => {
+                const lvl = typeof b.level === 'number' ? b.level : 0;
+                levelSum += lvl;
+                if (b.underConstruction) hasConstruction = true;
+                if (b.upgradable) upgradable = true;
+                const upgradeNote = b.underConstruction ? ` (Upgrading to ${lvl + 1})` : "";
+                tooltip += `Pos ${b.position}: lvl ${lvl}${upgradeNote}\n`;
+            });
+
+            if (buildingDef && levelSum >= buildingDef.maxedLvl * buildingArray.length) {
+                tdClass += " tnt_building_maxed";
+            }
+            if (upgradable) tdClass += " green";
+            if (hasConstruction) bgColor = "#80404050";
+
+            return `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};" title="${tooltip.trim().replace(/"/g, '&quot;')}">${levelSum > 0 ? levelSum : '0'}</td>`;
+        },
+
+        // Visual progress class determination
         getProgressClass(cityId, isCurrentCity, hasConstruction, isVisited) {
             if (!tnt.citySwitcher.isActive) {
                 return hasConstruction ? ' tnt_construction' : '';
