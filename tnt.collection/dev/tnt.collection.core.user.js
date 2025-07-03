@@ -869,7 +869,9 @@ const tnt = {
                 // Default logic for all other buildings (never allow townHall at any other position)
                 let buildingType = this.detectBuildingType($pos);
                 if (buildingType === 'townHall') return;
-                if (!buildingType && $pos.hasClass('constructionSite')) {
+                // Enhanced detection for construction sites
+                const isUnderConstruction = $pos.hasClass('constructionSite');
+                if (!buildingType && isUnderConstruction) {
                     const $a = $pos.find('a[href*="view="]');
                     if ($a.length > 0) {
                         const href = $a.attr('href');
@@ -885,10 +887,22 @@ const tnt = {
                 if (!buildingType) return;
 
                 const levelInfo = this.extractBuildingLevel($pos);
-                if (levelInfo.level <= 0 && !levelInfo.underConstruction) return;
-                if (levelInfo.level > 0 || levelInfo.underConstruction) {
+
+                // BUGFIX: Always include buildings under construction, regardless of level
+                if (isUnderConstruction || levelInfo.level > 0) {
+                    // For buildings under construction with level 0, set level to 0 but mark as under construction
+                    if (isUnderConstruction && levelInfo.level <= 0) {
+                        levelInfo.level = 0;
+                        levelInfo.currentLevel = 0;
+                    }
+
                     const buildingData = this.createBuildingData(position, buildingType, levelInfo);
+                    buildingData.underConstruction = isUnderConstruction; // Ensure this flag is always correct
                     this.addBuildingToCollection(foundBuildings, buildingData);
+                }
+                // Skip buildings with level 0 that aren't under construction
+                else if (levelInfo.level <= 0 && !isUnderConstruction) {
+                    return;
                 }
             });
 
