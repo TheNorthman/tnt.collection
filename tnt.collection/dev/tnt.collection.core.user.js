@@ -1373,10 +1373,10 @@ const tnt = {
                     ajax.Responder.changeView = function (response) {
                         var view = $('body').attr('id');
 
-                        // PHASE 1: Set early Ikariam properties before rendering
+                        // Set early Ikariam properties before rendering
                         try {
                             if (ikariam.templateView && ikariam.templateView.id === "city") {
-                                const layoutPrefs = tnt.data.storage.settings?.layoutPrefs;
+                                const layoutPrefs = tnt.data.storage.settings.layoutPrefs;
                                 if (layoutPrefs && layoutPrefs.maintainLayout && layoutPrefs.layout) {
                                     const layout = layoutPrefs.layout;
                                     // Defensive null checks
@@ -1384,11 +1384,13 @@ const tnt = {
                                     //     if (typeof layout.mainbox.x === 'number') ikariam.mainbox_x = layout.mainbox.x;
                                     //     if (typeof layout.mainbox.y === 'number') ikariam.mainbox_y = layout.mainbox.y;
                                     //     if (typeof layout.mainbox.z === 'number') ikariam.mainbox_z = layout.mainbox.z;
+                                    //     tnt.core.debug.log("Setting mainbox position to: " + ikariam.mainbox_x + ", " + ikariam.mainbox_y + ", " + ikariam.mainbox_z, 3);
                                     // }
                                     // if (layout.sidebar) {
                                     //     if (typeof layout.sidebar.x === 'number') ikariam.sidebar_x = layout.sidebar.x;
                                     //     if (typeof layout.sidebar.y === 'number') ikariam.sidebar_y = layout.sidebar.y;
                                     //     if (typeof layout.sidebar.z === 'number') ikariam.sidebar_z = layout.sidebar.z;
+                                    //     tnt.core.debug.log("Setting sidebar position to: " + ikariam.sidebar_x + ", " + ikariam.sidebar_y + ", " + ikariam.sidebar_z, 3);
                                     // }
                                     // if (layout.citymap && typeof layout.citymap.zoom === 'number') {
                                     //     localStorage.setItem('cityWorldviewScale', layout.citymap.zoom.toString());
@@ -2305,16 +2307,17 @@ const tnt = {
             const $containers = $('.tnt_resource_icon_container');
             tnt.core.debug.log('TNT: Adding tooltips to', $containers.length, 'resource icons');
 
+            // Iterate over each container and bind the tooltip
             $containers.each(function () {
                 const $container = $(this);
-                const resourceType = $container.data('resource');
-                const template = TNT_TOOLTIP_TEMPLATES[resourceType];
-
-                if (!template) {
+                let resourceType = $container.data('resource');
+                
+                if (!resourceType || !TNT_TOOLTIP_TEMPLATES.hasOwnProperty(resourceType)) {
                     tnt.core.debug.log('Tooltip template missing for resource:', resourceType);
                     return;
                 }
-
+                
+                const template = TNT_TOOLTIP_TEMPLATES[resourceType];
                 const html = tnt.tooltip.formatTemplateTooltip(template);
 
                 // Remove previous handlers to avoid stacking
