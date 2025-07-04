@@ -15,11 +15,7 @@
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
-// const VERSION_URL = "http://ikariam.rjj-net.dk/scripts/tnt.Collection/version.php";
-// const UPDATE_URL = "http://ikariam.rjj-net.dk/scripts/tnt.Collection/update.php";
-// const UPDATE_HQ_URL = "http://lazy.rjj-net.dk/tnt/ikariam/hq/update";
-
-// Initialize the tnt.console
+// Initialize the tntConsole
 const tntConsole = Object.assign({}, window.console);
 
 // Move large data blocks to separate internal modules for better organization
@@ -125,14 +121,11 @@ const tnt = {
     version: GM_info.script.version,
 
     template, // Add template to tnt object
-    //url: { versionUrl: VERSION_URL, updateUrl: UPDATE_URL, update: UPDATE_HQ_URL },
 
     delay: (time) => new Promise(resolve => setTimeout(resolve, time)),
 
     // Settings module - manage user settings
     settings: {
-        debug: { enable: true },
-
         // Get setting with default value from new storage structure
         get(key, defaultValue = null) {
             return tnt.data.storage.settings?.[key] ?? defaultValue;
@@ -216,7 +209,7 @@ const tnt = {
 
                 return layout;
             } catch (e) {
-                console.warn('TNT: Failed to parse layout URL:', e.message);
+                tnt.core.debug.warn('TNT: Failed to parse layout URL: ' + e.message, 3);
                 return null;
             }
         },
@@ -402,7 +395,11 @@ const tnt = {
     // Initialize the core module
     core: {
         init() {
-            tnt.core.debug.log(`TNT Collection v${tnt.version} - Init...`);
+            // We need to init the storage before anything else, so tnt.core.debug has its settings available
+            tnt.core.storage.init();
+
+            // Log the initialization
+            tnt.core.debug.log(`TNT Collection v${tnt.version} - Init...`, 1);
 
             // We run events.init() first to overwrite the default Ikariam events as early as possible
             tnt.core.events.init();
@@ -446,33 +443,42 @@ const tnt = {
                     },
                     onerror: (error) => {
                         // Keep error logging but make it cleaner
-                        console.error("TNT AJAX Error:", error.message);
+                        tnt.core.debug.error("TNT AJAX Error: " + error.message, 1);
                     }
                 });
             }
         },
 
         debug: {
-            log(val) {
-                // Reduce debug noise - only log important messages
-                if (tnt.settings.debug.enable) {
-                    // Filter out excessive debug messages
-                    if (typeof val === 'string' && (
-                        val.includes('Error in safeGet') ||
-                        val.includes('Using fallback city ID') ||
-                        val.includes('updateGlobalData') ||
-                        val.includes('updateBackgroundData') ||
-                        val.includes('changeView')
-                    )) {
-                        return; // Skip these noisy debug messages
-                    }
+            // Log messages with level control
+            log(val, level = 2) {
+                const debug = tnt.settings.get('debug', { enable: true, level: 1 });
+                if (debug.enable && level <= debug.level) {
                     tntConsole.log(val);
                 }
             },
-            dir(obj, level = 0) {
-                // Only show directory output for level 0 (most important)
-                if (tnt.settings.debug.enable && level === 0) {
-                    tntConsole.dir(obj);
+
+            // Log objects with level control
+            dir(val, level = 2) {
+                const debug = tnt.settings.get('debug', { enable: true, level: 1 });
+                if (debug.enable && level <= debug.level) {
+                    tntConsole.dir(val);
+                }
+            },
+
+            // Log warnings with level control
+            warn(val, level = 3) {
+                const debug = tnt.settings.get('debug', { enable: true, level: 1 });
+                if (debug.enable && level <= debug.level) {
+                    tntConsole.warn(val);
+                }
+            },
+
+            // Log errors with level control
+            error(val, level = 1) {
+                const debug = tnt.settings.get('debug', { enable: true, level: 1 });
+                if (debug.enable && level <= debug.level) {
+                    tntConsole.error(val);
                 }
             }
         },
@@ -480,7 +486,6 @@ const tnt = {
         storage: {
             init() {
                 const scriptStartTime = performance.now();
-                console.log(`[TNT Timing] Script start: ${scriptStartTime.toFixed(2)}ms`);
 
                 try {
                     const storedData = localStorage.getItem("tnt_storage");
@@ -489,13 +494,10 @@ const tnt = {
                         const parsedData = JSON.parse(storedData);
                         const storedVersion = parsedData.version;
 
-                        console.log(`[TNT Timing] Storage parsed: ${(performance.now() - scriptStartTime).toFixed(2)}ms`);
-
                         // Enhanced version check - detect structure compatibility
                         if (storedVersion === tnt.version) {
                             // Same version - use existing data
                             tnt.data.storage = $.extend(true, {}, tnt.data.storage, parsedData);
-                            // console.log('[TNT] Using existing storage data (version match)');
                         } else {
                             // Check if stored data has new structure (city, foreign, spy, settings)
                             const hasNewStructure = parsedData.city &&
@@ -507,12 +509,11 @@ const tnt = {
                                 tnt.data.storage = $.extend(true, {}, tnt.data.storage, parsedData);
                                 tnt.data.storage.version = tnt.version;
                                 tnt.core.storage.save();
-                                // console.log(`[TNT] Updated version from ${storedVersion} to ${tnt.version} (structure compatible)`);
-                            } else {
-                                // Old structure or incompatible - reset and auto-start
-                                // console.log(`[TNT] Incompatible storage structure - resetting and starting data collection`);
-                                // console.log(`[TNT] Stored: ${storedVersion}, Current: ${tnt.version}`);
 
+                                // Log timing information
+                                tnt.core.debug.log(`[TNT Timing] Script start: ${scriptStartTime.toFixed(2)}ms`, 2);
+                                tnt.core.debug.log(`[TNT Timing] Storage parsed: ${(performance.now() - scriptStartTime).toFixed(2)}ms`, 2);
+                            } else {
                                 // Reset to clean defaults with current version
                                 tnt.data.storage.version = tnt.version;
                                 tnt.core.storage.save();
@@ -522,25 +523,18 @@ const tnt = {
                                     const cityList = tnt.get.cityList();
                                     const cityCount = Object.keys(cityList).length;
 
-                                    // console.log(`[TNT] Auto-starting data collection for ${cityCount} cities`);
-
                                     if (cityCount > 1) {
                                         // Multiple cities - start city switcher
-                                        // console.log('[TNT] Starting city switcher for multi-city data collection');
                                         tnt.citySwitcher.start();
                                     } else if (cityCount === 1) {
                                         // Single city - just collect current city data
-                                        // console.log('[TNT] Single city detected - collecting current city data');
                                         tnt.dataCollector.update();
-                                    } else {
-                                        // console.log('[TNT] No cities detected - skipping auto-collection');
                                     }
                                 }, 200);
                             }
                         }
                     } else {
                         // No existing storage - new user
-                        // console.log('[TNT] No existing storage found - new user detected');
                         tnt.data.storage.version = tnt.version;
                         tnt.core.storage.save();
 
@@ -549,29 +543,21 @@ const tnt = {
                             const cityList = tnt.get.cityList();
                             const cityCount = Object.keys(cityList).length;
 
-                            // console.log(`[TNT] New user auto-starting data collection for ${cityCount} cities`);
-
                             if (cityCount > 1) {
                                 // Multiple cities - start city switcher
-                                // console.log('[TNT] Starting city switcher for new user');
                                 tnt.citySwitcher.start();
                             } else if (cityCount === 1) {
                                 // Single city - just collect current city data
-                                // console.log('[TNT] Single city new user - collecting current city data');
                                 tnt.dataCollector.update();
-                            } else {
-                                // console.log('[TNT] New user with no cities - skipping auto-collection');
                             }
                         }, 200);
                     }
 
                     // Check when city list becomes available
                     const cityList = tnt.get.cityList();
-                    // console.log(`[TNT Timing] City list ready: ${(performance.now() - scriptStartTime).toFixed(2)}ms (${Object.keys(cityList).length} cities)`;
 
                 } catch (e) {
-                    tnt.core.debug.log("Error parsing tnt_storage: " + e.message);
-                    // console.log('[TNT] Using default storage structure due to parse error');
+                    tnt.core.debug.log("Error parsing tnt_storage: " + e.message, 1);
 
                     // On parse error, treat as new user
                     tnt.data.storage.version = tnt.version;
@@ -618,10 +604,10 @@ const tnt = {
             init() {
                 // Check if ajax and ajax.Responder exist before overriding
                 if (typeof ajax !== 'undefined' && ajax.Responder) {
-                    tnt.core.debug.log('[TNT] Ajax responder available, applying override');
+                    tnt.core.debug.log('[TNT] Ajax responder available, applying override', 2);
                     tnt.core.events.ikariam.override();
                 } else {
-                    tnt.core.debug.log('[TNT] Ajax responder not available, skipping override');
+                    tnt.core.debug.log('[TNT] Ajax responder not available, skipping override', 2);
                 }
             },
             ikariam: {
@@ -631,7 +617,7 @@ const tnt = {
                     ajax.Responder.updateGlobalData = function (response) {
 
                         var view = $('body').attr('id');
-                        tnt.core.debug.log("updateGlobalData (View: " + view + ")", 3);
+                        tnt.core.debug.warn("[TNT] updateGlobalData (View: " + view + ")", 4);
 
                         // Let Ikariam do its stuff
                         ajax.Responder.tntUpdateGlobalData(response);
@@ -823,7 +809,7 @@ const tnt = {
                         </div>
                     </li>
                 `);
-                this.attachOptionsEventHandlers();
+                tnt.events.attachOptionsEventHandlers();
             }
         },
 
@@ -864,6 +850,17 @@ const tnt = {
                         ${this.createCheckbox('tntAllRemovePremiumOffers', 'Remove Premium Offers', settings.removePremiumOffers)}
                         ${this.createCheckbox('tntAllRemoveFooterNavigation', 'Remove footer navigation', settings.removeFooterNavigation)}
                         ${this.createCheckbox('tntAllChangeNavigationCoord', 'Make footer navigation coord input a number', settings.changeNavigationCoord)}
+                    </div>
+                    <div class="tnt_left" style="float:left;width:50%;">
+                        <legend>Debug:</legend>
+                        ${this.createCheckbox('tntDebugEnable', 'Enable debug logging', tnt.settings.get('debug')?.enable ?? true)}
+                        <label for="tntDebugLevel" style="font-size:11px;">Log level:</label>
+                        <select id="tntDebugLevel" style="font-size:11px;">
+                            <option value="1"${tnt.settings.get('debug')?.level === 1 ? ' selected' : ''}>1 - Errors only</option>
+                            <option value="2"${tnt.settings.get('debug')?.level === 2 ? ' selected' : ''}>2 - Important</option>
+                            <option value="3"${tnt.settings.get('debug')?.level === 3 ? ' selected' : ''}>3 - Warnings</option>
+                            <option value="4"${tnt.settings.get('debug')?.level === 4 ? ' selected' : ''}>4 - Verbose</option>
+                        </select>
                     </div>
                     <div class="tnt_left" style="float:left;width:50%;">
                         <legend>Notifications:</legend>
@@ -909,115 +906,6 @@ const tnt = {
 
         createCheckbox(id, label, checked) {
             return `<input id="${id}" type="checkbox"${checked ? ' checked="checked"' : ''} /> ${label}<br/>`;
-        },
-
-        attachOptionsEventHandlers() {
-            // Open/close dialog
-            $("#tntOptionsLink").on("click", () => $("#tntOptions").slideToggle());
-            $("#tntOptionsClose").on("click", () => {
-                $("#tntOptions").slideToggle();
-                location.reload();
-            });
-
-            // Setting change handlers
-            const settingHandlers = {
-                'tntAllRemovePremiumOffers': 'allRemovePremiumOffers',
-                'tntAllRemoveFooterNavigation': 'allRemoveFooterNavigation',
-                'tntAllChangeNavigationCoord': 'allChangeNavigationCoord',
-                'tntIslandShowCityLvl': 'islandShowCityLvl',
-                'tntCityRemoveFlyingShop': 'cityRemoveFlyingShop',
-                'tntCityShowResources': 'cityShowResources',
-                'tntCityShowResourcesPorpulation': 'cityShowResourcesPorpulation',
-                'tntCityShowResourcesCitizens': 'cityShowResourcesCitizens',
-                'tntCityShowResourcesWoods': 'cityShowResourcesWoods',
-                'tntCityShowResourcesWine': 'cityShowResourcesWine',
-                'tntCityShowResourcesMarble': 'cityShowResourcesMarble',
-                'tntCityShowResourcesCrystal': 'cityShowResourcesCrystal',
-                'tntCityShowResourcesSulfur': 'cityShowResourcesSulfur',
-                'tntNotificationAdvisors': 'notificationAdvisors'
-            };
-
-            Object.entries(settingHandlers).forEach(([elementId, settingKey]) => {
-                $(`#${elementId}`).on("change", () => tnt.settings.toggle(settingKey));
-            });
-
-            // Special handler for notification sound (different toggle logic)
-            $("#tntNotificationSound").on("change", () => {
-                tnt.settings.set("notificationSound", !tnt.settings.get("notificationSound"));
-            });
-
-            // Layout maintenance checkbox handler
-            $("#tntLayoutMaintain").on("change", () => {
-                const isChecked = $("#tntLayoutMaintain").is(':checked');
-                const layoutPrefs = tnt.settings.getLayoutPrefs();
-                
-                if (isChecked) {
-                    layoutPrefs.maintainLayout = true;
-                    $("#tntLayoutUrlSection").show();
-                } else {
-                    // Clear layout preferences when unchecked
-                    tnt.settings.clearLayoutPrefs();
-                    $("#tntLayoutUrlSection").hide();
-                }
-                
-                if (isChecked) {
-                    tnt.settings.setLayoutPrefs(layoutPrefs);
-                }
-            });
-
-            // Layout URL input handler
-            $("#tntLayoutUrl").on("paste blur keypress", function(e) {
-                // Handle paste, blur, or Enter key
-                if (e.type === 'keypress' && e.which !== 13) return;
-
-                setTimeout(() => {
-                    const url = $(this).val().trim();
-
-                    if (url && tnt.settings.isValidIkariamUrl(url)) {
-                        const layout = tnt.settings.parseLayoutFromUrl(url);
-
-                        if (layout) {
-                            const layoutPrefs = {
-                                maintainLayout: true,
-                                url: url,
-                                layout: layout
-                            };
-
-                            tnt.settings.setLayoutPrefs(layoutPrefs);
-
-                            // Show extracted layout data in compact format
-                            function fmt(obj) {
-                                if (!obj || typeof obj !== 'object') return '';
-                                return Object.entries(obj)
-                                    .map(([k, v]) => `${k}:${v}`)
-                                    .join(', ');
-                            }
-                            const citymap = fmt(layout.citymap);
-                            const mainbox = fmt(layout.mainbox);
-                            const sidebar = fmt(layout.sidebar);
-                            const layoutDataHtml = `<div id="tntLayoutCurrentData" style="margin-top:5px;font-size:10px;color:#666;word-break:break-all;line-height:1.4;">
-                                <span><b>citymap</b>: ${citymap || '-'}</span><br/>
-                                <span><b>mainbox</b>: ${mainbox || '-'}</span><br/>
-                                <span><b>sidebar</b>: ${sidebar || '-'}</span>
-                            </div>`;
-                            if ($("#tntLayoutCurrentData").length) {
-                                $("#tntLayoutCurrentData").replaceWith(layoutDataHtml);
-                            } else {
-                                $("#tntLayoutUrlSection").append(layoutDataHtml);
-                            }
-
-                            // Clear the input after successful processing
-                            $(this).val('');
-
-                            console.log('TNT: Layout preferences saved:', layoutPrefs);
-                        } else {
-                            alert('Failed to parse layout parameters from URL');
-                        }
-                    } else if (url) {
-                        alert('Please enter a valid Ikariam URL');
-                    }
-                }, 10);
-            });
         },
 
         // Apply UI modifications based on settings
@@ -1494,6 +1382,7 @@ const tnt = {
         }
     },
 
+    // Event module - handles all event bindings and interactions
     events: {
         attachButtonEvents() {
             // Attach event handlers for minimize/maximize
@@ -1530,7 +1419,131 @@ const tnt = {
             $('.tnt_refresh_btn').off('click').on('click', function () {
                 tnt.citySwitcher.start();
             });
-        }
+        },
+
+        // Attach event handlers for options dialog
+        attachOptionsEventHandlers() {
+            // Open/close dialog
+            $("#tntOptionsLink").on("click", () => $("#tntOptions").slideToggle());
+            $("#tntOptionsClose").on("click", () => {
+                $("#tntOptions").slideToggle();
+                location.reload();
+            });
+
+            // Setting change handlers
+            const settingHandlers = {
+                'tntAllRemovePremiumOffers': 'allRemovePremiumOffers',
+                'tntAllRemoveFooterNavigation': 'allRemoveFooterNavigation',
+                'tntAllChangeNavigationCoord': 'allChangeNavigationCoord',
+                'tntIslandShowCityLvl': 'islandShowCityLvl',
+                'tntCityRemoveFlyingShop': 'cityRemoveFlyingShop',
+                'tntCityShowResources': 'cityShowResources',
+                'tntCityShowResourcesPorpulation': 'cityShowResourcesPorpulation',
+                'tntCityShowResourcesCitizens': 'cityShowResourcesCitizens',
+                'tntCityShowResourcesWoods': 'cityShowResourcesWoods',
+                'tntCityShowResourcesWine': 'cityShowResourcesWine',
+                'tntCityShowResourcesMarble': 'cityShowResourcesMarble',
+                'tntCityShowResourcesCrystal': 'cityShowResourcesCrystal',
+                'tntCityShowResourcesSulfur': 'cityShowResourcesSulfur',
+                'tntNotificationAdvisors': 'notificationAdvisors'
+            };
+
+            Object.entries(settingHandlers).forEach(([elementId, settingKey]) => {
+                $(`#${elementId}`).on("change", () => tnt.settings.toggle(settingKey));
+            });
+
+            // Special handler for notification sound (different toggle logic)
+            $("#tntNotificationSound").on("change", () => {
+                tnt.settings.set("notificationSound", !tnt.settings.get("notificationSound"));
+            });
+
+            // Layout maintenance checkbox handler
+            $("#tntLayoutMaintain").on("change", () => {
+                const isChecked = $("#tntLayoutMaintain").is(':checked');
+                const layoutPrefs = tnt.settings.getLayoutPrefs();
+                
+                if (isChecked) {
+                    layoutPrefs.maintainLayout = true;
+                    $("#tntLayoutUrlSection").show();
+                } else {
+                    // Clear layout preferences when unchecked
+                    tnt.settings.clearLayoutPrefs();
+                    $("#tntLayoutUrlSection").hide();
+                }
+                
+                if (isChecked) {
+                    tnt.settings.setLayoutPrefs(layoutPrefs);
+                }
+            });
+
+            // Layout URL input handler
+            $("#tntLayoutUrl").on("paste blur keypress", function(e) {
+                // Handle paste, blur, or Enter key
+                if (e.type === 'keypress' && e.which !== 13) return;
+
+                setTimeout(() => {
+                    const url = $(this).val().trim();
+
+                    if (url && tnt.settings.isValidIkariamUrl(url)) {
+                        const layout = tnt.settings.parseLayoutFromUrl(url);
+
+                        if (layout) {
+                            const layoutPrefs = {
+                                maintainLayout: true,
+                                url: url,
+                                layout: layout
+                            };
+
+                            tnt.settings.setLayoutPrefs(layoutPrefs);
+
+                            // Show extracted layout data in compact format
+                            function fmt(obj) {
+                                if (!obj || typeof obj !== 'object') return '';
+                                return Object.entries(obj)
+                                    .map(([k, v]) => `${k}:${v}`)
+                                    .join(', ');
+                            }
+                            const citymap = fmt(layout.citymap);
+                            const mainbox = fmt(layout.mainbox);
+                            const sidebar = fmt(layout.sidebar);
+                            const layoutDataHtml = `<div id="tntLayoutCurrentData" style="margin-top:5px;font-size:10px;color:#666;word-break:break-all;line-height:1.4;">
+                                <span><b>citymap</b>: ${citymap || '-'}</span><br/>
+                                <span><b>mainbox</b>: ${mainbox || '-'}</span><br/>
+                                <span><b>sidebar</b>: ${sidebar || '-'}</span>
+                            </div>`;
+                            if ($("#tntLayoutCurrentData").length) {
+                                $("#tntLayoutCurrentData").replaceWith(layoutDataHtml);
+                            } else {
+                                $("#tntLayoutUrlSection").append(layoutDataHtml);
+                            }
+
+                            // Clear the input after successful processing
+                            $(this).val('');
+
+                            tnt.core.debug.log(`[TNT] Layout preferences saved: ${JSON.stringify(layoutPrefs)}`, 2);
+                        } else {
+                            alert('Failed to parse layout parameters from URL');
+                        }
+                    } else if (url) {
+                        alert('Please enter a valid Ikariam URL');
+                    }
+                }, 10);
+            });
+
+            // Debug toggle
+            $('#tntDebugEnable').on('change', () => {
+                const debug = tnt.settings.get('debug', { enable: true, level: 3 });
+                debug.enable = $('#tntDebugEnable').is(':checked');
+                tnt.settings.set('debug', debug);
+            });
+
+            // Debug level change
+            $('#tntDebugLevel').on('change', () => {
+                const debug = tnt.settings.get('debug', { enable: true, level: 3 });
+                debug.level = parseInt($('#tntDebugLevel').val(), 10);
+                tnt.settings.set('debug', debug);
+            });
+        },
     },
 
     // dataCollector = Collects and stores resource data
@@ -2489,7 +2502,7 @@ const tnt = {
                     $(BubbleTips.infoNode).css({ 'z-index': '100000001', 'display': 'block' });
                     BubbleTips.bindBubbleTip(6, 13, html, null, this, false);
                 } catch (err) {
-                    console.warn('TNT: Tooltip bind failed:', err);
+                    tnt.core.debug.warn('TNT: Tooltip bind failed: ' + err, 2);
                 }
             });
 
@@ -2502,7 +2515,7 @@ const tnt = {
 
             const template = TNT_TOOLTIP_TEMPLATES?.[section]?.[key] || TNT_TOOLTIP_TEMPLATES?.[key];
             if (!template) {
-                tnt.core.debug.log(`[TNT] No tooltip template found for section="${section}", key="${key}"`);
+                tnt.core.debug.log(`[TNT] No tooltip template found for section="${section}", key="${key}"`, 2);
                 return;
             }
 
@@ -2513,7 +2526,7 @@ const tnt = {
         // Attach tooltips to elements with class 'tnt_tooltip_target'
         attachTooltips() {
             if (!tnt.tooltip.init()) {
-                console.log('TNT: BubbleTips not available');
+                tnt.core.debug.log('TNT: BubbleTips not available', 2);
                 return;
             }
 
@@ -2538,7 +2551,7 @@ const tnt = {
         // Types: 10 = success (green), 11 = info (yellow), 12 = error (red), 13 = hover tooltip
         create(element, text, type = 13) {
             if (!this.init()) {
-                console.warn('TNT: BubbleTips not available, cannot create tooltip');
+                tnt.core.debug.warn('TNT: BubbleTips not available, cannot create tooltip', 3);
                 return false;
             }
 
@@ -2548,7 +2561,7 @@ const tnt = {
                 BubbleTips.bindBubbleTip(6, type, text, null, element, false);
                 return true;
             } catch (e) {
-                console.error('TNT: Error creating tooltip:', e);
+                tnt.core.debug.error('TNT: Error creating tooltip: ' + e.message, 1);
                 return false;
             }
         }
@@ -2717,7 +2730,7 @@ const tnt = {
                 }
 
                 // Clean up debug logging - only log real errors
-                console.warn('TNT: No valid city ID found');
+                tnt.core.debug.warn('TNT: No valid city ID found', 3);
                 return null;
             }
         },
