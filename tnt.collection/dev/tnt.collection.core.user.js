@@ -2274,7 +2274,7 @@ const tnt = {
                 return false;
             });
 
-            // Panel minimize/maximize - target the spans inside the table
+            // Button: Panel minimize/maximize
             $('.tnt_panel_minimize_btn').off('click').on('click', function () {
                 const $panel = $('#tnt_info_resources');
                 const $btn = $(this);
@@ -2288,7 +2288,7 @@ const tnt = {
                 }
             });
 
-            // Toggle between resources/buildings tables - target the spans inside the table
+            // Button: Toggle between resources/buildings tables
             $('.tnt_table_toggle_btn').off('click').on('click', function () {
                 const $resourceContent = $('#tnt_info_resources_content');
                 const $buildingContent = $('#tnt_info_buildings_content');
@@ -2304,13 +2304,13 @@ const tnt = {
                 }
             });
 
-            // Refresh all cities button - target the spans inside the table
+            // Button: CitySwitcher - Refresh all cities button
             $('.tnt_refresh_btn').off('click').on('click', function () {
                 tnt.citySwitcher.start();
             });
 
             // Add tooltips to resource icons
-            this.addResourceTooltips();
+            this.addResourceTooltips(); // Not sure where to move this. One run once after tables has been build!
         },
 
         addResourceTooltips() {
