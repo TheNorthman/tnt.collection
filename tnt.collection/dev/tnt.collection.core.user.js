@@ -351,689 +351,6 @@ const tnt = {
         }
     },
 
-    // UI module - handle all DOM manipulation and event binding
-    ui: {
-        // Create and show the options dialog
-        showOptionsDialog() {
-            const optionsHtml = this.buildOptionsHtml();
-
-            if ($('#tntOptions').length === 0) {
-                $('li.serverTime').before(`
-                    <li>
-                        <a id="tntOptionsLink" href="javascript:void(0);">TNT Options v${tnt.version}</a>
-                        <div id="tntOptions" class="tntBox" style="display:none;">
-                            ${optionsHtml}
-                        </div>
-                    </li>
-                `);
-                this.attachOptionsEventHandlers();
-            }
-        },
-
-        buildOptionsHtml() {
-            const settings = tnt.settings.getFeatureSettings();
-            const resourceSettings = tnt.settings.getResourceDisplaySettings();
-            const layoutPrefs = tnt.settings.getLayoutPrefs();
-
-            // Prepare extracted layout data display
-            let layoutDataHtml = '';
-            if (layoutPrefs.layout) {
-                // Helper to flatten and format an object as key1:val1, key2:val2
-                function fmt(obj) {
-                    if (!obj || typeof obj !== 'object') return '';
-                    return Object.entries(obj)
-                        .map(([k, v]) => `${k}:${v}`)
-                        .join(', ');
-                }
-                const citymap = fmt(layoutPrefs.layout.citymap);
-                const mainbox = fmt(layoutPrefs.layout.mainbox);
-                const sidebar = fmt(layoutPrefs.layout.sidebar);
-                layoutDataHtml = `<div id="tntLayoutCurrentData" style="margin-top:5px;font-size:10px;color:#666;word-break:break-all;line-height:1.4;">
-                    <span><b>citymap</b>: ${citymap || '-'}</span><br/>
-                    <span><b>mainbox</b>: ${mainbox || '-'}</span><br/>
-                    <span><b>sidebar</b>: ${sidebar || '-'}</span>
-                </div>`;
-            }
-
-            return `
-                <div id="tntUpdateLine" align="center" style="padding-bottom:5px;">
-                    <a id="tntColUpgradeLink" href="" style="display:none;color:blue;font-size:12px;">
-                        Version <span id="tntColVersion"></span> is available. Click here to update now!
-                    </a>
-                </div>
-                <div>
-                    <div class="tnt_left" style="float:left;width:50%;">
-                        <legend>All:</legend>
-                        ${this.createCheckbox('tntAllRemovePremiumOffers', 'Remove Premium Offers', settings.removePremiumOffers)}
-                        ${this.createCheckbox('tntAllRemoveFooterNavigation', 'Remove footer navigation', settings.removeFooterNavigation)}
-                        ${this.createCheckbox('tntAllChangeNavigationCoord', 'Make footer navigation coord input a number', settings.changeNavigationCoord)}
-                    </div>
-                    <div class="tnt_left" style="float:left;width:50%;">
-                        <legend>Notifications:</legend>
-                        ${this.createCheckbox('tntNotificationAdvisors', 'Show notifications from Advisors', settings.notificationAdvisors)}
-                        ${this.createCheckbox('tntNotificationSound', 'Play sound with notifications from Advisors', settings.notificationSound)}
-                    </div>
-                    <div class="tnt_left" style="float:left;width:50%;">
-                        <legend>Islands:</legend>
-                        ${this.createCheckbox('tntIslandShowCityLvl', 'Show Town Levels on Islands', settings.showCityLvl)}
-                    </div>
-                    <div class="tnt_left" style="float:left;width:50%;">
-                        <legend>City:</legend>
-                        ${this.createCheckbox('tntCityRemoveFlyingShop', 'Remove flying shop', settings.removeFlyingShop)}
-                        ${this.createCheckbox('tntCityShowResources', 'Show resources', resourceSettings.showResources)}
-                        <div class="tnt_left" style="padding-left:20px;">
-                            ${this.createCheckbox('tntCityShowResourcesPorpulation', 'Show population', resourceSettings.showPopulation)}
-                            ${this.createCheckbox('tntCityShowResourcesCitizens', 'Show citizens', resourceSettings.showCitizens)}
-                            ${this.createCheckbox('tntCityShowResourcesWoods', 'Show wood', resourceSettings.showWood)}
-                            ${this.createCheckbox('tntCityShowResourcesWine', 'Show Wine', resourceSettings.showWine)}
-                            ${this.createCheckbox('tntCityShowResourcesMarble', 'Show Marble', resourceSettings.showMarble)}
-                            ${this.createCheckbox('tntCityShowResourcesCrystal', 'Show Crystal', resourceSettings.showCrystal)}
-                            ${this.createCheckbox('tntCityShowResourcesSulfur', 'Show Sulfur', resourceSettings.showSulfur)}
-                        </div>
-                    </div>
-                    <div class="tnt_left" style="float:left;width:50%;">
-                        <legend>World Map:</legend>
-                    </div>
-                    <div class="tnt_left" style="float:left;width:50%;">
-                        <legend>Layout:</legend>
-                        ${this.createCheckbox('tntLayoutMaintain', 'Maintain layout from URL', layoutPrefs.maintainLayout)}
-                        <div id="tntLayoutUrlSection" style="padding-left:20px;${layoutPrefs.maintainLayout ? '' : 'display:none;'}">
-                            <label for="tntLayoutUrl" style="display:block;margin-top:5px;font-size:11px;">Paste Ikariam layout URL:</label>
-                            <input id="tntLayoutUrl" type="text" style="width:90%;margin-top:2px;font-size:11px;" placeholder="https://s##-us.ikariam.gameforge.com/?view=city&..." />
-                            ${layoutDataHtml}
-                        </div>
-                    </div>
-                </div>
-                <div align="center" style="clear:both;">
-                    <input id="tntOptionsClose" type="button" class="button" value="Close and refresh" />
-                </div>
-            `;
-        },
-
-        createCheckbox(id, label, checked) {
-            return `<input id="${id}" type="checkbox"${checked ? ' checked="checked"' : ''} /> ${label}<br/>`;
-        },
-
-        attachOptionsEventHandlers() {
-            // Open/close dialog
-            $("#tntOptionsLink").on("click", () => $("#tntOptions").slideToggle());
-            $("#tntOptionsClose").on("click", () => {
-                $("#tntOptions").slideToggle();
-                location.reload();
-            });
-
-            // Setting change handlers
-            const settingHandlers = {
-                'tntAllRemovePremiumOffers': 'allRemovePremiumOffers',
-                'tntAllRemoveFooterNavigation': 'allRemoveFooterNavigation',
-                'tntAllChangeNavigationCoord': 'allChangeNavigationCoord',
-                'tntIslandShowCityLvl': 'islandShowCityLvl',
-                'tntCityRemoveFlyingShop': 'cityRemoveFlyingShop',
-                'tntCityShowResources': 'cityShowResources',
-                'tntCityShowResourcesPorpulation': 'cityShowResourcesPorpulation',
-                'tntCityShowResourcesCitizens': 'cityShowResourcesCitizens',
-                'tntCityShowResourcesWoods': 'cityShowResourcesWoods',
-                'tntCityShowResourcesWine': 'cityShowResourcesWine',
-                'tntCityShowResourcesMarble': 'cityShowResourcesMarble',
-                'tntCityShowResourcesCrystal': 'cityShowResourcesCrystal',
-                'tntCityShowResourcesSulfur': 'cityShowResourcesSulfur',
-                'tntNotificationAdvisors': 'notificationAdvisors'
-            };
-
-            Object.entries(settingHandlers).forEach(([elementId, settingKey]) => {
-                $(`#${elementId}`).on("change", () => tnt.settings.toggle(settingKey));
-            });
-
-            // Special handler for notification sound (different toggle logic)
-            $("#tntNotificationSound").on("change", () => {
-                tnt.settings.set("notificationSound", !tnt.settings.get("notificationSound"));
-            });
-
-            // Layout maintenance checkbox handler
-            $("#tntLayoutMaintain").on("change", () => {
-                const isChecked = $("#tntLayoutMaintain").is(':checked');
-                const layoutPrefs = tnt.settings.getLayoutPrefs();
-                
-                if (isChecked) {
-                    layoutPrefs.maintainLayout = true;
-                    $("#tntLayoutUrlSection").show();
-                } else {
-                    // Clear layout preferences when unchecked
-                    tnt.settings.clearLayoutPrefs();
-                    $("#tntLayoutUrlSection").hide();
-                }
-                
-                if (isChecked) {
-                    tnt.settings.setLayoutPrefs(layoutPrefs);
-                }
-            });
-
-            // Layout URL input handler
-            $("#tntLayoutUrl").on("paste blur keypress", function(e) {
-                // Handle paste, blur, or Enter key
-                if (e.type === 'keypress' && e.which !== 13) return;
-
-                setTimeout(() => {
-                    const url = $(this).val().trim();
-
-                    if (url && tnt.settings.isValidIkariamUrl(url)) {
-                        const layout = tnt.settings.parseLayoutFromUrl(url);
-
-                        if (layout) {
-                            const layoutPrefs = {
-                                maintainLayout: true,
-                                url: url,
-                                layout: layout
-                            };
-
-                            tnt.settings.setLayoutPrefs(layoutPrefs);
-
-                            // Show extracted layout data in compact format
-                            function fmt(obj) {
-                                if (!obj || typeof obj !== 'object') return '';
-                                return Object.entries(obj)
-                                    .map(([k, v]) => `${k}:${v}`)
-                                    .join(', ');
-                            }
-                            const citymap = fmt(layout.citymap);
-                            const mainbox = fmt(layout.mainbox);
-                            const sidebar = fmt(layout.sidebar);
-                            const layoutDataHtml = `<div id="tntLayoutCurrentData" style="margin-top:5px;font-size:10px;color:#666;word-break:break-all;line-height:1.4;">
-                                <span><b>citymap</b>: ${citymap || '-'}</span><br/>
-                                <span><b>mainbox</b>: ${mainbox || '-'}</span><br/>
-                                <span><b>sidebar</b>: ${sidebar || '-'}</span>
-                            </div>`;
-                            if ($("#tntLayoutCurrentData").length) {
-                                $("#tntLayoutCurrentData").replaceWith(layoutDataHtml);
-                            } else {
-                                $("#tntLayoutUrlSection").append(layoutDataHtml);
-                            }
-
-                            // Clear the input after successful processing
-                            $(this).val('');
-
-                            console.log('TNT: Layout preferences saved:', layoutPrefs);
-                        } else {
-                            alert('Failed to parse layout parameters from URL');
-                        }
-                    } else if (url) {
-                        alert('Please enter a valid Ikariam URL');
-                    }
-                }, 10);
-            });
-        },
-
-        // Apply UI modifications based on settings
-        applyUIModifications() {
-            const settings = tnt.settings.getFeatureSettings();
-
-            if (settings.removeFooterNavigation) {
-                $('div#footer').hide();
-            }
-
-            if (settings.removeFlyingShop && $("body").attr("id") === "city") {
-                $('.premiumOfferBox').hide();
-                $('.expandable.resourceShop, .expandable.slot1, .expandable.slot2').remove();
-                $('#js_viewCityMenu').css({
-                    'top': '195px'
-                });
-            }
-        }
-    },
-
-    // Utilities module
-    utils: {
-        // Safe getter with error handling
-        safeGet(getter, defaultValue = null) {
-            try {
-                return getter();
-            } catch (e) {
-                tnt.core.debug.log(`Error in safeGet: ${e.message}`);
-                return defaultValue;
-            }
-        },
-
-        // Returns true if any building in the city is currently under construction.
-        hasConstruction() {
-            return $('.constructionSite').length > 0;
-        },
-
-        // Calculates resource and tradegood production for a city over a given number of hours.
-        // Returns an object with formatted string values for each resource.
-        calculateProduction(cityID, hours) {
-            const city = tnt.data.storage.city[cityID]; // Use new storage structure
-            if (city && city.hasOwnProperty('resourceProduction') && city.hasOwnProperty('tradegoodProduction')) {
-                return {
-                    wood: parseInt((city.resourceProduction * hours * 3600)).toLocaleString(),
-                    wine: city.producedTradegood == 1 ? (parseInt(city.tradegoodProduction * hours * 3600)).toLocaleString() : "0",
-                    marble: city.producedTradegood == 2 ? (parseInt(city.tradegoodProduction * hours * 3600)).toLocaleString() : "0",
-                    crystal: city.producedTradegood == 3 ? (parseInt(city.tradegoodProduction * hours * 3600)).toLocaleString() : "0",
-                    sulfur: city.producedTradegood == 4 ? (parseInt(city.tradegoodProduction * hours * 3600)).toLocaleString() : "0"
-                };
-            }
-
-            if (!city) {
-                tnt.core.debug.log(`City ID ${cityID} not found in storage`);
-            } else {
-                tnt.core.debug.log(`City ID ${cityID} missing production data (resourceProduction: ${city.resourceProduction}, tradegoodProduction: ${city.tradegoodProduction})`);
-            }
-            return { wood: "0", wine: "0", marble: "0", crystal: "0", sulfur: "0" };
-        },
-
-        // Extracts the building level from the element's CSS class (e.g., "level12").
-        // Returns the level as a string or '?' if not found.
-        extractLevelFromElement($element) {
-            const classes = $element.attr('class') || '';
-            const levelMatch = classes.match(/level(\d+)/);
-            return levelMatch ? levelMatch[1] : '?';
-        },
-
-        // Creates a DOM element to visually display the city level.
-        createLevelIndicator(level) {
-            return $('<div class="tntLvl">' + level + '</div>');
-        },
-
-        // Check if current page is island view
-        isIslandView() {
-            return $("body").attr("id") === "island";
-        },
-
-        // Validate city element for level display
-        validateCityElement($element) {
-            // Check if element exists
-            if ($element.length === 0) return false;
-
-            // Check if already has level indicator
-            if ($element.find('.tntLvl').length > 0) return false;
-
-            // Check if it's actually a player city
-            if (!$element.hasClass('city')) return false;
-
-            return true;
-        },
-
-        // Iterate through city positions with callback
-        iterateCityPositions(callback) {
-            for (let i = 0; i <= 16; i++) {
-                const $cityLocation = $(`#cityLocation${i}`);
-                callback($cityLocation, i);
-            }
-        },
-
-        // Displays level indicators for all player cities on the island view.
-        // Skips non-city elements and avoids duplicate indicators.
-        displayCityLevels() {
-            // Only run on island view
-            if (!this.isIslandView()) return;
-
-            // Iterate through all city positions
-            this.iterateCityPositions(($cityLocation, position) => {
-                // Validate the city element
-                if (!this.validateCityElement($cityLocation)) return;
-
-                // Extract level from element
-                const level = this.extractLevelFromElement($cityLocation);
-
-                // Create and append level indicator
-                const $levelIndicator = this.createLevelIndicator(level);
-                $cityLocation.append($levelIndicator);
-            });
-        },
-
-        // Building Detection Utilities
-
-        // Extract position number from element ID
-        extractPositionFromElement($element) {
-            const posId = $element.attr('id');
-            if (!posId) return null;
-            const match = posId.match(/\d+$/);
-            return match ? match[0] : null;
-        },
-
-        // Detect building type from CSS classes
-        detectBuildingType($element) {
-            const classes = ($element.attr('class') || '').split(/\s+/);
-            return classes.find(c => validBuildingTypes.includes(c)) || null;
-        },
-
-        // Check if building is under construction
-        isUnderConstruction($element) {
-            return $element.hasClass('constructionSite');
-        },
-
-        // Extracts the current level, under construction, and upgradable state for a building element.
-        // Handles multiple DOM patterns and fallback cases for robustness.
-        extractBuildingLevel($element) {
-            let level = 0;
-            let position = $element.data('position');
-
-            if (typeof position === 'undefined') {
-                position = $element.data('id');
-                if (typeof position === 'undefined') {
-                    const idAttr = $element.attr('id');
-                    const match = idAttr && idAttr.match(/(\d+)$/);
-                    if (match) position = match[1];
-                }
-            }
-
-            const underConstruction = $element.hasClass('constructionSite');
-
-            // Try direct level via #js_CityPositionXLevel
-            let usedDirectLevel = false;
-            if (typeof position !== 'undefined') {
-                const $levelSpan = $("#js_CityPosition" + position + "Level");
-                if ($levelSpan.length) {
-                    const txt = $levelSpan.text().trim();
-                    if (/^\d+$/.test(txt)) {
-                        level = parseInt(txt, 10);
-                        usedDirectLevel = true;
-                    }
-                }
-            }
-
-            // If not found, try from .level span or class fallback
-            if (!usedDirectLevel) {
-                const $level = $element.find('.level');
-                if ($level.length > 0) {
-                    const match = $level.text().match(/\d+/);
-                    if (match) level = parseInt(match[0], 10);
-                } else {
-                    const classes = ($element.attr('class') || '').split(/\s+/);
-                    const levelClass = classes.find(c => c.startsWith('level'));
-                    if (levelClass) {
-                        const match = levelClass.match(/\d+$/);
-                        if (match) level = parseInt(match[0], 10);
-                    }
-                }
-            }
-
-            // NEW: fallback if level is still 0 and it's under construction
-            if (underConstruction && level <= 0 && typeof position !== 'undefined') {
-                const $link = $("#js_CityPosition" + position + "Link");
-                if ($link.length) {
-                    const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
-                    if (m) level = parseInt(m[1], 10);
-                }
-            }
-
-            // Check upgradable (scrollName green)
-            let upgradable = false;
-            if (typeof position !== 'undefined') {
-                const $scrollName = $("#js_CityPosition" + position + "ScrollName");
-                if ($scrollName.length && $scrollName.hasClass("green")) {
-                    upgradable = true;
-                }
-            }
-            if (!upgradable && $element.find('.green').length > 0) {
-                upgradable = true;
-            }
-
-            return {
-                level,
-                underConstruction,
-                upgradable
-            };
-        },
-
-        // Create building data object
-        createBuildingData(position, buildingType, levelInfo) {
-            return {
-                position,
-                level: levelInfo.level,
-                name: buildingType,
-                underConstruction: levelInfo.underConstruction,
-                upgradable: levelInfo.upgradable // Store upgradable state
-            };
-        },
-
-        // Adds or updates a building entry in the provided collection by building type and position.
-        addBuildingToCollection(collection, buildingData) {
-            const buildingType = buildingData.name;
-            collection[buildingType] = collection[buildingType] || [];
-
-            const existingIndex = collection[buildingType].findIndex(b => b.position === buildingData.position);
-            if (existingIndex >= 0) {
-                collection[buildingType][existingIndex] = buildingData;
-            } else {
-                collection[buildingType].push(buildingData);
-            }
-        },
-
-        // Scans all building positions in the current city and returns a collection of detected buildings.
-        // Ensures under-construction buildings are always included, even if level is 0.
-        // Guarantees every building type is present in the result, even if not found.
-        scanAllBuildings() {
-            const $positions = $('div[id^="position"].building, div[id^="js_CityPosition"].building');
-            if (!$positions.length) return { buildings: {}, hasConstruction: false };
-
-            const foundBuildings = {};
-            const hasAnyConstruction = this.hasConstruction();
-
-            $positions.each((index, element) => {
-                const $pos = $(element);
-                const position = this.extractPositionFromElement($pos);
-                if (!position) return;
-
-                // Only allow Town Hall at position 0
-                if (position == 0) {
-                    let level = 0;
-                    let underConstruction = $pos.hasClass('constructionSite');
-                    let upgradable = false;
-                    if (underConstruction) {
-                        // Under construction: get level from the link's title
-                        const $link = $("#js_CityPosition0Link");
-                        if ($link.length) {
-                            const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
-                            if (m) level = parseInt(m[1], 10);
-                        }
-                    } else {
-                        // Not under construction: get level from the visible span
-                        const $levelSpan = $("#js_CityPosition0Level");
-                        if ($levelSpan.length) {
-                            const txt = $levelSpan.text().trim();
-                            if (/^\d+$/.test(txt)) level = parseInt(txt, 10);
-                        }
-                        // Upgradable: check if the scroll name is green
-                        const $scrollName = $("#js_CityPosition0ScrollName");
-                        if ($scrollName.length && $scrollName.hasClass("green")) upgradable = true;
-                    }
-                    // Always save Town Hall if level > 0 or under construction
-                    if (level > 0 || underConstruction) {
-                        const buildingData = {
-                            position: 0,
-                            level: level,
-                            name: 'townHall',
-                            underConstruction: underConstruction,
-                            upgradable: upgradable
-                        };
-                        this.addBuildingToCollection(foundBuildings, buildingData);
-                    }
-                    // Do not allow any other building at position 0
-                    return;
-                }
-
-                // Default logic for all other buildings (never allow townHall at any other position)
-                let buildingType = this.detectBuildingType($pos);
-                if (buildingType === 'townHall') return;
-                // Enhanced detection for construction sites
-                const isUnderConstruction = $pos.hasClass('constructionSite');
-                if (!buildingType && isUnderConstruction) {
-                    const $a = $pos.find('a[href*="view="]');
-                    if ($a.length > 0) {
-                        const href = $a.attr('href');
-                        const match = href && href.match(/view=([a-zA-Z]+)/);
-                        if (match && match[1]) {
-                            const viewName = match[1];
-                            const def = (typeof TNT_BUILDING_DEFINITIONS !== 'undefined' ? TNT_BUILDING_DEFINITIONS : (window.TNT_BUILDING_DEFINITIONS || []))
-                                .find(b => b.viewName === viewName);
-                            buildingType = def ? def.key : null;
-                        }
-                    }
-                }
-                if (!buildingType) return;
-
-                const levelInfo = this.extractBuildingLevel($pos);
-
-                // BUGFIX: Always include buildings under construction, regardless of level
-                if (isUnderConstruction || levelInfo.level > 0) {
-                    // For buildings under construction with level 0, set level to 0 but mark as under construction
-                    if (isUnderConstruction && levelInfo.level <= 0) {
-                        levelInfo.level = 0;
-                    }
-
-                    const buildingData = this.createBuildingData(position, buildingType, levelInfo);
-                    buildingData.underConstruction = isUnderConstruction; // Ensure this flag is always correct
-                    this.addBuildingToCollection(foundBuildings, buildingData);
-                }
-                // Skip buildings with level 0 that aren't under construction
-                else if (levelInfo.level <= 0 && !isUnderConstruction) {
-                    return;
-                }
-            });
-
-            // Ensure every building type is present in the collection, even if empty
-            const buildingDefs = TNT_BUILDING_DEFINITIONS || [];
-            buildingDefs.forEach(def => {
-                if (!foundBuildings.hasOwnProperty(def.key)) {
-                    foundBuildings[def.key] = [];
-                }
-            });
-
-            return {
-                buildings: foundBuildings,
-                hasConstruction: hasAnyConstruction
-            };
-        },
-
-        // Attempts to switch to the specified city using several fallback methods.
-        // Tries AJAX, dropdown, and direct URL navigation for maximum compatibility.
-        switchToCity(cityId) {
-            // tntConsole.log('[TNT] Utils switching to city:', cityId);
-
-            // Try multiple methods to switch cities
-            let switchSuccess = false;
-
-            // Method 1: Direct ajaxHandlerCall (most reliable)
-            try {
-                if (typeof ajaxHandlerCall === 'function') {
-                    // console.log('[TNT] Utils using ajaxHandlerCall method');
-                    ajaxHandlerCall(`?view=city&cityId=${cityId}`);
-                    switchSuccess = true;
-                    return true;
-                }
-            } catch (e) {
-                // console.log('[TNT] Utils ajaxHandlerCall failed:', e.message);
-            }
-
-            // Method 2: Try to find and trigger the city select dropdown change
-            try {
-                const $citySelect = $('#js_GlobalMenu_citySelect');
-                if ($citySelect.length > 0) {
-                    // console.log('[TNT] Utils using city select dropdown method');
-                    $citySelect.val(cityId).trigger('change');
-                    switchSuccess = true;
-                    return true;
-                }
-            } catch (e) {
-                // console.log('[TNT] Utils city select dropdown failed:', e.message);
-            }
-
-            // Method 3: Try the dropdown li click with more specific targeting
-            try {
-                const $cityOption = $(`#dropDown_js_citySelectContainer li[selectValue="${cityId}"]`);
-                if ($cityOption.length > 0) {
-                    // console.log('[TNT] Utils using improved dropdown click method');
-
-                    // Get the select element that the dropdown controls
-                    const $select = $('#js_GlobalMenu_citySelect, #citySelect');
-                    if ($select.length > 0) {
-                        // Update the select value first
-                        $select.val(cityId);
-
-                        // Then trigger the change event
-                        $select.trigger('change');
-
-                        // Also trigger a click on the option for good measure
-                        $cityOption.trigger('click');
-
-                        switchSuccess = true;
-                        return true;
-                    }
-                }
-            } catch (e) {
-                // console.log('[TNT] Utils improved dropdown method failed:', e.message);
-            }
-
-            // Method 4: Direct URL navigation (fallback)
-            if (!switchSuccess) {
-                // console.log('[TNT] Utils using URL navigation fallback');
-                const currentUrl = new URL(window.location.href);
-                currentUrl.searchParams.set('cityId', cityId);
-                currentUrl.searchParams.set('currentCityId', cityId);
-                window.location.href = currentUrl.toString();
-                return true;
-            }
-
-            return false;
-        },
-
-        // Applies user-defined layout preferences to the city view using inline styles.
-        // Only applies if layout maintenance is enabled and layout data is available.
-        applyLayoutDirectly() {
-            const layoutPrefs = tnt.settings.getLayoutPrefs();
-            const layout = layoutPrefs.layout;
-
-            // If the maintainLayout is not enabled or we don't have a layout, we can't apply it
-            if (!layoutPrefs || !layoutPrefs.maintainLayout || !layout) return;
-
-            // IMPORTANT: Enforce citymap position if enabled in settings. Do NOT modify or remove this! IT WORKS!
-            if (layout.citymap) {
-                const citymap = layout.citymap;
-                if (citymap) {
-                    $('#worldmap').css({
-                        top: citymap.top + 'px',
-                        left: citymap.left + 'px',
-                        transform: `scale(${citymap.zoom || 1})` // Apply zoom if available
-                    });
-                }
-            }
-
-            // IMPORTANT: Enforce mainbox position if enabled in settings. Do NOT modify or remove this! IT WORKS!
-            if (layout.mainbox) {
-                const mainbox = layout.mainbox;
-                if (ikariam && layout.maintainLayout && mainbox) {
-                    // Apply specific adjustments for Ikariam
-                    if (ikariam.mainbox_x !== mainbox.x) {
-                        ikariam.mainbox_x = mainbox.x;
-                    }
-                    if (ikariam.mainbox_z !== mainbox.z) {
-                        ikariam.mainbox_z = mainbox.z;
-                    }
-                }
-            }
-
-            // IMPORTANT: Enforce sidebar position if enabled in settings. Do NOT modify or remove this! IT WORKS!
-            if (layout.sidebar) {
-                const sidebar = layout.sidebar;
-                if (layout.maintainLayout && sidebar) {
-                    // Apply specific adjustments for Ikariam
-                    if (ikariam.sidebar_x !== sidebar.x) {
-                        ikariam.sidebar_x = sidebar.x;
-                    }
-                    if (ikariam.sidebar_z !== sidebar.z) {
-                        ikariam.sidebar_z = sidebar.z;
-                    }
-                }
-            }
-        },
-
-        buildingExistsInAnyCity(buildingKey, cities) {
-            return Object.values(cities).some(city =>
-                city.buildings && Array.isArray(city.buildings[buildingKey]) && city.buildings[buildingKey].length > 0
-            );
-        }
-    },
-
     // IMPORTANT: Common functionality that runs on all pages
     all() {
         // Common functionality that runs on all pages
@@ -1490,7 +807,732 @@ const tnt = {
             }
         }
     },
-    
+
+    // UI module - handle all DOM manipulation and event binding
+    ui: {
+        // Create and show the options dialog
+        showOptionsDialog() {
+            const optionsHtml = this.buildOptionsHtml();
+
+            if ($('#tntOptions').length === 0) {
+                $('li.serverTime').before(`
+                    <li>
+                        <a id="tntOptionsLink" href="javascript:void(0);">TNT Options v${tnt.version}</a>
+                        <div id="tntOptions" class="tntBox" style="display:none;">
+                            ${optionsHtml}
+                        </div>
+                    </li>
+                `);
+                this.attachOptionsEventHandlers();
+            }
+        },
+
+        buildOptionsHtml() {
+            const settings = tnt.settings.getFeatureSettings();
+            const resourceSettings = tnt.settings.getResourceDisplaySettings();
+            const layoutPrefs = tnt.settings.getLayoutPrefs();
+
+            // Prepare extracted layout data display
+            let layoutDataHtml = '';
+            if (layoutPrefs.layout) {
+                // Helper to flatten and format an object as key1:val1, key2:val2
+                function fmt(obj) {
+                    if (!obj || typeof obj !== 'object') return '';
+                    return Object.entries(obj)
+                        .map(([k, v]) => `${k}:${v}`)
+                        .join(', ');
+                }
+                const citymap = fmt(layoutPrefs.layout.citymap);
+                const mainbox = fmt(layoutPrefs.layout.mainbox);
+                const sidebar = fmt(layoutPrefs.layout.sidebar);
+                layoutDataHtml = `<div id="tntLayoutCurrentData" style="margin-top:5px;font-size:10px;color:#666;word-break:break-all;line-height:1.4;">
+                    <span><b>citymap</b>: ${citymap || '-'}</span><br/>
+                    <span><b>mainbox</b>: ${mainbox || '-'}</span><br/>
+                    <span><b>sidebar</b>: ${sidebar || '-'}</span>
+                </div>`;
+            }
+
+            return `
+                <div id="tntUpdateLine" align="center" style="padding-bottom:5px;">
+                    <a id="tntColUpgradeLink" href="" style="display:none;color:blue;font-size:12px;">
+                        Version <span id="tntColVersion"></span> is available. Click here to update now!
+                    </a>
+                </div>
+                <div>
+                    <div class="tnt_left" style="float:left;width:50%;">
+                        <legend>All:</legend>
+                        ${this.createCheckbox('tntAllRemovePremiumOffers', 'Remove Premium Offers', settings.removePremiumOffers)}
+                        ${this.createCheckbox('tntAllRemoveFooterNavigation', 'Remove footer navigation', settings.removeFooterNavigation)}
+                        ${this.createCheckbox('tntAllChangeNavigationCoord', 'Make footer navigation coord input a number', settings.changeNavigationCoord)}
+                    </div>
+                    <div class="tnt_left" style="float:left;width:50%;">
+                        <legend>Notifications:</legend>
+                        ${this.createCheckbox('tntNotificationAdvisors', 'Show notifications from Advisors', settings.notificationAdvisors)}
+                        ${this.createCheckbox('tntNotificationSound', 'Play sound with notifications from Advisors', settings.notificationSound)}
+                    </div>
+                    <div class="tnt_left" style="float:left;width:50%;">
+                        <legend>Islands:</legend>
+                        ${this.createCheckbox('tntIslandShowCityLvl', 'Show Town Levels on Islands', settings.showCityLvl)}
+                    </div>
+                    <div class="tnt_left" style="float:left;width:50%;">
+                        <legend>City:</legend>
+                        ${this.createCheckbox('tntCityRemoveFlyingShop', 'Remove flying shop', settings.removeFlyingShop)}
+                        ${this.createCheckbox('tntCityShowResources', 'Show resources', resourceSettings.showResources)}
+                        <div class="tnt_left" style="padding-left:20px;">
+                            ${this.createCheckbox('tntCityShowResourcesPorpulation', 'Show population', resourceSettings.showPopulation)}
+                            ${this.createCheckbox('tntCityShowResourcesCitizens', 'Show citizens', resourceSettings.showCitizens)}
+                            ${this.createCheckbox('tntCityShowResourcesWoods', 'Show wood', resourceSettings.showWood)}
+                            ${this.createCheckbox('tntCityShowResourcesWine', 'Show Wine', resourceSettings.showWine)}
+                            ${this.createCheckbox('tntCityShowResourcesMarble', 'Show Marble', resourceSettings.showMarble)}
+                            ${this.createCheckbox('tntCityShowResourcesCrystal', 'Show Crystal', resourceSettings.showCrystal)}
+                            ${this.createCheckbox('tntCityShowResourcesSulfur', 'Show Sulfur', resourceSettings.showSulfur)}
+                        </div>
+                    </div>
+                    <div class="tnt_left" style="float:left;width:50%;">
+                        <legend>World Map:</legend>
+                    </div>
+                    <div class="tnt_left" style="float:left;width:50%;">
+                        <legend>Layout:</legend>
+                        ${this.createCheckbox('tntLayoutMaintain', 'Maintain layout from URL', layoutPrefs.maintainLayout)}
+                        <div id="tntLayoutUrlSection" style="padding-left:20px;${layoutPrefs.maintainLayout ? '' : 'display:none;'}">
+                            <label for="tntLayoutUrl" style="display:block;margin-top:5px;font-size:11px;">Paste Ikariam layout URL:</label>
+                            <input id="tntLayoutUrl" type="text" style="width:90%;margin-top:2px;font-size:11px;" placeholder="https://s##-us.ikariam.gameforge.com/?view=city&..." />
+                            ${layoutDataHtml}
+                        </div>
+                    </div>
+                </div>
+                <div align="center" style="clear:both;">
+                    <input id="tntOptionsClose" type="button" class="button" value="Close and refresh" />
+                </div>
+            `;
+        },
+
+        createCheckbox(id, label, checked) {
+            return `<input id="${id}" type="checkbox"${checked ? ' checked="checked"' : ''} /> ${label}<br/>`;
+        },
+
+        attachOptionsEventHandlers() {
+            // Open/close dialog
+            $("#tntOptionsLink").on("click", () => $("#tntOptions").slideToggle());
+            $("#tntOptionsClose").on("click", () => {
+                $("#tntOptions").slideToggle();
+                location.reload();
+            });
+
+            // Setting change handlers
+            const settingHandlers = {
+                'tntAllRemovePremiumOffers': 'allRemovePremiumOffers',
+                'tntAllRemoveFooterNavigation': 'allRemoveFooterNavigation',
+                'tntAllChangeNavigationCoord': 'allChangeNavigationCoord',
+                'tntIslandShowCityLvl': 'islandShowCityLvl',
+                'tntCityRemoveFlyingShop': 'cityRemoveFlyingShop',
+                'tntCityShowResources': 'cityShowResources',
+                'tntCityShowResourcesPorpulation': 'cityShowResourcesPorpulation',
+                'tntCityShowResourcesCitizens': 'cityShowResourcesCitizens',
+                'tntCityShowResourcesWoods': 'cityShowResourcesWoods',
+                'tntCityShowResourcesWine': 'cityShowResourcesWine',
+                'tntCityShowResourcesMarble': 'cityShowResourcesMarble',
+                'tntCityShowResourcesCrystal': 'cityShowResourcesCrystal',
+                'tntCityShowResourcesSulfur': 'cityShowResourcesSulfur',
+                'tntNotificationAdvisors': 'notificationAdvisors'
+            };
+
+            Object.entries(settingHandlers).forEach(([elementId, settingKey]) => {
+                $(`#${elementId}`).on("change", () => tnt.settings.toggle(settingKey));
+            });
+
+            // Special handler for notification sound (different toggle logic)
+            $("#tntNotificationSound").on("change", () => {
+                tnt.settings.set("notificationSound", !tnt.settings.get("notificationSound"));
+            });
+
+            // Layout maintenance checkbox handler
+            $("#tntLayoutMaintain").on("change", () => {
+                const isChecked = $("#tntLayoutMaintain").is(':checked');
+                const layoutPrefs = tnt.settings.getLayoutPrefs();
+                
+                if (isChecked) {
+                    layoutPrefs.maintainLayout = true;
+                    $("#tntLayoutUrlSection").show();
+                } else {
+                    // Clear layout preferences when unchecked
+                    tnt.settings.clearLayoutPrefs();
+                    $("#tntLayoutUrlSection").hide();
+                }
+                
+                if (isChecked) {
+                    tnt.settings.setLayoutPrefs(layoutPrefs);
+                }
+            });
+
+            // Layout URL input handler
+            $("#tntLayoutUrl").on("paste blur keypress", function(e) {
+                // Handle paste, blur, or Enter key
+                if (e.type === 'keypress' && e.which !== 13) return;
+
+                setTimeout(() => {
+                    const url = $(this).val().trim();
+
+                    if (url && tnt.settings.isValidIkariamUrl(url)) {
+                        const layout = tnt.settings.parseLayoutFromUrl(url);
+
+                        if (layout) {
+                            const layoutPrefs = {
+                                maintainLayout: true,
+                                url: url,
+                                layout: layout
+                            };
+
+                            tnt.settings.setLayoutPrefs(layoutPrefs);
+
+                            // Show extracted layout data in compact format
+                            function fmt(obj) {
+                                if (!obj || typeof obj !== 'object') return '';
+                                return Object.entries(obj)
+                                    .map(([k, v]) => `${k}:${v}`)
+                                    .join(', ');
+                            }
+                            const citymap = fmt(layout.citymap);
+                            const mainbox = fmt(layout.mainbox);
+                            const sidebar = fmt(layout.sidebar);
+                            const layoutDataHtml = `<div id="tntLayoutCurrentData" style="margin-top:5px;font-size:10px;color:#666;word-break:break-all;line-height:1.4;">
+                                <span><b>citymap</b>: ${citymap || '-'}</span><br/>
+                                <span><b>mainbox</b>: ${mainbox || '-'}</span><br/>
+                                <span><b>sidebar</b>: ${sidebar || '-'}</span>
+                            </div>`;
+                            if ($("#tntLayoutCurrentData").length) {
+                                $("#tntLayoutCurrentData").replaceWith(layoutDataHtml);
+                            } else {
+                                $("#tntLayoutUrlSection").append(layoutDataHtml);
+                            }
+
+                            // Clear the input after successful processing
+                            $(this).val('');
+
+                            console.log('TNT: Layout preferences saved:', layoutPrefs);
+                        } else {
+                            alert('Failed to parse layout parameters from URL');
+                        }
+                    } else if (url) {
+                        alert('Please enter a valid Ikariam URL');
+                    }
+                }, 10);
+            });
+        },
+
+        // Apply UI modifications based on settings
+        applyUIModifications() {
+            const settings = tnt.settings.getFeatureSettings();
+
+            // Need delay to ensure elements are ready
+            setTimeout(() => {
+                if (settings.removeFooterNavigation) {
+                    $('div#footer').hide();
+                }
+
+                if (settings.removeFlyingShop && $("body").attr("id") === "city") {
+                    $('.premiumOfferBox').hide();
+                    $('.expandable.resourceShop, .expandable.slot1, .expandable.slot2').remove();
+                    $('#js_viewCityMenu').css({
+                        'top': '195px'
+                    });
+                }
+            }, 200);
+        }
+    },
+
+    // Utilities module
+    utils: {
+        // Safe getter with error handling
+        safeGet(getter, defaultValue = null) {
+            try {
+                return getter();
+            } catch (e) {
+                tnt.core.debug.log(`Error in safeGet: ${e.message}`);
+                return defaultValue;
+            }
+        },
+
+        // Returns true if any building in the city is currently under construction.
+        hasConstruction() {
+            return $('.constructionSite').length > 0;
+        },
+
+        // Calculates resource and tradegood production for a city over a given number of hours.
+        // Returns an object with formatted string values for each resource.
+        calculateProduction(cityID, hours) {
+            const city = tnt.data.storage.city[cityID]; // Use new storage structure
+            if (city && city.hasOwnProperty('resourceProduction') && city.hasOwnProperty('tradegoodProduction')) {
+                return {
+                    wood: parseInt((city.resourceProduction * hours * 3600)).toLocaleString(),
+                    wine: city.producedTradegood == 1 ? (parseInt(city.tradegoodProduction * hours * 3600)).toLocaleString() : "0",
+                    marble: city.producedTradegood == 2 ? (parseInt(city.tradegoodProduction * hours * 3600)).toLocaleString() : "0",
+                    crystal: city.producedTradegood == 3 ? (parseInt(city.tradegoodProduction * hours * 3600)).toLocaleString() : "0",
+                    sulfur: city.producedTradegood == 4 ? (parseInt(city.tradegoodProduction * hours * 3600)).toLocaleString() : "0"
+                };
+            }
+
+            if (!city) {
+                tnt.core.debug.log(`City ID ${cityID} not found in storage`);
+            } else {
+                tnt.core.debug.log(`City ID ${cityID} missing production data (resourceProduction: ${city.resourceProduction}, tradegoodProduction: ${city.tradegoodProduction})`);
+            }
+            return { wood: "0", wine: "0", marble: "0", crystal: "0", sulfur: "0" };
+        },
+
+        // Extracts the building level from the element's CSS class (e.g., "level12").
+        // Returns the level as a string or '?' if not found.
+        extractLevelFromElement($element) {
+            const classes = $element.attr('class') || '';
+            const levelMatch = classes.match(/level(\d+)/);
+            return levelMatch ? levelMatch[1] : '?';
+        },
+
+        // Creates a DOM element to visually display the city level.
+        createLevelIndicator(level) {
+            return $('<div class="tntLvl">' + level + '</div>');
+        },
+
+        // Check if current page is island view
+        isIslandView() {
+            return $("body").attr("id") === "island";
+        },
+
+        // Validate city element for level display
+        validateCityElement($element) {
+            // Check if element exists
+            if ($element.length === 0) return false;
+
+            // Check if already has level indicator
+            if ($element.find('.tntLvl').length > 0) return false;
+
+            // Check if it's actually a player city
+            if (!$element.hasClass('city')) return false;
+
+            return true;
+        },
+
+        // Iterate through city positions with callback
+        iterateCityPositions(callback) {
+            for (let i = 0; i <= 16; i++) {
+                const $cityLocation = $(`#cityLocation${i}`);
+                callback($cityLocation, i);
+            }
+        },
+
+        // Displays level indicators for all player cities on the island view.
+        // Skips non-city elements and avoids duplicate indicators.
+        displayCityLevels() {
+            // Only run on island view
+            if (!this.isIslandView()) return;
+
+            // Iterate through all city positions
+            this.iterateCityPositions(($cityLocation, position) => {
+                // Validate the city element
+                if (!this.validateCityElement($cityLocation)) return;
+
+                // Extract level from element
+                const level = this.extractLevelFromElement($cityLocation);
+
+                // Create and append level indicator
+                const $levelIndicator = this.createLevelIndicator(level);
+                $cityLocation.append($levelIndicator);
+            });
+        },
+
+        // Building Detection Utilities
+
+        // Extract position number from element ID
+        extractPositionFromElement($element) {
+            const posId = $element.attr('id');
+            if (!posId) return null;
+            const match = posId.match(/\d+$/);
+            return match ? match[0] : null;
+        },
+
+        // Detect building type from CSS classes
+        detectBuildingType($element) {
+            const classes = ($element.attr('class') || '').split(/\s+/);
+            return classes.find(c => validBuildingTypes.includes(c)) || null;
+        },
+
+        // Check if building is under construction
+        isUnderConstruction($element) {
+            return $element.hasClass('constructionSite');
+        },
+
+        // Extracts the current level, under construction, and upgradable state for a building element.
+        // Handles multiple DOM patterns and fallback cases for robustness.
+        extractBuildingLevel($element) {
+            let level = 0;
+            let position = $element.data('position');
+
+            if (typeof position === 'undefined') {
+                position = $element.data('id');
+                if (typeof position === 'undefined') {
+                    const idAttr = $element.attr('id');
+                    const match = idAttr && idAttr.match(/(\d+)$/);
+                    if (match) position = match[1];
+                }
+            }
+
+            const underConstruction = $element.hasClass('constructionSite');
+
+            // Try direct level via #js_CityPositionXLevel
+            let usedDirectLevel = false;
+            if (typeof position !== 'undefined') {
+                const $levelSpan = $("#js_CityPosition" + position + "Level");
+                if ($levelSpan.length) {
+                    const txt = $levelSpan.text().trim();
+                    if (/^\d+$/.test(txt)) {
+                        level = parseInt(txt, 10);
+                        usedDirectLevel = true;
+                    }
+                }
+            }
+
+            // If not found, try from .level span or class fallback
+            if (!usedDirectLevel) {
+                const $level = $element.find('.level');
+                if ($level.length > 0) {
+                    const match = $level.text().match(/\d+/);
+                    if (match) level = parseInt(match[0], 10);
+                } else {
+                    const classes = ($element.attr('class') || '').split(/\s+/);
+                    const levelClass = classes.find(c => c.startsWith('level'));
+                    if (levelClass) {
+                        const match = levelClass.match(/\d+$/);
+                        if (match) level = parseInt(match[0], 10);
+                    }
+                }
+            }
+
+            // NEW: fallback if level is still 0 and it's under construction
+            if (underConstruction && level <= 0 && typeof position !== 'undefined') {
+                const $link = $("#js_CityPosition" + position + "Link");
+                if ($link.length) {
+                    const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
+                    if (m) level = parseInt(m[1], 10);
+                }
+            }
+
+            // Check upgradable (scrollName green)
+            let upgradable = false;
+            if (typeof position !== 'undefined') {
+                const $scrollName = $("#js_CityPosition" + position + "ScrollName");
+                if ($scrollName.length && $scrollName.hasClass("green")) {
+                    upgradable = true;
+                }
+            }
+            if (!upgradable && $element.find('.green').length > 0) {
+                upgradable = true;
+            }
+
+            return {
+                level,
+                underConstruction,
+                upgradable
+            };
+        },
+
+        // Create building data object
+        createBuildingData(position, buildingType, levelInfo) {
+            return {
+                position,
+                level: levelInfo.level,
+                name: buildingType,
+                underConstruction: levelInfo.underConstruction,
+                upgradable: levelInfo.upgradable // Store upgradable state
+            };
+        },
+
+        // Adds or updates a building entry in the provided collection by building type and position.
+        addBuildingToCollection(collection, buildingData) {
+            const buildingType = buildingData.name;
+            collection[buildingType] = collection[buildingType] || [];
+
+            const existingIndex = collection[buildingType].findIndex(b => b.position === buildingData.position);
+            if (existingIndex >= 0) {
+                collection[buildingType][existingIndex] = buildingData;
+            } else {
+                collection[buildingType].push(buildingData);
+            }
+        },
+
+        // Scans all building positions in the current city and returns a collection of detected buildings.
+        // Ensures under-construction buildings are always included, even if level is 0.
+        // Guarantees every building type is present in the result, even if not found.
+        scanAllBuildings() {
+            const $positions = $('div[id^="position"].building, div[id^="js_CityPosition"].building');
+            if (!$positions.length) return { buildings: {}, hasConstruction: false };
+
+            const foundBuildings = {};
+            const hasAnyConstruction = this.hasConstruction();
+
+            $positions.each((index, element) => {
+                const $pos = $(element);
+                const position = this.extractPositionFromElement($pos);
+                if (!position) return;
+
+                // Only allow Town Hall at position 0
+                if (position == 0) {
+                    let level = 0;
+                    let underConstruction = $pos.hasClass('constructionSite');
+                    let upgradable = false;
+                    if (underConstruction) {
+                        // Under construction: get level from the link's title
+                        const $link = $("#js_CityPosition0Link");
+                        if ($link.length) {
+                            const m = $link.attr("title") && $link.attr("title").match(/\((\d+)\)/);
+                            if (m) level = parseInt(m[1], 10);
+                        }
+                    } else {
+                        // Not under construction: get level from the visible span
+                        const $levelSpan = $("#js_CityPosition0Level");
+                        if ($levelSpan.length) {
+                            const txt = $levelSpan.text().trim();
+                            if (/^\d+$/.test(txt)) level = parseInt(txt, 10);
+                        }
+                        // Upgradable: check if the scroll name is green
+                        const $scrollName = $("#js_CityPosition0ScrollName");
+                        if ($scrollName.length && $scrollName.hasClass("green")) upgradable = true;
+                    }
+                    // Always save Town Hall if level > 0 or under construction
+                    if (level > 0 || underConstruction) {
+                        const buildingData = {
+                            position: 0,
+                            level: level,
+                            name: 'townHall',
+                            underConstruction: underConstruction,
+                            upgradable: upgradable
+                        };
+                        this.addBuildingToCollection(foundBuildings, buildingData);
+                    }
+                    // Do not allow any other building at position 0
+                    return;
+                }
+
+                // Default logic for all other buildings (never allow townHall at any other position)
+                let buildingType = this.detectBuildingType($pos);
+                if (buildingType === 'townHall') return;
+                // Enhanced detection for construction sites
+                const isUnderConstruction = $pos.hasClass('constructionSite');
+                if (!buildingType && isUnderConstruction) {
+                    const $a = $pos.find('a[href*="view="]');
+                    if ($a.length > 0) {
+                        const href = $a.attr('href');
+                        const match = href && href.match(/view=([a-zA-Z]+)/);
+                        if (match && match[1]) {
+                            const viewName = match[1];
+                            const def = (typeof TNT_BUILDING_DEFINITIONS !== 'undefined' ? TNT_BUILDING_DEFINITIONS : (window.TNT_BUILDING_DEFINITIONS || []))
+                                .find(b => b.viewName === viewName);
+                            buildingType = def ? def.key : null;
+                        }
+                    }
+                }
+                if (!buildingType) return;
+
+                const levelInfo = this.extractBuildingLevel($pos);
+
+                // BUGFIX: Always include buildings under construction, regardless of level
+                if (isUnderConstruction || levelInfo.level > 0) {
+                    // For buildings under construction with level 0, set level to 0 but mark as under construction
+                    if (isUnderConstruction && levelInfo.level <= 0) {
+                        levelInfo.level = 0;
+                    }
+
+                    const buildingData = this.createBuildingData(position, buildingType, levelInfo);
+                    buildingData.underConstruction = isUnderConstruction; // Ensure this flag is always correct
+                    this.addBuildingToCollection(foundBuildings, buildingData);
+                }
+                // Skip buildings with level 0 that aren't under construction
+                else if (levelInfo.level <= 0 && !isUnderConstruction) {
+                    return;
+                }
+            });
+
+            // Ensure every building type is present in the collection, even if empty
+            const buildingDefs = TNT_BUILDING_DEFINITIONS || [];
+            buildingDefs.forEach(def => {
+                if (!foundBuildings.hasOwnProperty(def.key)) {
+                    foundBuildings[def.key] = [];
+                }
+            });
+
+            return {
+                buildings: foundBuildings,
+                hasConstruction: hasAnyConstruction
+            };
+        },
+
+        // Attempts to switch to the specified city using several fallback methods.
+        // Tries AJAX, dropdown, and direct URL navigation for maximum compatibility.
+        switchToCity(cityId) {
+            // tntConsole.log('[TNT] Utils switching to city:', cityId);
+
+            // Try multiple methods to switch cities
+            let switchSuccess = false;
+
+            // Method 1: Direct ajaxHandlerCall (most reliable)
+            try {
+                if (typeof ajaxHandlerCall === 'function') {
+                    // console.log('[TNT] Utils using ajaxHandlerCall method');
+                    ajaxHandlerCall(`?view=city&cityId=${cityId}`);
+                    switchSuccess = true;
+                    return true;
+                }
+            } catch (e) {
+                // console.log('[TNT] Utils ajaxHandlerCall failed:', e.message);
+            }
+
+            // Method 2: Try to find and trigger the city select dropdown change
+            try {
+                const $citySelect = $('#js_GlobalMenu_citySelect');
+                if ($citySelect.length > 0) {
+                    // console.log('[TNT] Utils using city select dropdown method');
+                    $citySelect.val(cityId).trigger('change');
+                    switchSuccess = true;
+                    return true;
+                }
+            } catch (e) {
+                // console.log('[TNT] Utils city select dropdown failed:', e.message);
+            }
+
+            // Method 3: Try the dropdown li click with more specific targeting
+            try {
+                const $cityOption = $(`#dropDown_js_citySelectContainer li[selectValue="${cityId}"]`);
+                if ($cityOption.length > 0) {
+                    // console.log('[TNT] Utils using improved dropdown click method');
+
+                    // Get the select element that the dropdown controls
+                    const $select = $('#js_GlobalMenu_citySelect, #citySelect');
+                    if ($select.length > 0) {
+                        // Update the select value first
+                        $select.val(cityId);
+
+                        // Then trigger the change event
+                        $select.trigger('change');
+
+                        // Also trigger a click on the option for good measure
+                        $cityOption.trigger('click');
+
+                        switchSuccess = true;
+                        return true;
+                    }
+                }
+            } catch (e) {
+                // console.log('[TNT] Utils improved dropdown method failed:', e.message);
+            }
+
+            // Method 4: Direct URL navigation (fallback)
+            if (!switchSuccess) {
+                // console.log('[TNT] Utils using URL navigation fallback');
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('cityId', cityId);
+                currentUrl.searchParams.set('currentCityId', cityId);
+                window.location.href = currentUrl.toString();
+                return true;
+            }
+
+            return false;
+        },
+
+        // Applies user-defined layout preferences to the city view using inline styles.
+        // Only applies if layout maintenance is enabled and layout data is available.
+        applyLayoutDirectly() {
+            const layoutPrefs = tnt.settings.getLayoutPrefs();
+            const layout = layoutPrefs.layout;
+
+            // If the maintainLayout is not enabled or we don't have a layout, we can't apply it
+            if (!layoutPrefs || !layoutPrefs.maintainLayout || !layout) return;
+
+            // IMPORTANT: Enforce citymap position if enabled in settings. Do NOT modify or remove this! IT WORKS!
+            if (layout.citymap) {
+                const citymap = layout.citymap;
+                if (citymap) {
+                    $('#worldmap').css({
+                        top: citymap.top + 'px',
+                        left: citymap.left + 'px',
+                        transform: `scale(${citymap.zoom || 1})` // Apply zoom if available
+                    });
+                }
+            }
+
+            // IMPORTANT: Enforce mainbox position if enabled in settings. Do NOT modify or remove this! IT WORKS!
+            if (layout.mainbox) {
+                const mainbox = layout.mainbox;
+                if (ikariam && layout.maintainLayout && mainbox) {
+                    // Apply specific adjustments for Ikariam
+                    if (ikariam.mainbox_x !== mainbox.x) {
+                        ikariam.mainbox_x = mainbox.x;
+                    }
+                    if (ikariam.mainbox_z !== mainbox.z) {
+                        ikariam.mainbox_z = mainbox.z;
+                    }
+                }
+            }
+
+            // IMPORTANT: Enforce sidebar position if enabled in settings. Do NOT modify or remove this! IT WORKS!
+            if (layout.sidebar) {
+                const sidebar = layout.sidebar;
+                if (layout.maintainLayout && sidebar) {
+                    // Apply specific adjustments for Ikariam
+                    if (ikariam.sidebar_x !== sidebar.x) {
+                        ikariam.sidebar_x = sidebar.x;
+                    }
+                    if (ikariam.sidebar_z !== sidebar.z) {
+                        ikariam.sidebar_z = sidebar.z;
+                    }
+                }
+            }
+        },
+
+        buildingExistsInAnyCity(buildingKey, cities) {
+            return Object.values(cities).some(city =>
+                city.buildings && Array.isArray(city.buildings[buildingKey]) && city.buildings[buildingKey].length > 0
+            );
+        }
+    },
+
+    events: {
+        attachButtonEvents() {
+            // Attach event handlers for minimize/maximize
+            $('.tnt_panel_minimize_btn').off('click').on('click', function () {
+                const $panel = $('#tnt_info_resources');
+                const $btn = $(this);
+
+                if ($panel.hasClass('minimized')) {
+                    $panel.removeClass('minimized');
+                    $btn.removeClass('tnt_foreward').addClass('tnt_back');
+                } else {
+                    $panel.addClass('minimized');
+                    $btn.removeClass('tnt_back').addClass('tnt_foreward');
+                }
+            });
+
+            // Attach event handlers for toggle between resources and buildings
+            $('.tnt_table_toggle_btn').off('click').on('click', function () {
+                const $resourceContent = $('#tnt_info_resources_content');
+                const $buildingContent = $('#tnt_info_buildings_content');
+
+                if ($resourceContent.is(':visible')) {
+                    $resourceContent.hide();
+                    $buildingContent.show();
+                    $(this).addClass('active');
+                } else {
+                    $buildingContent.hide();
+                    $resourceContent.show();
+                    $(this).removeClass('active');
+                }
+            });
+
+            // Attach event handlers for refresh button. citySwitcher.start() will handle the refresh logic
+            $('.tnt_refresh_btn').off('click').on('click', function () {
+                tnt.citySwitcher.start();
+            });
+        }
+    },
+
     // dataCollector = Collects and stores resource data
     dataCollector: {
         update() {
@@ -1641,6 +1683,9 @@ const tnt = {
                 $externalControls.append($leftButtons);
                 $externalControls.append($rightButtons);
                 $('#tnt_info_resources').prepend($externalControls);
+
+                // Attach event handlers for the new buttons
+                tnt.events.attachButtonEvents();
             }
         },
 
@@ -2274,121 +2319,8 @@ const tnt = {
                 return false;
             });
 
-            // Button: Panel minimize/maximize
-            $('.tnt_panel_minimize_btn').off('click').on('click', function () {
-                const $panel = $('#tnt_info_resources');
-                const $btn = $(this);
-
-                if ($panel.hasClass('minimized')) {
-                    $panel.removeClass('minimized');
-                    $btn.removeClass('tnt_foreward').addClass('tnt_back');
-                } else {
-                    $panel.addClass('minimized');
-                    $btn.removeClass('tnt_back').addClass('tnt_foreward');
-                }
-            });
-
-            // Button: Toggle between resources/buildings tables
-            $('.tnt_table_toggle_btn').off('click').on('click', function () {
-                const $resourceContent = $('#tnt_info_resources_content');
-                const $buildingContent = $('#tnt_info_buildings_content');
-
-                if ($resourceContent.is(':visible')) {
-                    $resourceContent.hide();
-                    $buildingContent.show();
-                    $(this).addClass('active');
-                } else {
-                    $buildingContent.hide();
-                    $resourceContent.show();
-                    $(this).removeClass('active');
-                }
-            });
-
-            // Button: CitySwitcher - Refresh all cities button
-            $('.tnt_refresh_btn').off('click').on('click', function () {
-                tnt.citySwitcher.start();
-            });
-
             // Add tooltips to resource icons
-            this.addResourceTooltips(); // Not sure where to move this. One run once after tables has been build!
-        },
-
-        addResourceTooltips() {
-            // Check if BubbleTips is available
-            if (!tnt.tooltip.isAvailable()) {
-                console.log('TNT: BubbleTips not available');
-                return;
-            }
-
-            // Ensure z-index is high enough to sit above TNT tables
-            if (BubbleTips.bubbleNode) {
-                $(BubbleTips.bubbleNode).css('z-index', '100000001');
-            }
-            if (BubbleTips.infoNode) {
-                $(BubbleTips.infoNode).css('z-index', '100000001');
-            }
-
-            const $containers = $('.tnt_tooltip_target');
-            tnt.core.debug.log(`[TNT] Adding tooltips to ${$containers.length} elements`, 3);
-
-            // Iterate over each container and bind the tooltip
-            $containers.each(function () {
-                const $container = $(this);
-                let resourceType = $container.data('resource');
-
-                if (!resourceType || !TNT_TOOLTIP_TEMPLATES.hasOwnProperty(resourceType)) {
-                    tnt.core.debug.log(`[TNT] Tooltip template missing or invalid for resourceType:`, resourceType, `→ Element: ${JSON.stringify($container[0])}`, 3);
-                    return;
-                }
-                const template = TNT_TOOLTIP_TEMPLATES[resourceType];
-                const html = tnt.tooltip.formatTemplateTooltip(template);
-
-                // Remove previous handlers to avoid stacking
-                $container.off('mouseenter.tnt mouseleave.tnt');
-
-                $container.on('mouseenter.tnt', function () {
-                    try {
-                        // Clean any existing tooltip state without disrupting Ikariam tooltips
-                        if (typeof BubbleTips.clear === 'function') {
-                            BubbleTips.clear();
-                        }
-
-                        // Ensure BubbleTips is initialized
-                        if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
-                            BubbleTips.init();
-                        }
-
-                        // Reapply high z-index (Ikariam might reset it)
-                        $(BubbleTips.infoNode).css({
-                            'z-index': '100000001',
-                            'display': 'block',
-                            'position': 'absolute'
-                        });
-
-                        // Bind the TNT tooltip using BubbleTips system
-                        BubbleTips.bindBubbleTip(6, 13, html, null, this, false);
-
-                        // Ensure visibility after slight delay
-                        setTimeout(() => {
-                            if (BubbleTips.infoNode && $(BubbleTips.infoNode).is(':hidden')) {
-                                $(BubbleTips.infoNode).show();
-                            }
-                        }, 30);
-                    } catch (err) {
-                        console.warn('TNT: Tooltip bind failed for', resourceType + ':', err);
-                    }
-                });
-
-                $container.on('mouseleave.tnt', function () {
-                    try {
-                        if (typeof BubbleTips.clear === 'function') {
-                            BubbleTips.clear();
-                        }
-                    } catch (e) {
-                        console.warn('TNT: Tooltip cleanup failed:', e);
-                    }
-                });
-            });
+            tnt.tooltip.attachTooltips(); // Not sure where to move this. One run once after tables has been build!
         }
     },
 
@@ -2525,13 +2457,6 @@ const tnt = {
     
     // Tooltip/Bubbletip Testing Module
     tooltip: {
-        // Test if Ikariam's BubbleTips system is available
-        isAvailable() {
-            return typeof BubbleTips !== 'undefined' && 
-                   typeof BubbleTips.bindBubbleTip === 'function' &&
-                   typeof BubbleTips.init === 'function';
-        },
-
         // Initialize the tooltip system (ensure BubbleTips is ready)
         init() {
             if (this.isAvailable()) {
@@ -2547,7 +2472,97 @@ const tnt = {
             }
         },
 
-        // Create a simple tooltip on an element
+        // Test if Ikariam's BubbleTips system is available
+        isAvailable() {
+            return typeof BubbleTips !== 'undefined' && 
+                   typeof BubbleTips.bindBubbleTip === 'function' &&
+                   typeof BubbleTips.init === 'function';
+        },
+        
+        formatTemplateTooltip({ title, body }) {
+            return `<div style="padding:8px;"><strong>${title}</strong><br/>${body}</div>`;
+        },
+
+        // Attach tooltips to elements with class 'tnt_tooltip_target'
+        attachTooltips() {
+            // Check if BubbleTips is available
+            if (!tnt.tooltip.isAvailable()) {
+                console.log('TNT: BubbleTips not available');
+                return;
+            }
+
+            // Ensure z-index is high enough to sit above TNT tables
+            if (BubbleTips.bubbleNode) {
+                $(BubbleTips.bubbleNode).css('z-index', '100000001');
+            }
+            if (BubbleTips.infoNode) {
+                $(BubbleTips.infoNode).css('z-index', '100000001');
+            }
+
+            const $containers = $('.tnt_tooltip_target');
+            tnt.core.debug.log(`[TNT] Adding tooltips to ${$containers.length} elements`, 3);
+
+            // Iterate over each container and bind the tooltip
+            $containers.each(function () {
+                const $container = $(this);
+                let resourceType = $container.data('resource');
+
+                if (!resourceType || !TNT_TOOLTIP_TEMPLATES.hasOwnProperty(resourceType)) {
+                    tnt.core.debug.log(`[TNT] Tooltip template missing or invalid for resourceType:`, resourceType, `→ Element: ${JSON.stringify($container[0])}`, 3);
+                    return;
+                }
+                const template = TNT_TOOLTIP_TEMPLATES[resourceType];
+                const html = tnt.tooltip.formatTemplateTooltip(template);
+
+                // Remove previous handlers to avoid stacking
+                $container.off('mouseenter.tnt mouseleave.tnt');
+
+                $container.on('mouseenter.tnt', function () {
+                    try {
+                        // Clean any existing tooltip state without disrupting Ikariam tooltips
+                        if (typeof BubbleTips.clear === 'function') {
+                            BubbleTips.clear();
+                        }
+
+                        // Ensure BubbleTips is initialized
+                        if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
+                            BubbleTips.init();
+                        }
+
+                        // Reapply high z-index (Ikariam might reset it)
+                        $(BubbleTips.infoNode).css({
+                            'z-index': '100000001',
+                            'display': 'block',
+                            'position': 'absolute'
+                        });
+
+                        // Bind the TNT tooltip using BubbleTips system
+                        BubbleTips.bindBubbleTip(6, 13, html, null, this, false);
+
+                        // Ensure visibility after slight delay
+                        setTimeout(() => {
+                            if (BubbleTips.infoNode && $(BubbleTips.infoNode).is(':hidden')) {
+                                $(BubbleTips.infoNode).show();
+                            }
+                        }, 30);
+                    } catch (err) {
+                        console.warn('TNT: Tooltip bind failed for', resourceType + ':', err);
+                    }
+                });
+
+                $container.on('mouseleave.tnt', function () {
+                    try {
+                        if (typeof BubbleTips.clear === 'function') {
+                            BubbleTips.clear();
+                        }
+                    } catch (e) {
+                        console.warn('TNT: Tooltip cleanup failed:', e);
+                    }
+                });
+            });
+        },
+
+        // NOT USED: Create a simple tooltip on an element - Kept for now
         // Types: 10 = success (green), 11 = info (yellow), 12 = error (red), 13 = hover tooltip
         create(element, text, type = 13) {
             if (!this.init()) {
@@ -2564,190 +2579,6 @@ const tnt = {
                 console.error('TNT: Error creating tooltip:', e);
                 return false;
             }
-        },
-
-        // Create a feedback bubble (shows for 5 seconds)
-        createFeedback(text, type = 'info') {
-            if (!this.init()) {
-                console.warn('TNT: BubbleTips not available, cannot create feedback');
-                return false;
-            }
-
-            try {
-                let bubbleType;
-                switch (type) {
-                    case 'success': bubbleType = 10; break; // Green with checkmark
-                    case 'error': bubbleType = 12; break;   // Red with X
-                    case 'info':
-                    default: bubbleType = 11; break;        // Yellow
-                }
-
-                // Parameters: location(5=last clicked), type, text, null, null
-                BubbleTips.bindBubbleTip(5, bubbleType, text, null, null);
-                return true;
-            } catch (e) {
-                console.error('TNT: Error creating feedback bubble:', e);
-                return false;
-            }
-        },
-
-        // Test function to add tooltips to resource table
-        testResourceTableTooltips() {
-            if (!this.init()) {
-                console.warn('TNT: Cannot test tooltips - BubbleTips not available');
-                return;
-            }
-
-            // Add tooltips to resource icons in the header
-            setTimeout(() => {
-                const $table = $('#tnt_resources_table');
-                if ($table.length === 0) {
-                    console.log('TNT: Resource table not found for tooltip testing');
-                    return;
-                }
-
-                // Add tooltip to wood icon
-                const $woodIcon = $table.find('th img[src*="icon_wood.png"]').parent();
-                if ($woodIcon.length > 0) {
-                    this.create($woodIcon[0], 
-                        '<div style="padding:5px;"><strong>Wood Resources</strong><br/>Basic building material<br/>Required for all construction</div>'
-                    );
-                }
-
-                // Add tooltip to wine icon
-                const $wineIcon = $table.find('th img[src*="icon_wine.png"]').parent();
-                if ($wineIcon.length > 0) {
-                    this.create($wineIcon[0], 
-                        '<div style="padding:5px;"><strong>Wine</strong><br/>Luxury good for population<br/>Keeps citizens happy</div>'
-                    );
-                }
-
-                // Add tooltip to marble icon
-                const $marbleIcon = $table.find('th img[src*="icon_marble.png"]').parent();
-                if ($marbleIcon.length > 0) {
-                    this.create($marbleIcon[0], 
-                        '<div style="padding:5px;"><strong>Marble</strong><br/>Premium building material<br/>Used for advanced buildings</div>'
-                    );
-                }
-
-                // Add tooltip to crystal icon
-                const $crystalIcon = $table.find('th img[src*="icon_glass.png"]').parent();
-                if ($crystalIcon.length > 0) {
-                    this.create($crystalIcon[0], 
-                        '<div style="padding:5px;"><strong>Crystal Glass</strong><br/>High-tech luxury good<br/>Required for advanced research</div>'
-                    );
-                }
-
-                // Add tooltip to sulfur icon
-                const $sulfurIcon = $table.find('th img[src*="icon_sulfur.png"]').parent();
-                if ($sulfurIcon.length > 0) {
-                    this.create($sulfurIcon[0], 
-                        '<div style="padding:5px;"><strong>Sulfur</strong><br/>Military resource<br/>Used for weapons and explosives</div>'
-                    );
-                }
-
-                // Add tooltips to city links with production info
-                $table.find('.tnt_city_link').each(function() {
-                    const cityId = $(this).data('city-id');
-                    const cityData = tnt.data.storage.city[cityId];
-                    
-                    if (cityData) {
-                        const production24h = tnt.utils.calculateProduction(cityId, 24);
-                        const tooltipText = `
-                            <div style="padding:5px;">
-                                <strong>${tnt.get.cityName(cityId)}</strong><br/>
-                                <strong>24h Production:</strong><br/>
-                                Wood: ${production24h.wood}<br/>
-                                Wine: ${production24h.wine}<br/>
-                                Marble: ${production24h.marble}<br/>
-                                Crystal: ${production24h.crystal}<br/>
-                                Sulfur: ${production24h.sulfur}
-                            </div>
-                        `;
-                        
-                        tnt.tooltip.create(this, tooltipText);
-                    }
-                });
-
-                console.log('TNT: Added tooltips to resource table elements');
-            }, 500);
-        },
-
-        // Test function to show different types of feedback bubbles
-        testFeedbackBubbles() {
-            console.log('TNT: Testing feedback bubbles...');
-            
-            // Test success bubble
-            setTimeout(() => {
-                this.createFeedback('✓ Success! This is a green success bubble.', 'success');
-            }, 500);
-
-            // Test info bubble
-            setTimeout(() => {
-                this.createFeedback('ℹ Info: This is a yellow information bubble.', 'info');
-            }, 2000);
-
-            // Test error bubble
-            setTimeout(() => {
-                this.createFeedback('✗ Error: This is a red error bubble.', 'error');
-            }, 4000);
-        },
-
-        // Enhanced test function for building table tooltips
-        testBuildingTableTooltips() {
-            if (!this.init()) {
-                console.warn('TNT: Cannot test building tooltips - BubbleTips not available');
-                return;
-            }
-
-            setTimeout(() => {
-                const $buildingTable = $('#tnt_buildings_table');
-                if ($buildingTable.length === 0) {
-                    console.log('TNT: Building table not found for tooltip testing');
-                    return;
-                }
-
-                // Add tooltips to building icons in header
-                $buildingTable.find('th img.tnt_building_icon').each(function() {
-                    const $icon = $(this);
-                    const src = $icon.attr('src');
-                    const buildingName = $icon.attr('title');
-                    
-                    if (src && buildingName) {
-                        let description = '';
-                        
-                        // Get building description based on src
-                        if (src.includes('townhall')) {
-                            description = 'Administrative center of your city<br/>Higher levels unlock more building slots<br/>Required for colony management';
-                        } else if (src.includes('warehouse')) {
-                            description = 'Stores your resources safely<br/>Higher levels increase storage capacity<br/>Protects goods from raids';
-                        } else if (src.includes('port')) {
-                            description = 'Enables trading with other players<br/>Higher levels increase trade ships<br/>Connects your island to the world';
-                        } else if (src.includes('barracks')) {
-                            description = 'Trains military units<br/>Higher levels unlock advanced troops<br/>Essential for defense and conquest';
-                        } else if (src.includes('academy')) {
-                            description = 'Research new technologies<br/>Higher levels speed up research<br/>Unlocks advanced building options';
-                        } else {
-                            description = 'Important city building<br/>Upgrade to improve its benefits<br/>Check building details for specifics';
-                        }
-
-                        const tooltipText = `
-                            <div style="padding:5px;">
-                                <strong>${buildingName}</strong><br/>
-                                ${description}
-                            </div>
-                        `;
-                        
-                        tnt.tooltip.create($icon.parent()[0], tooltipText);
-                    }
-                });
-
-                console.log('TNT: Added tooltips to building table elements');
-            }, 500);
-        },
-        
-        formatTemplateTooltip({ title, body }) {
-            return `<div style="padding:8px;"><strong>${title}</strong><br/>${body}</div>`;
         }
     },
 
