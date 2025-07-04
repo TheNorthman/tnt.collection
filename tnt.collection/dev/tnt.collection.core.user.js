@@ -920,7 +920,7 @@ const tnt = {
 
                 if (settings.removeFlyingShop && $("body").attr("id") === "city") {
                     $('.premiumOfferBox').hide();
-                    $('.expandable.resourceShop, .expandable.slot1, .expandable.slot2').remove();
+                    $('#leftMenu .expandable.resourceShop, #leftMenu .expandable.slot1, #leftMenu .expandable.slot2').remove();
                     $('#js_viewCityMenu').css({
                         'top': '195px'
                     });
