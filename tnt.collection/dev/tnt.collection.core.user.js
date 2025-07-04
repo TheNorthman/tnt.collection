@@ -2459,66 +2459,24 @@ const tnt = {
     tooltip: {
         // Initialize the tooltip system (ensure BubbleTips is ready)
         init() {
-            if (this.isAvailable()) {
-                // Ensure BubbleTips is initialized
-                if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
-                    BubbleTips.init();
-                }
-                tnt.core.debug.log('BubbleTips system is available and initialized');
-                return true;
-            } else {
-                tnt.core.debug.log('BubbleTips system is not available');
+            if (typeof BubbleTips === 'undefined' || typeof BubbleTips.bindBubbleTip !== 'function') {
+                tnt.core.debug.log('[TNT] BubbleTips system is not available');
                 return false;
             }
+
+            if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
+                BubbleTips.init?.();
+            }
+
+            tnt.core.debug.log('[TNT] BubbleTips system is available and initialized');
+            return true;
         },
 
-        // Test if Ikariam's BubbleTips system is available
-        isAvailable() {
-            return typeof BubbleTips !== 'undefined' && 
-                   typeof BubbleTips.bindBubbleTip === 'function' &&
-                   typeof BubbleTips.init === 'function';
-        },
-        
         formatTemplateTooltip({ title, body }) {
             return `<div style="padding:8px;"><strong>${title}</strong><br/>${body}</div>`;
         },
 
-        // Attach tooltips to elements with class 'tnt_tooltip_target'
-        attachTooltips() {
-            // Check if BubbleTips is available
-            if (!tnt.tooltip.isAvailable()) {
-                console.log('TNT: BubbleTips not available');
-                return;
-            }
-
-            // Ensure z-index is high enough to sit above TNT tables
-            if (BubbleTips.bubbleNode) {
-                $(BubbleTips.bubbleNode).css('z-index', '100000001');
-            }
-            if (BubbleTips.infoNode) {
-                $(BubbleTips.infoNode).css('z-index', '100000001');
-            }
-
-            const $containers = $('.tnt_tooltip_target');
-            tnt.core.debug.log(`[TNT] Adding tooltips to ${$containers.length} elements`, 3);
-
-            // Iterate over each container and bind the tooltip
-            $containers.each(function () {
-                const $container = $(this);
-                let resourceType = $container.data('resource');
-
-                if (!resourceType || !TNT_TOOLTIP_TEMPLATES.hasOwnProperty(resourceType)) {
-                    tnt.core.debug.log(`[TNT] Tooltip template missing or invalid for resourceType:`, resourceType, `→ Element: ${JSON.stringify($container[0])}`, 3);
-                    return;
-                }
-                const template = TNT_TOOLTIP_TEMPLATES[resourceType];
-                const html = tnt.tooltip.formatTemplateTooltip(template);
-
-                tnt.tooltip.bindToElement($container, html);
-
-            });
-        },
-
+        // Bind a tooltip HTML to an element
         bindToElement($el, html) {
             if (!$el || $el.length === 0 || !html) return;
 
@@ -2536,6 +2494,44 @@ const tnt = {
             });
 
             $el.on('mouseleave.tnt', () => BubbleTips.clear?.());
+        },
+
+        // Bind a template tooltip to an element
+        bindTemplateTooltip($el, section, key) {
+            if (!$el || $el.length === 0) return;
+
+            const template = TNT_TOOLTIP_TEMPLATES?.[section]?.[key] || TNT_TOOLTIP_TEMPLATES?.[key];
+            if (!template) {
+                tnt.core.debug.log(`[TNT] No tooltip template found for section="${section}", key="${key}"`);
+                return;
+            }
+
+            const html = tnt.tooltip.formatTemplateTooltip(template);
+            tnt.tooltip.bindToElement($el, html);
+        },
+
+        // Attach tooltips to elements with class 'tnt_tooltip_target'
+        attachTooltips() {
+            if (!tnt.tooltip.init()) {
+                console.log('TNT: BubbleTips not available');
+                return;
+            }
+
+            if (BubbleTips.bubbleNode) {
+                $(BubbleTips.bubbleNode).css('z-index', '100000001');
+            }
+            if (BubbleTips.infoNode) {
+                $(BubbleTips.infoNode).css('z-index', '100000001');
+            }
+
+            const $containers = $('.tnt_tooltip_target');
+            tnt.core.debug.log(`[TNT] Adding tooltips to ${$containers.length} elements`, 3);
+
+            $containers.each(function () {
+                const $container = $(this);
+                const resourceType = $container.data('resource');
+                tnt.tooltip.bindTemplateTooltip($container, 'resource', resourceType);
+            });
         },
 
         // NOT USED: Create a simple tooltip on an element - Kept for now
