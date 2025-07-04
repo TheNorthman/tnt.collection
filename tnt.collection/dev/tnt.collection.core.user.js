@@ -1731,6 +1731,33 @@ const tnt = {
             return categorySpans;
         },
 
+        // PHASE 1: Add calculateBuildingTotals helper
+        calculateBuildingTotals(mergedColumns) {
+            const totals = {};
+
+            mergedColumns.forEach(col => {
+                let total = 0;
+
+                Object.values(tnt.data.storage.city || {}).forEach(city => {
+                    if (!city.buildings) return;
+
+                    if (col.key === 'palaceOrColony') {
+                        const palace = city.buildings.palace || [];
+                        const colony = city.buildings.palaceColony || [];
+                        total += palace.reduce((sum, b) => sum + (b.level || 0), 0);
+                        total += colony.reduce((sum, b) => sum + (b.level || 0), 0);
+                    } else {
+                        const arr = city.buildings[col.key] || [];
+                        total += arr.reduce((sum, b) => sum + (b.level || 0), 0);
+                    }
+                });
+
+                totals[col.key] = total;
+            });
+
+            return totals;
+        },
+
         sortCities() {
             var list = {};
             var cities = tnt.data.storage.city || {};
@@ -2065,11 +2092,13 @@ const tnt = {
                 html += '</tr>';
             });
 
-            // Total row
+            // Total row with building level totals
             html += '<tr>';
             html += '<td class="tnt_total" style="padding:4px;text-align:left;border:1px solid #000;background-color:#faeac6;font-weight:bold;">Total</td>';
-            mergedColumns.forEach(() => {
-                html += '<td class="tnt_building_level" style="padding:4px;text-align:center;border:1px solid #000;background-color:#faeac6;"></td>';
+            const buildingTotals = tnt.dataCollector.calculateBuildingTotals(mergedColumns);
+            mergedColumns.forEach(col => {
+                const total = buildingTotals[col.key] || '';
+                html += `<td class="tnt_building_level" style="padding:4px;text-align:center;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${total}</td>`;
             });
             html += '</tr>';
 
