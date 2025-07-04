@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection Core
-// @version      2.1.0
+// @version      2.1.1
 // @namespace    tnt.collection.core
 // @author       Ronny Jespersen
 // @description  TNT Collection Core - Stable functionality for Ikariam enhancements
@@ -1087,11 +1087,17 @@ const tnt = {
         init() {
             tnt.core.debug.log(`TNT Collection v${tnt.version} - Init...`);
 
-            tnt.core.storage.init();
-            tnt.dataCollector.update();
-            tnt.core.notification.init();
+            // We run events.init() first to overwrite the default Ikariam events as early as possible
             tnt.core.events.init();
+
+            // Initialize all core components
+            tnt.core.storage.init();
+            tnt.core.notification.init();
             tnt.core.options.init();
+
+            // Collect city data
+            tnt.dataCollector.update();
+            tnt.dataCollector.show();
 
             // Apply UI modifications
             tnt.ui.applyUIModifications();
@@ -1548,7 +1554,7 @@ const tnt = {
             // Store in own city data
             tnt.data.storage.city[currentCityId] = cityData;
             tnt.core.storage.save();
-            tnt.dataCollector.show();
+            // tnt.dataCollector.show(); // Moved to tnt.core.init() to avoid double updates. Remove if not needed
         },
 
         collectForeignCityData(currentCityId) {
