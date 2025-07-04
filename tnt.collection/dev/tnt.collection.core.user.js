@@ -1294,12 +1294,11 @@ const tnt = {
         events: {
             init() {
                 // Check if ajax and ajax.Responder exist before overriding
-
                 if (typeof ajax !== 'undefined' && ajax.Responder) {
-                    tnt.core.debug.log('Ajax responder available, applying override');
+                    tnt.core.debug.log('[TNT] Ajax responder available, applying override');
                     tnt.core.events.ikariam.override();
                 } else {
-                    tnt.core.debug.log('Ajax responder not available, skipping override');
+                    tnt.core.debug.log('[TNT] Ajax responder not available, skipping override');
                 }
             },
             ikariam: {
@@ -1406,7 +1405,7 @@ const tnt = {
                         // Let Ikariam do its stuff
                         ajax.Responder.tntChangeView(response);
 
-                        // PHASE 2: Apply layout with inline styles after rendering
+                        // Apply layout with inline styles after rendering
                         try {
                             if (ikariam.templateView && ikariam.templateView.id === "city") {
                                 tnt.utils.applyLayoutDirectly();
@@ -1595,38 +1594,27 @@ const tnt = {
 
         show() {
             // Only show resource tables for own cities
-            if (tnt.settings.getResourceDisplaySettings().showResources &&
-                $("body").attr("id") == "city" &&
-                tnt.is.ownCity()) {
+            if (tnt.settings.getResourceDisplaySettings().showResources && $("body").attr("id") == "city" && tnt.is.ownCity()) {
 
-                // console.log('[TNT] Showing resource tables');
-
+                // Show resource tables
                 if ($('#tnt_info_resources').length === 0) {
                     $('body').append(tnt.template.resources);
-                    // console.log('[TNT] Created tnt_info_resources container');
                 }
 
-                $('#tnt_info_resources_content').empty();
-                $('#tnt_info_buildings_content').empty();
+                // $('#tnt_info_resources_content').empty();
+                // $('#tnt_info_buildings_content').empty();
 
+                // Build and display the resource table
                 const resourceTable = tnt.tableBuilder.buildTable('resources');
                 $('#tnt_info_resources_content').html(resourceTable);
-                // console.log('[TNT] Inserted resource table HTML');
 
+                // Build and display the buildings table
                 const buildingTable = tnt.tableBuilder.buildTable('buildings');
                 $('#tnt_info_buildings_content').html(buildingTable);
-                // console.log('[TNT] Inserted building table HTML');
 
+                // Create external controls (buttons) and attach event handlers
                 this.createExternalControls();
-                tnt.tableBuilder.attachEventHandlers();
-
-                const $cityLinks = $('.tnt_city_link');
-                // console.log('[TNT] Created city links:', $cityLinks.length);
-            } else {
-                // console.log('[TNT] Not showing resource tables - conditions not met');
-                if (!tnt.is.ownCity()) {
-                    // console.log('[TNT] Foreign city detected - not showing own city tables');
-                }
+                tnt.tableBuilder.attachEventHandlers(); // Is this needed here?
             }
         },
 
@@ -1861,31 +1849,31 @@ const tnt = {
             // Optional columns
             if (settings.showPopulation) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += '<span class="tnt_resource_icon_container">' + tnt.dataCollector.getIcon('population') + '</span></th>';
+                html += '<span class="tnt_tooltip_target" data-resource="population">' + tnt.dataCollector.getIcon('population') + '</span></th>';
             }
             if (settings.showCitizens) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += '<span class="tnt_resource_icon_container">' + tnt.dataCollector.getIcon('citizens') + '</span></th>';
+                html += '<span class="tnt_tooltip_target" data-resource="citizens">' + tnt.dataCollector.getIcon('citizens') + '</span></th>';
             }
             if (settings.showWood) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += '<span class="tnt_resource_icon_container" data-resource="wood">' + tnt.dataCollector.getIcon(0) + '</span></th>';
+                html += '<span class="tnt_tooltip_target" data-resource="wood">' + tnt.dataCollector.getIcon(0) + '</span></th>';
             }
             if (settings.showWine) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += '<span class="tnt_resource_icon_container" data-resource="wine">' + tnt.dataCollector.getIcon(1) + '</span></th>';
+                html += '<span class="tnt_tooltip_target" data-resource="wine">' + tnt.dataCollector.getIcon(1) + '</span></th>';
             }
             if (settings.showMarble) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += '<span class="tnt_resource_icon_container" data-resource="marble">' + tnt.dataCollector.getIcon(2) + '</span></th>';
+                html += '<span class="tnt_tooltip_target" data-resource="marble">' + tnt.dataCollector.getIcon(2) + '</span></th>';
             }
             if (settings.showCrystal) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += '<span class="tnt_resource_icon_container" data-resource="crystal">' + tnt.dataCollector.getIcon(3) + '</span></th>';
+                html += '<span class="tnt_tooltip_target" data-resource="crystal">' + tnt.dataCollector.getIcon(3) + '</span></th>';
             }
             if (settings.showSulfur) {
                 html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-                html += '<span class="tnt_resource_icon_container" data-resource="sulfur">' + tnt.dataCollector.getIcon(4) + '</span></th>';
+                html += '<span class="tnt_tooltip_target" data-resource="sulfur">' + tnt.dataCollector.getIcon(4) + '</span></th>';
             }
             html += '</tr>';
 
@@ -2320,6 +2308,7 @@ const tnt = {
         },
 
         addResourceTooltips() {
+            // Check if BubbleTips is available
             if (!tnt.tooltip.isAvailable()) {
                 console.log('TNT: BubbleTips not available');
                 return;
@@ -2333,19 +2322,18 @@ const tnt = {
                 $(BubbleTips.infoNode).css('z-index', '100000001');
             }
 
-            const $containers = $('.tnt_resource_icon_container');
-            tnt.core.debug.log('TNT: Adding tooltips to', $containers.length, 'resource icons');
+            const $containers = $('.tnt_tooltip_target');
+            tnt.core.debug.log(`[TNT] Adding tooltips to ${$containers.length} elements`, 3);
 
             // Iterate over each container and bind the tooltip
             $containers.each(function () {
                 const $container = $(this);
                 let resourceType = $container.data('resource');
-                
+
                 if (!resourceType || !TNT_TOOLTIP_TEMPLATES.hasOwnProperty(resourceType)) {
-                    tnt.core.debug.log('Tooltip template missing for resource:', resourceType);
+                    tnt.core.debug.log(`[TNT] Tooltip template missing or invalid for resourceType:`, resourceType, `→ Element: ${JSON.stringify($container[0])}`, 3);
                     return;
                 }
-                
                 const template = TNT_TOOLTIP_TEMPLATES[resourceType];
                 const html = tnt.tooltip.formatTemplateTooltip(template);
 
@@ -2476,34 +2464,29 @@ const tnt = {
         updateVisualProgress() {
             // 
             if ($('#tnt_info_resources').is(':visible') && $("body").attr("id") === "city") {
-                // setTimeout(() => {
-                    const resourceTable = tnt.tableBuilder.buildTable('resources');
-                    $('#tnt_info_resources_content').html(resourceTable);
+                const resourceTable = tnt.tableBuilder.buildTable('resources');
+                $('#tnt_info_resources_content').html(resourceTable);
 
-                    const buildingTable = tnt.tableBuilder.buildTable('buildings');
-                    $('#tnt_info_buildings_content').html(buildingTable);
+                const buildingTable = tnt.tableBuilder.buildTable('buildings');
+                $('#tnt_info_buildings_content').html(buildingTable);
 
-                    tnt.tableBuilder.attachEventHandlers();
-                // }, 300);
+                // Shouldn't need to reattach handlers here. We are going to move to a new city anyway.
+                // tnt.tableBuilder.attachEventHandlers();
             }
         },
 
         restoreNormalVisualState() {
-            // console.log('[TNT] === RESTORING NORMAL STATE ===');
-
+            // Restore normal visual state of the resources/buildings tables
             this.visitedCities = [];
 
             if ($('#tnt_info_resources').is(':visible') && $("body").attr("id") === "city") {
-                setTimeout(() => {
-                    const resourceTable = tnt.tableBuilder.buildTable('resources');
-                    $('#tnt_info_resources_content').html(resourceTable);
+                const resourceTable = tnt.tableBuilder.buildTable('resources');
+                $('#tnt_info_resources_content').html(resourceTable);
 
-                    const buildingTable = tnt.tableBuilder.buildTable('buildings');
-                    $('#tnt_info_buildings_content').html(buildingTable);
+                const buildingTable = tnt.tableBuilder.buildTable('buildings');
+                $('#tnt_info_buildings_content').html(buildingTable);
 
-                    tnt.tableBuilder.attachEventHandlers();
-                    // console.log('[TNT] Normal state restored');
-                }, 300);
+                tnt.tableBuilder.attachEventHandlers();
             }
         },
 
@@ -2526,7 +2509,7 @@ const tnt = {
                         this.nextCity();
                     }, 100);
                 } else {
-                    // console.log('[TNT] Direct navigation detected - stopping citySwitcher');
+                    // Direct navigation detected - stopping citySwitcher
                     this.isActive = false;
                     tnt.settings.set("citySwitcherActive", false);
                     this.restoreNormalVisualState();
