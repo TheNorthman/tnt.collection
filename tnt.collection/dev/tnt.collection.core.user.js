@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection Core
-// @version      2.1.1
+// @version      2.1.2
 // @namespace    tnt.collection.core
 // @author       Ronny Jespersen
 // @description  TNT Collection Core - Stable functionality for Ikariam enhancements
@@ -2514,52 +2514,28 @@ const tnt = {
                 const template = TNT_TOOLTIP_TEMPLATES[resourceType];
                 const html = tnt.tooltip.formatTemplateTooltip(template);
 
-                // Remove previous handlers to avoid stacking
-                $container.off('mouseenter.tnt mouseleave.tnt');
+                tnt.tooltip.bindToElement($container, html);
 
-                $container.on('mouseenter.tnt', function () {
-                    try {
-                        // Clean any existing tooltip state without disrupting Ikariam tooltips
-                        if (typeof BubbleTips.clear === 'function') {
-                            BubbleTips.clear();
-                        }
-
-                        // Ensure BubbleTips is initialized
-                        if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
-                            BubbleTips.init();
-                        }
-
-                        // Reapply high z-index (Ikariam might reset it)
-                        $(BubbleTips.infoNode).css({
-                            'z-index': '100000001',
-                            'display': 'block',
-                            'position': 'absolute'
-                        });
-
-                        // Bind the TNT tooltip using BubbleTips system
-                        BubbleTips.bindBubbleTip(6, 13, html, null, this, false);
-
-                        // Ensure visibility after slight delay
-                        setTimeout(() => {
-                            if (BubbleTips.infoNode && $(BubbleTips.infoNode).is(':hidden')) {
-                                $(BubbleTips.infoNode).show();
-                            }
-                        }, 30);
-                    } catch (err) {
-                        console.warn('TNT: Tooltip bind failed for', resourceType + ':', err);
-                    }
-                });
-
-                $container.on('mouseleave.tnt', function () {
-                    try {
-                        if (typeof BubbleTips.clear === 'function') {
-                            BubbleTips.clear();
-                        }
-                    } catch (e) {
-                        console.warn('TNT: Tooltip cleanup failed:', e);
-                    }
-                });
             });
+        },
+
+        bindToElement($el, html) {
+            if (!$el || $el.length === 0 || !html) return;
+
+            $el.off('mouseenter.tnt mouseleave.tnt');
+
+            $el.on('mouseenter.tnt', function () {
+                try {
+                    BubbleTips.clear?.();
+                    BubbleTips.init?.();
+                    $(BubbleTips.infoNode).css({ 'z-index': '100000001', 'display': 'block' });
+                    BubbleTips.bindBubbleTip(6, 13, html, null, this, false);
+                } catch (err) {
+                    console.warn('TNT: Tooltip bind failed:', err);
+                }
+            });
+
+            $el.on('mouseleave.tnt', () => BubbleTips.clear?.());
         },
 
         // NOT USED: Create a simple tooltip on an element - Kept for now
