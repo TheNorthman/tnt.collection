@@ -74,34 +74,34 @@ const TNT_BUILDING_DEFINITIONS = Object.freeze([
 const validBuildingTypes = Object.freeze(TNT_BUILDING_DEFINITIONS.map(b => b.key));
 
 const TNT_TOOLTIP_TEMPLATES = {
-  wood: {
-    title: 'Wood Resources',
-    body: 'Basic material used in nearly all construction. Gathered from forests by Foresters.'
-  },
-  wine: {
-    title: 'Wine',
-    body: 'Luxury good consumed in Taverns to keep citizens happy. Produced by Winegrowers.'
-  },
-  marble: {
-    title: 'Marble',
-    body: 'Used for structural buildings and town upgrades. Supplied by Stonemasons.'
-  },
-  crystal: {
-    title: 'Crystal Glass',
-    body: 'Essential for research and scientific progress. Refined by Opticians.'
-  },
-  sulfur: {
-    title: 'Sulfur',
-    body: 'Powerful military resource used to create weapons and explosives. Extracted by Fireworkers.'
-  },
-  population: {
-    title: 'Population',
-    body: 'Total inhabitants of your city. Affects growth, tax income, and workforce availability.'
-  },
-  citizens: {
-    title: 'Citizens',
-    body: 'Free population available for jobs, research, or military service.'
-  }
+    wood: {
+        title: 'Wood Resources',
+        body: 'Basic material used in nearly all construction. Gathered from forests by Foresters.'
+    },
+    wine: {
+        title: 'Wine',
+        body: 'Luxury good consumed in Taverns to keep citizens happy. Produced by Winegrowers.'
+    },
+    marble: {
+        title: 'Marble',
+        body: 'Used for structural buildings and town upgrades. Supplied by Stonemasons.'
+    },
+    crystal: {
+        title: 'Crystal Glass',
+        body: 'Essential for research and scientific progress. Refined by Opticians.'
+    },
+    sulfur: {
+        title: 'Sulfur',
+        body: 'Powerful military resource used to create weapons and explosives. Extracted by Fireworkers.'
+    },
+    population: {
+        title: 'Population',
+        body: 'Total inhabitants of your city. Affects growth, tax income, and workforce availability.'
+    },
+    citizens: {
+        title: 'Citizens',
+        body: 'Free population available for jobs, research, or military service.'
+    }
 };
 
 const template = Object.freeze({
@@ -245,8 +245,8 @@ const tnt = {
         isValidIkariamUrl(url) {
             try {
                 const urlObj = new URL(url);
-                return urlObj.hostname.includes('ikariam') && 
-                       urlObj.hostname.includes('gameforge.com');
+                return urlObj.hostname.includes('ikariam') &&
+                    urlObj.hostname.includes('gameforge.com');
             } catch (e) {
                 return false;
             }
@@ -381,8 +381,8 @@ const tnt = {
         tnt.core.debug.log('[TNT] World map loaded');
 
         // Apply UI modifications for world map - Found in Ikariam Map Enhancer
-        $('.cities').each(function() {
-            if(this.innerText === "0") {
+        $('.cities').each(function () {
+            if (this.innerText === "0") {
                 $(this).parent().css('opacity', 0.5);
             } else {
                 $(this).parent().css('opacity', 1);
@@ -520,7 +520,7 @@ const tnt = {
 
                                 // Smart auto-start data collection with 200ms delay
                                 setTimeout(() => {
-                                    const cityList = tnt.get.cityList();
+                                    const cityList = tnt.get.player.list.cities();
                                     const cityCount = Object.keys(cityList).length;
 
                                     if (cityCount > 1) {
@@ -540,7 +540,7 @@ const tnt = {
 
                         // Smart auto-start for new users with 200ms delay
                         setTimeout(() => {
-                            const cityList = tnt.get.cityList();
+                            const cityList = tnt.get.player.list.cities();
                             const cityCount = Object.keys(cityList).length;
 
                             if (cityCount > 1) {
@@ -554,7 +554,7 @@ const tnt = {
                     }
 
                     // Check when city list becomes available
-                    const cityList = tnt.get.cityList();
+                    const cityList = tnt.get.player.list.cities();
 
                 } catch (e) {
                     tnt.core.debug.log("Error parsing tnt_storage: " + e.message, 1);
@@ -656,9 +656,9 @@ const tnt = {
                             case "city":
                                 break;
                             case "plunder":
-                                case "deploymentFleet":
-                                case "deployment":
-                                case "plunderFleet":
+                            case "deploymentFleet":
+                            case "deployment":
+                            case "plunderFleet":
                                 // Select all units when pillaging
                                 setTimeout(() => {
                                     // Set all units to max
@@ -719,7 +719,7 @@ const tnt = {
                             if (ikariam.templateView && ikariam.templateView.id === "city") {
                                 tnt.utils.applyLayoutDirectly();
                             }
-                        } catch (e) {}
+                        } catch (e) { }
 
                         // Check notifications
                         tnt.core.notification.check();
@@ -757,24 +757,24 @@ const tnt = {
                             case "plunder":
                             case "deployment":
                             case "plunderFleet":
-                            // Wait for dialog to be ready
-                            setTimeout(() => {
-                                // Select all units
-                                $('#selectArmy .assignUnits .setMax').trigger("click");
-                                $('#fleetDeploymentForm .setMax').trigger("click");
+                                // Wait for dialog to be ready
+                                setTimeout(() => {
+                                    // Select all units
+                                    $('#selectArmy .assignUnits .setMax').trigger("click");
+                                    $('#fleetDeploymentForm .setMax').trigger("click");
 
-                                // Set initial transporter count
-                                const freeTransporters = tnt.get.transporters.free();
-                                $('#extraTransporter').val(freeTransporters);
+                                    // Set initial transporter count
+                                    const freeTransporters = tnt.get.military.transporters.free();
+                                    $('#extraTransporter').val(freeTransporters);
 
-                                // Prevent 0 transporters when min is clicked
-                                $('#selectArmy .assignUnits .setMin').on('click', function () {
-                                    if (parseInt($('#extraTransporter').val()) === 0) {
-                                        $('#extraTransporter').val(tnt.get.transporters.free());
-                                    }
-                                });
-                            }, 1200);
-                            break;
+                                    // Prevent 0 transporters when min is clicked
+                                    $('#selectArmy .assignUnits .setMin').on('click', function () {
+                                        if (parseInt($('#extraTransporter').val()) === 0) {
+                                            $('#extraTransporter').val(freeTransporters);
+                                        }
+                                    });
+                                }, 1200);
+                                break;
                         }
 
                         // Run tnt.all() to handle all common tasks
@@ -1461,7 +1461,7 @@ const tnt = {
             $("#tntLayoutMaintain").on("change", () => {
                 const isChecked = $("#tntLayoutMaintain").is(':checked');
                 const layoutPrefs = tnt.settings.getLayoutPrefs();
-                
+
                 if (isChecked) {
                     layoutPrefs.maintainLayout = true;
                     $("#tntLayoutUrlSection").show();
@@ -1470,14 +1470,14 @@ const tnt = {
                     tnt.settings.clearLayoutPrefs();
                     $("#tntLayoutUrlSection").hide();
                 }
-                
+
                 if (isChecked) {
                     tnt.settings.setLayoutPrefs(layoutPrefs);
                 }
             });
 
             // Layout URL input handler
-            $("#tntLayoutUrl").on("paste blur keypress", function(e) {
+            $("#tntLayoutUrl").on("paste blur keypress", function (e) {
                 // Handle paste, blur, or Enter key
                 if (e.type === 'keypress' && e.which !== 13) return;
 
@@ -1579,20 +1579,20 @@ const tnt = {
             const cityData = {
                 ...prev,
                 buildings: {},
-                cityIslandCoords: tnt.get.cityIslandCoords(),
-                producedTradegood: parseInt(tnt.get.producedTradegood()),
-                population: tnt.get.resources.population(),
-                citizens: tnt.get.resources.citizens(),
-                max: tnt.get.resources.max(),
-                wood: tnt.get.resources.wood(),
-                wine: tnt.get.resources.wine(),
-                marble: tnt.get.resources.marble(),
-                crystal: tnt.get.resources.crystal(),
-                sulfur: tnt.get.resources.sulfur(),
+                cityIslandCoords: tnt.get.city.coords(),
+                producedTradegood: parseInt(tnt.get.city.tradegood()),
+                population: tnt.get.city.resources.population(),
+                citizens: tnt.get.city.resources.citizens(),
+                max: tnt.get.city.resources.max(),
+                wood: tnt.get.city.resources.wood(),
+                wine: tnt.get.city.resources.wine(),
+                marble: tnt.get.city.resources.marble(),
+                crystal: tnt.get.city.resources.crystal(),
+                sulfur: tnt.get.city.resources.sulfur(),
                 hasConstruction: false,
                 cityLvl: tnt.get.city.level(),
-                resourceProduction: tnt.get.resourceProduction(),
-                tradegoodProduction: tnt.get.tradegoodProduction(),
+                resourceProduction: tnt.get.city.production.resource(),
+                tradegoodProduction: tnt.get.city.production.tradegood(),
                 lastUpdate: Date.now(),
                 isOwn: true
             };
@@ -1624,9 +1624,9 @@ const tnt = {
                 name: tnt.utils.safeGet(() => ikariam.backgroundView.screen.data.name, 'Unknown City'),
                 ownerName: ownerName,
                 ownerId: parseInt(ownerId),
-                cityIslandCoords: tnt.get.cityIslandCoords(),
+                cityIslandCoords: tnt.get.city.coords(),
                 cityLvl: tnt.get.city.level(),
-                producedTradegood: parseInt(tnt.get.producedTradegood()),
+                producedTradegood: parseInt(tnt.get.city.tradegood()),
                 hasSpyAccess: hasSpyAccess,
                 buildings: {},
                 lastUpdate: Date.now(),
@@ -1962,7 +1962,7 @@ const tnt = {
                 // City name cell with progress styling
                 html += `<td class="tnt_city tnt_left${progressClass}" style="padding:4px;text-align:left;border:1px solid #000;background-color:#fdf7dd;">`;
                 html += `<a href="#" class="tnt_city_link" data-city-id="${cityId}">`;
-                html += tnt.dataCollector.getIcon(city.producedTradegood) + ' ' + tnt.get.cityName(cityId);
+                html += tnt.dataCollector.getIcon(city.producedTradegood) + ' ' + tnt.get.city.name(cityId);
                 html += '</a></td>';
 
                 // Town Hall level
@@ -2123,7 +2123,7 @@ const tnt = {
                 // City name cell with progress styling
                 html += `<td class="tnt_city tnt_left${progressClass}" style="padding:4px;text-align:left;border:1px solid #000;background-color:#fdf7dd;">`;
                 html += `<a href="#" class="tnt_city_link" data-city-id="${cityId}">`;
-                html += tnt.dataCollector.getIcon(city.producedTradegood) + ' ' + tnt.get.cityName(cityId);
+                html += tnt.dataCollector.getIcon(city.producedTradegood) + ' ' + tnt.get.city.name(cityId);
                 html += '</a></td>';
 
                 // Add building level cells for each merged column
@@ -2157,7 +2157,7 @@ const tnt = {
             html += '</tbody></table>';
             return html;
         },
-        
+
         renderBuildingLevelCell(buildingArray, buildingKey, cityId) {
             let tdClass = "tnt_building_level";
             let bgColor = "#fdf7dd";
@@ -2370,7 +2370,7 @@ const tnt = {
         },
 
         nextCity() {
-            const allCities = Object.keys(tnt.get.cityList());
+            const allCities = Object.keys(tnt.get.player.list.cities());
             // console.log(`[TNT] Looking for next city. Visited: [${this.visitedCities.join(', ')}]`);
 
             for (const cityId of allCities) {
@@ -2406,8 +2406,8 @@ const tnt = {
 
             // Restore normal state after final switch
             // setTimeout(() => {
-                // console.log('[TNT] Restoring normal visual state');
-                this.restoreNormalVisualState();
+            // console.log('[TNT] Restoring normal visual state');
+            this.restoreNormalVisualState();
             // }, 2000);
         },
 
@@ -2467,7 +2467,7 @@ const tnt = {
             }
         }
     },
-    
+
     // Tooltip/Bubbletip Testing Module
     tooltip: {
         // Initialize the tooltip system (ensure BubbleTips is ready)
@@ -2567,49 +2567,29 @@ const tnt = {
         }
     },
 
-    // Game data getters with better organization and error handling
-    game: {
+
+    // BEGIN: DO NOT MODIFY - Fixed logic
+    // Legacy compatibility - Here all the communication with Ikariam is handled
+    // Should only be changed by the core team
+    // These has to work for the rest of the code to work properly. We keep them here so we only have to change them in one place.
+    get: {
+        // Player data
         player: {
-            getId() {
-                return tnt.get.player.id();
+            id: () => tnt.utils.safeGet(() => parseInt(ikariam.model.avatarId), 0),
+            alliance: {
+                id: () => tnt.utils.safeGet(() => parseInt(ikariam.model.avatarAllyId), 0),
+                hasAlly: () => tnt.utils.safeGet(() => ikariam.model.hasAlly, false)
             },
-
-            getAlliance() {
-                return {
-                    id: tnt.utils.safeGet(() => parseInt(ikariam.model.avatarAllyId), 0),
-                    hasAlly: tnt.utils.safeGet(() => ikariam.model.hasAlly, false)
-                };
-            }
-        },
-
-        city: {
-            getId() {
-                return tnt.utils.safeGet(() =>
-                    ikariam.model.relatedCityData.selectedCity.replace(/[^\d-]+/g, ""), ""
-                );
+            economy: {
+                gold: () => tnt.utils.safeGet(() => parseInt(ikariam.model.gold), 0),
+                ambrosia: () => tnt.utils.safeGet(() => ikariam.model.ambrosia, 0),
+                income: () => tnt.utils.safeGet(() => ikariam.model.income, 0),
+                upkeep: () => tnt.utils.safeGet(() => ikariam.model.upkeep, 0),
+                scientistsUpkeep: () => tnt.utils.safeGet(() => ikariam.model.sciencetistsUpkeep, 0),
+                godGoldResult: () => tnt.utils.safeGet(() => ikariam.model.godGoldResult, 0)
             },
-
-            getName(id) {
-                return tnt.utils.safeGet(() => {
-                    if (id) {
-                        return ikariam.model.relatedCityData["city_" + id].name;
-                    }
-                    return $("#citySelect option:selected").text().split("] ")[1];
-                }, "Unknown City");
-            },
-
-            getCoordinates() {
-                return $("#js_islandBreadCoords").text();
-            },
-
-            getProducedTradegood() {
-                return tnt.utils.safeGet(() => ikariam.model.producedTradegood, 0);
-            },
-
-            isOwn() { return tnt.is.ownCity(); },
-
-            getList() {
-                return tnt.utils.safeGet(() => {
+            list: {
+                cities: () => tnt.utils.safeGet(() => {
                     const cityList = {};
                     for (const key in ikariam.model.relatedCityData) {
                         if (key.startsWith("city_")) {
@@ -2621,179 +2601,81 @@ const tnt = {
                         }
                     }
                     return cityList;
-                }, {});
+                }, {})
             }
         },
 
-        resources: {
-            getCurrent() {
-                return {
-                    wood: tnt.get.resources.wood(),
-                    wine: tnt.get.resources.wine(),
-                    marble: tnt.get.resources.marble(),
-                    crystal: tnt.get.resources.crystal(),
-                    sulfur: tnt.get.resources.sulfur(),
-                    population: tnt.get.resources.population(),
-                    citizens: tnt.get.resources.citizens()
-                };
+        // City data
+        city: {
+            id: () => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlCityId = urlParams.get('cityId') || urlParams.get('currentCityId');
+                if (urlCityId && urlCityId !== 'undefined') return urlCityId;
+
+                try {
+                    const modelCityId = ikariam.model.relatedCityData.selectedCity.replace(/[^\d-]+/g, "");
+                    if (modelCityId && modelCityId !== 'undefined') return modelCityId;
+                } catch (e) { }
+
+                const menuCityId = $('#js_GlobalMenu_citySelect').attr('name');
+                if (menuCityId && menuCityId !== 'undefined') return menuCityId;
+
+                const cities = tnt.get.player.list.cities();
+                const cityIds = Object.keys(cities);
+                if (cityIds.length > 0) return cityIds[0];
+
+                tnt.core.debug.warn('TNT: No valid city ID found', 3);
+                return null;
+            },
+            name: (id) => tnt.utils.safeGet(() => {
+                if (id) return ikariam.model.relatedCityData["city_" + id].name;
+                return $("#citySelect option:selected").text().split("] ")[1];
+            }, "Unknown City"),
+
+            coords: () => $("#js_islandBreadCoords").text(),
+
+            tradegood: () => tnt.utils.safeGet(() => ikariam.model.producedTradegood, 0),
+
+            level: () => $("#js_CityPosition0Level").text(),
+
+            resources: {
+                wood: () => tnt.utils.safeGet(() => ikariam.model.currentResources.resource, 0),
+                wine: () => tnt.utils.safeGet(() => ikariam.model.currentResources[1], 0),
+                marble: () => tnt.utils.safeGet(() => ikariam.model.currentResources[2], 0),
+                crystal: () => tnt.utils.safeGet(() => ikariam.model.currentResources[3], 0),
+                sulfur: () => tnt.utils.safeGet(() => ikariam.model.currentResources[4], 0),
+                population: () => tnt.utils.safeGet(() => ikariam.model.currentResources.population, 0),
+                citizens: () => tnt.utils.safeGet(() => ikariam.model.currentResources.citizens, 0),
+                max: () => tnt.utils.safeGet(() => ikariam.model.maxResources.resource, 0),
+                wineSpending: () => tnt.utils.safeGet(() => ikariam.model.wineSpending, 0)
             },
 
-            getProduction() {
-                return {
-                    resource: tnt.utils.safeGet(() => ikariam.model.resourceProduction, 0),
-                    tradegood: tnt.utils.safeGet(() => ikariam.model.tradegoodProduction, 0)
-                };
-            },
-
-            getCapacity() {
-                return {
-                    max: tnt.utils.safeGet(() => ikariam.model.maxResources.resource, 0),
-                    wineSpending: tnt.utils.safeGet(() => ikariam.model.wineSpending, 0)
-                };
+            production: {
+                resource: () => tnt.utils.safeGet(() => ikariam.model.resourceProduction, 0),
+                tradegood: () => tnt.utils.safeGet(() => ikariam.model.tradegoodProduction, 0)
             }
         },
 
-        economy: {
-            getGold() {
-                return tnt.utils.safeGet(() => parseInt(ikariam.model.gold), 0);
-            },
-
-            getAmbrosia() {
-                return tnt.utils.safeGet(() => ikariam.model.ambrosia, 0);
-            },
-
-            getFinances() {
-                return {
-                    income: tnt.utils.safeGet(() => ikariam.model.income, 0),
-                    upkeep: tnt.utils.safeGet(() => ikariam.model.upkeep, 0),
-                    scientistsUpkeep: tnt.utils.safeGet(() => ikariam.model.sciencetistsUpkeep, 0),
-                    godGoldResult: tnt.utils.safeGet(() => ikariam.model.godGoldResult, 0)
-                };
-            }
-        },
-
+        // Military data
         military: {
-            getTransporters() {
-                return {
-                    free: tnt.utils.safeGet(() => ikariam.model.freeTransporters, 0),
-                    max: tnt.utils.safeGet(() => ikariam.model.maxTransporters, 0)
-                };
+            transporters: {
+                free: () => tnt.utils.safeGet(() => ikariam.model.freeTransporters, 0),
+                max: () => tnt.utils.safeGet(() => ikariam.model.maxTransporters, 0)
             }
         }
     },
 
-    // BEGIN: DO NOT MODIFY - Fixed logic
-    // Legacy compatibility - Here all the communication with Ikariam is handled
-    // Should only be changed by the core team
-    // These has to work for the rest of the code to work properly. We keep them here so we only have to change them in one place.
-
-    get: {
-        // Getters for player
-        player: {
-            id: () => tnt.utils.safeGet(() => parseInt(ikariam.model.avatarId), 0),
-        },
-        // Getters for city
-        city: {
-            level: () => $("js_CityPosition0Level").text(),
-            id: () => {
-                // Method 1: From URL parameters (most reliable during city switches)
-                const urlParams = new URLSearchParams(window.location.search);
-                const urlCityId = urlParams.get('cityId') || urlParams.get('currentCityId');
-
-                if (urlCityId && urlCityId !== 'undefined' && urlCityId !== '') {
-                    return urlCityId;
-                }
-
-                // Method 2: From Ikariam model
-                let modelCityId;
-                try {
-                    modelCityId = ikariam.model.relatedCityData.selectedCity.replace(/[^\d-]+/g, "");
-                    if (modelCityId && modelCityId !== 'undefined' && modelCityId !== '') {
-                        return modelCityId;
-                    }
-                } catch (e) {
-                    // Continue to next method
-                }
-
-                // Method 3: From global menu (fallback)
-                const menuCityId = $('#js_GlobalMenu_citySelect').attr('name');
-                if (menuCityId && menuCityId !== 'undefined' && menuCityId !== '') {
-                    return menuCityId;
-                }
-
-                // Method 4: Fallback to first city from city list
-                const cities = this.cityList();
-                const cityIds = Object.keys(cities);
-                if (cityIds.length > 0) {
-                    // Clean up debug logging
-                    // tnt.core.debug.log('Using fallback city ID: ' + cityIds[0]);
-                    return cityIds[0];
-                }
-
-                // Clean up debug logging - only log real errors
-                tnt.core.debug.warn('TNT: No valid city ID found', 3);
-                return null;
-            }
-        },
-        // Getters for resources
-        resources: {
-            // Current resource levels
-            wood: () => tnt.utils.safeGet(() => ikariam.model.currentResources.resource, 0),
-            wine: () => tnt.utils.safeGet(() => ikariam.model.currentResources[1], 0),
-            marble: () => tnt.utils.safeGet(() => ikariam.model.currentResources[2], 0),
-            crystal: () => tnt.utils.safeGet(() => ikariam.model.currentResources[3], 0),
-            sulfur: () => tnt.utils.safeGet(() => ikariam.model.currentResources[4], 0),
-            // Current population and citizens
-            population: () => tnt.utils.safeGet(() => ikariam.model.currentResources.population, 0),
-            citizens: () => tnt.utils.safeGet(() => ikariam.model.currentResources.citizens, 0),
-
-            // Current max resource capacities
-            max: () => tnt.utils.safeGet(() => ikariam.model.maxResources.resource, 0)
-        },
-
-
-
-        // These should be structured better under each section like player, city, resources, etc.
-        // Right now some of them are kept for legacy compatibility. Should be changed to use the new structure and then be removed.
-        // But first we need to get back the code GHC hijacked, and let these functions be the sole reference to the game data.
-        cityId: () => tnt.get.city.id(), // Legacy compatibility
-        cityIslandCoords: () => tnt.game.city.getCoordinates(), // Should be moved to city section
-        cityName: (id) => tnt.game.city.getName(id), // Should be moved to city section
-        producedTradegood: () => tnt.game.city.getProducedTradegood(), // Should be moved to city section
-        cityList: () => tnt.game.city.getList(), // Should be moved to city section
-
-        alliance: {
-            Id: () => tnt.game.player.getAlliance().id // Should be moved to player.alliance.id
-        },
-
-        transporters: {
-            free: () => tnt.game.military.getTransporters().free, // Should be moved to military section??? Or do it belong somewhere else?
-            max: () => tnt.game.military.getTransporters().max // Should be moved to military section??? Or do it belong somewhere else?
-        },
-
-        // Where should these be moved to?
-        population: () => tnt.get.resources.population(),
-        citizens: () => tnt.get.resources.citizens(),
-        income: () => tnt.game.economy.getFinances().income,
-        upkeep: () => tnt.game.economy.getFinances().upkeep,
-        scientistsUpkeep: () => tnt.game.economy.getFinances().scientistsUpkeep,
-        godGoldResult: () => tnt.game.economy.getFinances().godGoldResult,
-        resourceProduction: () => tnt.game.resources.getProduction().resource,
-        tradegoodProduction: () => tnt.game.resources.getProduction().tradegood,
-        hasAlly: () => tnt.game.player.getAlliance().hasAlly,
-        maxCapacity: () => tnt.game.resources.getCapacity().max,
-        wineSpending: () => tnt.game.resources.getCapacity().wineSpending,
-        construction: () => tnt.utils.hasConstruction()
-    },
-
+    // is functions - Used to check various states
     is: {
         // Check if the current city is the player's own city
         ownCity: () => tnt.utils.safeGet(() => ikariam.model.isOwnCity, false)
     },
-    // Add missing has object
+
+    // has functions - Used to check if certain features are available
     has: {
         construction: () => tnt.utils.hasConstruction()
     }
+
     // END: DO NOT MODIFY - Fixed logic
 };
 
