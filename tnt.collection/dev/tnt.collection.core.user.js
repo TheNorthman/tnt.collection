@@ -2453,18 +2453,17 @@ const tnt = {
             return tnt.utils.switchToCity(cityId);
         },
 
+        // Switch back to the starting city and update the states. Before resuming normal visual state
         end() {
-            // console.log(`[TNT] === ENDING - Returning to start city: ${this.startCityId} ===`);
-
             this.switchToCity(this.startCityId);
             this.isActive = false;
             tnt.settings.set("citySwitcherActive", false);
 
             // Restore normal state after final switch
-            setTimeout(() => {
+            // setTimeout(() => {
                 // console.log('[TNT] Restoring normal visual state');
                 this.restoreNormalVisualState();
-            }, 2000);
+            // }, 2000);
         },
 
         updateVisualProgress() {
