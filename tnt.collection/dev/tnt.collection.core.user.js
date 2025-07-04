@@ -416,9 +416,10 @@ const tnt = {
             // Apply UI modifications
             tnt.ui.applyUIModifications();
 
+            // Apply global styles
             tnt.all();
 
-            // 🚨 PROBLEM: This runs on EVERY page load, even direct navigation!
+            // Check if city switcher is active, and continue if so.
             tnt.citySwitcher.checkAndContinue();
 
             switch ($("body").attr("id")) {
@@ -428,22 +429,21 @@ const tnt = {
             }
         },
 
+        // AJAX helper - Not used at the moment, but can be used for future AJAX requests
         ajax: {
             send(data, url = tnt.url.update, callback = null) {
                 // Remove noisy debug logging
-                // tnt.core.debug.log('Data length: ' + JSON.stringify(data).length, 3);
+                tnt.core.debug.log('[TNT] Ajax call data length: ' + JSON.stringify(data).length, 3);
                 GM_xmlhttpRequest({
                     url, method: 'POST',
                     data: "data=" + encodeURIComponent(JSON.stringify(data)),
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     onload: resp => {
-                        // Remove noisy debug logging
-                        // tnt.core.debug.dir(resp.responseText, 5);
                         if (callback) callback();
                     },
                     onerror: (error) => {
                         // Keep error logging but make it cleaner
-                        tnt.core.debug.error("TNT AJAX Error: " + error.message, 1);
+                        tnt.core.debug.error("[TNT] AJAX Error: " + error.message, 1);
                     }
                 });
             }
@@ -2688,10 +2688,11 @@ const tnt = {
     // These has to work for the rest of the code to work properly. We keep them here so we only have to change them in one place.
 
     get: {
+        // Getters for player
         player: {
             id: () => tnt.utils.safeGet(() => parseInt(ikariam.model.avatarId), 0),
         },
-        cityId: () => tnt.get.city.id(),
+        // Getters for city
         city: {
             level: () => $("js_CityPosition0Level").text(),
             id: () => {
@@ -2734,20 +2735,7 @@ const tnt = {
                 return null;
             }
         },
-        cityIslandCoords: () => tnt.game.city.getCoordinates(),
-        cityName: (id) => tnt.game.city.getName(id),
-        producedTradegood: () => tnt.game.city.getProducedTradegood(),
-        cityList: () => tnt.game.city.getList(),
-
-        alliance: {
-            Id: () => tnt.game.player.getAlliance().id
-        },
-
-        transporters: {
-            free: () => tnt.game.military.getTransporters().free,
-            max: () => tnt.game.military.getTransporters().max
-        },
-
+        // Getters for resources
         resources: {
             // Current resource levels
             wood: () => tnt.utils.safeGet(() => ikariam.model.currentResources.resource, 0),
@@ -2763,9 +2751,29 @@ const tnt = {
             max: () => tnt.utils.safeGet(() => ikariam.model.maxResources.resource, 0)
         },
 
+
+
+        // These should be structured better under each section like player, city, resources, etc.
+        // Right now some of them are kept for legacy compatibility. Should be changed to use the new structure and then be removed.
+        // But first we need to get back the code GHC hijacked, and let these functions be the sole reference to the game data.
+        cityId: () => tnt.get.city.id(), // Legacy compatibility
+        cityIslandCoords: () => tnt.game.city.getCoordinates(), // Should be moved to city section
+        cityName: (id) => tnt.game.city.getName(id), // Should be moved to city section
+        producedTradegood: () => tnt.game.city.getProducedTradegood(), // Should be moved to city section
+        cityList: () => tnt.game.city.getList(), // Should be moved to city section
+
+        alliance: {
+            Id: () => tnt.game.player.getAlliance().id // Should be moved to player.alliance.id
+        },
+
+        transporters: {
+            free: () => tnt.game.military.getTransporters().free, // Should be moved to military section??? Or do it belong somewhere else?
+            max: () => tnt.game.military.getTransporters().max // Should be moved to military section??? Or do it belong somewhere else?
+        },
+
+        // Where should these be moved to?
         population: () => tnt.get.resources.population(),
         citizens: () => tnt.get.resources.citizens(),
-
         income: () => tnt.game.economy.getFinances().income,
         upkeep: () => tnt.game.economy.getFinances().upkeep,
         scientistsUpkeep: () => tnt.game.economy.getFinances().scientistsUpkeep,
