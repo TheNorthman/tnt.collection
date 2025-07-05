@@ -1,8 +1,12 @@
 # TNT Collection - TODO List
+#
+# Last Updated: 2025-07-05
 
 ## 📋 **Core Features**
 
-- [ ] Use Ikariam's own tooltips:
+- [/] Use Ikariam's own tooltips:
+    [x] Use the Ikariam bubbleTip module. *completed on the 2025-07-04*
+    [ ] Set up usefull template for the different kinds of tooltip we want to show.
 - [ ] Auto hide tables:
     - Have an option to make the tables visible on hover only (Same effect as clicking min/max button)
 - [ ] The ability to set different triggers on buildings

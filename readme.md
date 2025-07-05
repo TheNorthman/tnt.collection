@@ -29,15 +29,16 @@ The Main View:
 ## 🔧 Development
 
 This project uses a modular development approach:
-- **Production**: `tnt.collection.user.js` (what users install) - v1.5.22
+- **Production**: `tnt.collection.user.js` (what users install) - v1.5.24
 - **Development**: Files in `/dev/` folder for active development
 
 ### Development Files
-- `dev/tnt.collection.core.user.js` - Core functionality (v1.5.24) - includes all essential features
-- `dev/tnt.collection.dev.user.js` - Development workspace (v1.0.2) - for testing and experimentation
+- `dev/tnt.collection.core.user.js` - Core functionality (v2.1.4) - includes all essential features
+- `dev/tnt.collection.dev.user.js` - Development workspace (v1.0.3) - for testing and experimentation
 - `dev/tnt.collection.styles.user.js` - CSS styling (v1.0.0) - for visual enhancements
 
 ## 📋 Support
+
 
 For issues, suggestions, or development questions, please [open an issue](https://github.com/TheNorthman/tnt.collection/issues).
 
@@ -47,6 +48,6 @@ MIT License - See project files for details.
 
 ---
 
-**Version**: Production v1.5.22 | Core v1.5.24 | Dev v1.0.2  
+**Version**: Production v1.5.24 | Core v2.1.4 | Dev v1.0.3  
 **Compatibility**: All modern browsers with userscript manager support  
-**Last Updated**: 2025-06-16
+**Last Updated**: 2025-07-05

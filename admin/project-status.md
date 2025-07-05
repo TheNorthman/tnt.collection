@@ -6,9 +6,9 @@
 **Project Restructure Complete** - Clean organization achieved, ready for development
 
 ## 📊 **Active Versions**
-- **Production**: v1.5.22 (Public GreasyFork release)
-- **Core**: v1.5.27 ✅ **STABLE** (Full functionality)
-- **Dev**: v1.0.2 (Clean slate for development)
+- **Production**: v1.5.24 (Public GreasyFork release)
+- **Core**: v2.1.4 ✅ **STABLE** (Full functionality)
+- **Dev**: v1.0.3 (Clean slate for development)
 - **Styles**: v1.0.0 (Working CSS extension)
 
 ## 🚀 **Project Health**
@@ -25,7 +25,12 @@
 
 ## 🔧 **Recent Changes**
 - ✅ **Project Restructure** - Clean admin/ and .ai/ organization ✨ **COMPLETED**
-- ✅ **Version Update** - Core script updated to v1.5.27
+- ✅ **Core script refactored and modularized for maintainability and new features (v2.1.4)**
+- ✅ **Tooltip system groundwork** - new tooltip templates and structure for future enhancements
+- ✅ **Enhanced settings management** - new storage structure, layout preferences, and feature toggles
+- ✅ **Expanded utility functions** for DOM and data handling
+- ✅ **Improved UI module** for dynamic DOM manipulation and event binding
+- ✅ **More robust data collection and table-building logic**
 - ✅ **File Migration** - All files moved to proper locations
 - ✅ **Command System** - Updated for new file structure
 - ✅ **Archive Creation** - Old structure safely preserved
@@ -60,6 +65,6 @@ tools/                    # Development scripts and utilities
 
 ---
 
-**Last Updated**: 2025-06-20  
+**Last Updated**: 2025-07-05  
 **Status**: ✅ Clean, organized, ready for active development  
 **Achievement**: 🏆 Project restructure successfully completed

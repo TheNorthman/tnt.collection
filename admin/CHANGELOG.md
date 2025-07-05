@@ -1,6 +1,23 @@
-# Changelog
+# Changelog - All notable changes to TNT Collection will be documented in this file.
 
-All notable changes to TNT Collection will be documented in this file.
+## [2.1.4] - 2025-07-05
+
+### Added
+- Major refactor: modularized core script, separated building/resource logic into internal modules.
+- Tooltip system foundation: new tooltip templates and structure for future enhancements.
+- Enhanced settings management: new storage structure, layout preferences, and feature toggles.
+- Expanded utility functions for DOM and data handling.
+- Improved UI module for dynamic DOM manipulation and event binding.
+- More robust data collection and table-building logic.
+
+### Changed
+- Improved city switching and building detection logic.
+- Codebase restructured for maintainability and scalability.
+- Project now ready for advanced features and easier integration.
+
+### Fixed
+- Various minor bugs and inconsistencies from previous versions.
+
 
 ## [1.5.27] - 2025-06-19
 
