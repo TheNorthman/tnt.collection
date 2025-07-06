@@ -1,18 +1,18 @@
 // ==UserScript==
-// @name         TNT Collection Core
-// @version      2.1.5
+// @name         TNT Collection
+// @version      3.0.8
 // @namespace    tnt.collection.core
 // @author       Ronny Jespersen
 // @description  TNT Collection Core - Stable functionality for Ikariam enhancements
 // @license      MIT
 // @include      http*s*.ikariam.*/*
 // @exclude      http*support*.ikariam.*/*
-// @require      https://code.jquery.com/jquery-1.12.4.min.js
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_log
 // @grant        GM_xmlhttpRequest
+// @require      http://localhost/refactor/tnt.collection.styles.plugin.js
 // ==/UserScript==
 
 // Initialize the tntConsole
@@ -113,8 +113,9 @@ const template = Object.freeze({
     `
 });
 
-const TNT_STYLES = `
-`;
+// Register plugin system
+window.tnt = window.tnt || {};
+window.tnt.plugins = window.tnt.plugins || [];
 
 const tnt = {
 
@@ -400,6 +401,9 @@ const tnt = {
 
             // Log the initialization
             tnt.core.debug.log(`TNT Collection v${tnt.version} - Init...`, 1);
+
+            // Initialize all plugins
+            tnt.plugins.init();
 
             // We run events.init() first to overwrite the default Ikariam events as early as possible
             tnt.core.events.init();
@@ -906,15 +910,19 @@ const tnt = {
     // END: DO NOT MODIFY - Fixed logic
 };
 
-// Plugin system - Allows for modular extensions to TNT
-tnt.plugins = [];
-// Register a plugin with TNT
-tnt.registerPlugin = function (plugin) {
-    if (plugin?.name) {
-        tnt.plugins.push(plugin);
-        tnt.core.debug.log(`[TNT] Plugin registered: ${plugin.name}`, 2);
-    } else {
-        tnt.core.debug.warn('[TNT] Attempted to register unnamed plugin', 1);
+tnt.plugins = {
+    // Initialize all registered plugins
+    init() {
+        if (Array.isArray(window.tnt.plugins)) {
+            window.tnt.plugins.forEach((pluginInitFn, i) => {
+                try {
+                    pluginInitFn(tnt);
+                    tnt.core.debug.log(`[TNT] Plugin ${i + 1} initialized`, 2);
+                } catch (e) {
+                    tnt.core.debug.error(`[TNT] Plugin ${i + 1} failed to initialize: ${e.message}`, 1);
+                }
+            });
+        }
     }
 };
 
@@ -2693,6 +2701,3 @@ tnt.tableBuilder = {
 
 // Initialize the TNT core
 $(document).ready(() => tnt.core.init());
-
-// Apply styles at the end
-GM_addStyle(TNT_STYLES);
