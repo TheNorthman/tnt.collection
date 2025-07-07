@@ -19,9 +19,8 @@ window.tnt.plugins.push(function initStylesPlugin(tnt) {
         target.appendChild(style);
     }
 
-    addStyle(`
-
-/* === CORE TABLE STRUCTURE === */
+addStyle(`
+/* 01. CORE TABLE STRUCTURE */
 .tnt-table {
     border-collapse: collapse;
     font: 12px Arial, Helvetica, sans-serif;
@@ -36,7 +35,7 @@ window.tnt.plugins.push(function initStylesPlugin(tnt) {
     vertical-align: middle;
 }
 
-/* === HEADER STYLES === */
+/* 02. HEADER STYLES */
 .tnt-table-header-empty {
     margin: 0 !important;
     padding: 0 !important;
@@ -55,8 +54,18 @@ window.tnt.plugins.push(function initStylesPlugin(tnt) {
 .tnt-table-header-city-text {
     font-weight: bold;
 }
+.tnt_subcategory_header {
+    height: 32px;
+}
+.tnt_subcategory_header th {
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    vertical-align: middle;
+    overflow: hidden;
+}
 
-/* === CELL ALIGNMENT === */
+/* 03. CELL ALIGNMENT */
 .tnt-table-cell-city {
     text-align: left !important;
     white-space: nowrap;
@@ -76,18 +85,21 @@ window.tnt.plugins.push(function initStylesPlugin(tnt) {
 .tnt-table-cell-building-empty {
     background-color: #fdf7dd;
 }
+`);
 
-/* === ICON SIZES === */
+addStyle(`
+/* 04. ICON STYLING */
 .tnt_resource_icon {
-    vertical-align: middle !important;
     width: 18px !important;
     height: 16px !important;
+    vertical-align: middle !important;
     display: inline-block !important;
     margin-right: 2px;
 }
 .tnt_building_icon {
     width: 36px !important;
     height: 32px !important;
+    max-height: 32px;
     vertical-align: middle !important;
     margin-right: 2px;
 }
@@ -104,7 +116,7 @@ img[src*='/city/wall.png'].tnt_building_icon {
     margin-right: 2px;
 }
 
-/* === PANEL LAYOUT === */
+/* 05. PANEL LAYOUT */
 #tnt_info_resources {
     position: fixed;
     bottom: 20px !important;
@@ -136,8 +148,10 @@ img[src*='/city/wall.png'].tnt_building_icon {
 #tnt_info_buildings_content {
     display: none !important;
 }
+`);
 
-/* === BUILDING STATES === */
+addStyle(`
+/* 06. BUILDING STATES */
 .tnt_building_level {
     text-align: center;
 }
@@ -157,31 +171,7 @@ img[src*='/city/wall.png'].tnt_building_icon {
     color: #155724 !important;
 }
 
-/* === TRADEGOOD HIGHLIGHT === */
-.tnt-tradegood-bold {
-    font-weight: bold;
-    color: #8B0000;
-}
-
-/* === TOOLTIP === */
-.tnt-tooltip-content {
-    font-size: 11px;
-    line-height: 1.4;
-    color: #333;
-}
-
-/* === UTILITY CLASSES === */
-.tnt-hide {
-    display: none !important;
-}
-
-/* === MINIMIZED TABLES === */
-#tnt_info_resources.minimized td:not(:first-child),
-#tnt_info_resources.minimized th:not(:first-child) {
-    display: none !important;
-}
-
-/* === INLINE CONTROLS BAR === */
+/* 07. INLINE CONTROLS BAR */
 .tnt-inline-controls-bar {
     display: flex;
     flex-wrap: nowrap;
@@ -212,8 +202,10 @@ img[src*='/city/wall.png'].tnt_building_icon {
     justify-content: flex-end;
     margin-left: auto;
 }
+`);
 
-/* === BUTTON BASE === */
+addStyle(`
+/* 08. CONTROL BUTTONS */
 .tnt_panel_minimize_btn,
 .tnt_refresh_btn,
 .tnt_table_toggle_btn {
@@ -249,26 +241,27 @@ img[src*='/city/wall.png'].tnt_building_icon {
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
-/* === MINIMIZE BUTTON (TRIANGLE) === */
+/* 08a. MINIMIZE TRIANGLE (embedded) */
 .tnt_panel_minimize_btn {
+    position: relative;
+    overflow: hidden;
+    font-size: 0;
+    line-height: 0;
+}
+.tnt_panel_minimize_btn::before {
+    content: '';
+    display: inline-block;
     width: 0;
     height: 0;
     border-top: 6px solid transparent;
     border-bottom: 6px solid transparent;
     border-right: 8px solid #333;
-    margin: 5px 2px 3px 2px;
-    background: none;
-    border-radius: 0;
-    box-shadow: none;
-    transform: translateY(1px);
-    line-height: 0;
-    overflow: hidden;
 }
-.tnt_panel_minimize_btn:hover {
+.tnt_panel_minimize_btn:hover::before {
     border-right-color: #000;
 }
 
-/* === REFRESH & TOGGLE BUTTON ICONS === */
+/* 08b. ICON BUTTONS */
 .tnt_refresh_btn::after,
 .tnt_table_toggle_btn::after {
     display: inline-block;
@@ -293,118 +286,37 @@ img[src*='/city/wall.png'].tnt_building_icon {
     transform: scale(1.1);
 }
 
-.tnt_panel_minimize_btn {
-    width: 0;
-    height: 0;
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-    border-right: 8px solid #333; /* Left-pointing triangle */
-    margin: 3px 2px;
-    cursor: pointer;
-    display: inline-block;
-    vertical-align: middle;
-    background: linear-gradient(135deg, #E6D3A3 0%, #D2B48C 50%, #C4A47C 100%);
-    border-radius: 3px;
-    border: 1px solid #8B4513;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    padding: 0;
+/* 09. STATE CLASSES */
+#tnt_info_resources.minimized td:not(:first-child),
+#tnt_info_resources.minimized th:not(:first-child) {
+    display: none !important;
+}
+
+/* 10. TOOLTIP, HIGHLIGHTS & UTILITIES  */
+.tnt-tooltip-content {
+    font-size: 11px;
+    line-height: 1.4;
+    color: #333;
+}
+.tnt-tradegood-bold {
+    font-weight: bold;
+    color: #111 !important; /* or #222 for slightly softer contrast */
+}
+.tnt-hide {
+    display: none !important;
+}
+
+.tnt_selected {
+    border: 2px solid #000 !important;
     box-sizing: border-box;
-    transform: translateY(1px);
-    line-height: 0;
-    overflow: hidden;
-    position: relative;
-    top: 0;
-    left: 0;
-    min-width: 18px;
-    min-height: 18px;
-    max-width: 18px;
-    max-height: 18px;
 }
 
-.tnt_panel_minimize_btn:hover {
-    border-right-color: #000;
-    background: linear-gradient(135deg, #F0E4B6 0%, #E6D3A3 50%, #D2B48C 100%);
-    border-color: #654321;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.4);
-    transform: scale(1.05);
+.tnt_storage_min,
+.tnt_storage_max {
+    background-color: #ffaaaa !important;
 }
 
-.tnt_panel_minimize_btn:active {
-    transform: scale(1.02);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-}
-
-.tnt_panel_minimize_btn {
-    /* Dimensions + Display */
-    width: 18px;
-    height: 18px;
-    min-width: 18px;
-    min-height: 18px;
-    max-width: 18px;
-    max-height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    box-sizing: border-box;
-    cursor: pointer;
-    margin: 3px 2px;
-    padding: 0;
-    background: linear-gradient(135deg, #E6D3A3 0%, #D2B48C 50%, #C4A47C 100%);
-    border: 1px solid #8B4513;
-    border-radius: 3px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    overflow: hidden;
-    line-height: 0;
-    vertical-align: middle;
-    transform: translateY(1px);
-}
-
-.tnt_panel_minimize_btn::before {
-    content: '';
-    display: block;
-    width: 0;
-    height: 0;
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-    border-right: 8px solid #333;
-}
-
-.tnt_panel_minimize_btn:hover {
-    background: linear-gradient(135deg, #F0E4B6 0%, #E6D3A3 50%, #D2B48C 100%);
-    border-color: #654321;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.4);
-    transform: scale(1.05);
-}
-
-.tnt_panel_minimize_btn:hover::before {
-    border-right-color: #000;
-}
-
-.tnt_panel_minimize_btn:active {
-    transform: scale(1.02);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-}
-
-.tnt_subcategory_header {
-    height: 32px;
-}
-
-.tnt_subcategory_header th {
-    height: 32px;
-    min-height: 32px;
-    max-height: 32px;
-    vertical-align: middle;
-    overflow: hidden;
-}
-
-.tnt_building_icon,
-.tnt_resource_icon {
-    max-height: 32px;
-    vertical-align: middle;
-}
+`);
 
 
-
-    `);
 });

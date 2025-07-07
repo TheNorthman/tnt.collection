@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection
-// @version      3.0.59
+// @version      3.0.62
 // @namespace    tnt.collection.core
 // @author       Ronny Jespersen
 // @description  TNT Collection Core - Stable functionality for Ikariam enhancements
@@ -2293,11 +2293,6 @@ tnt.tableBuilder = {
             const isVisited = tnt.citySwitcher.isActive && tnt.citySwitcher.visitedCities.includes(cityId);
             const progressClass = this.getProgressClass(cityId, isCurrentCity, hasConstruction, isVisited);
             const rowClass = isCurrentCity ? ' class="tnt_selected"' : '';
-
-            // DEBUG: Simple state logging
-            if (tnt.citySwitcher.isActive) {
-                // console.log(`[TNT] City ${cityId}: Current=${isCurrentCity}, Visited=${isVisited}, Class="${progressClass}"`);
-            }
 
             html += `<tr${rowClass}>`;
 
