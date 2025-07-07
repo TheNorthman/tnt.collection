@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection
-// @version      3.0.8
+// @version      3.0.59
 // @namespace    tnt.collection.core
 // @author       Ronny Jespersen
 // @description  TNT Collection Core - Stable functionality for Ikariam enhancements
@@ -108,7 +108,7 @@ const template = Object.freeze({
     resources: `
         <div id="tnt_info_resources">
             <div id="tnt_info_resources_content"></div>
-            <div id="tnt_info_buildings_content" style="display:none;"></div>
+            <div id="tnt_info_buildings_content" class="tnt-styles-buildings-content tnt-hide"></div>
         </div>
     `
 });
@@ -936,7 +936,7 @@ tnt.ui = {
             $('li.serverTime').before(`
                 <li>
                     <a id="tntOptionsLink" href="javascript:void(0);">TNT Options v${tnt.version}</a>
-                    <div id="tntOptions" class="tntBox" style="display:none;">
+                    <div id="tntOptions" class="tntBox tnt-styles-options tnt-hide">
                         ${optionsHtml}
                     </div>
                 </li>
@@ -963,7 +963,7 @@ tnt.ui = {
             const citymap = fmt(layoutPrefs.layout.citymap);
             const mainbox = fmt(layoutPrefs.layout.mainbox);
             const sidebar = fmt(layoutPrefs.layout.sidebar);
-            layoutDataHtml = `<div id="tntLayoutCurrentData" style="margin-top:5px;font-size:10px;color:#666;word-break:break-all;line-height:1.4;">
+            layoutDataHtml = `<div id="tntLayoutCurrentData" class="tnt-styles-layout-current-data">
                 <span><b>citymap</b>: ${citymap || '-'}</span><br/>
                 <span><b>mainbox</b>: ${mainbox || '-'}</span><br/>
                 <span><b>sidebar</b>: ${sidebar || '-'}</span>
@@ -971,43 +971,43 @@ tnt.ui = {
         }
 
         return `
-            <div id="tntUpdateLine" align="center" style="padding-bottom:5px;">
-                <a id="tntColUpgradeLink" href="" style="display:none;color:blue;font-size:12px;">
+            <div id="tntUpdateLine" class="tnt-styles-update-line" align="center">
+                <a id="tntColUpgradeLink" href="" class="tnt-styles-upgrade-link tnt-hide">
                     Version <span id="tntColVersion"></span> is available. Click here to update now!
                 </a>
             </div>
             <div>
-                <div class="tnt_left" style="float:left;width:50%;">
+                <div class="tnt_left tnt-styles-half-col">
                     <legend>All:</legend>
                     ${this.createCheckbox('tntAllRemovePremiumOffers', 'Remove Premium Offers', settings.removePremiumOffers)}
                     ${this.createCheckbox('tntAllRemoveFooterNavigation', 'Remove footer navigation', settings.removeFooterNavigation)}
                     ${this.createCheckbox('tntAllChangeNavigationCoord', 'Make footer navigation coord input a number', settings.changeNavigationCoord)}
                 </div>
-                <div class="tnt_left" style="float:left;width:50%;">
+                <div class="tnt_left tnt-styles-half-col">
                     <legend>Debug:</legend>
                     ${this.createCheckbox('tntDebugEnable', 'Enable debug logging', tnt.settings.get('debug')?.enable ?? true)}
-                    <label for="tntDebugLevel" style="font-size:11px;">Log level:</label>
-                    <select id="tntDebugLevel" style="font-size:11px;">
+                    <label for="tntDebugLevel" class="tnt-styles-debug-label">Log level:</label>
+                    <select id="tntDebugLevel" class="tnt-styles-debug-select">
                         <option value="1"${tnt.settings.get('debug')?.level === 1 ? ' selected' : ''}>1 - Errors only</option>
                         <option value="2"${tnt.settings.get('debug')?.level === 2 ? ' selected' : ''}>2 - Important</option>
                         <option value="3"${tnt.settings.get('debug')?.level === 3 ? ' selected' : ''}>3 - Warnings</option>
                         <option value="4"${tnt.settings.get('debug')?.level === 4 ? ' selected' : ''}>4 - Verbose</option>
                     </select>
                 </div>
-                <div class="tnt_left" style="float:left;width:50%;">
+                <div class="tnt_left tnt-styles-half-col">
                     <legend>Notifications:</legend>
                     ${this.createCheckbox('tntNotificationAdvisors', 'Show notifications from Advisors', settings.notificationAdvisors)}
                     ${this.createCheckbox('tntNotificationSound', 'Play sound with notifications from Advisors', settings.notificationSound)}
                 </div>
-                <div class="tnt_left" style="float:left;width:50%;">
+                <div class="tnt_left tnt-styles-half-col">
                     <legend>Islands:</legend>
                     ${this.createCheckbox('tntIslandShowCityLvl', 'Show Town Levels on Islands', settings.showCityLvl)}
                 </div>
-                <div class="tnt_left" style="float:left;width:50%;">
+                <div class="tnt_left tnt-styles-half-col">
                     <legend>City:</legend>
                     ${this.createCheckbox('tntCityRemoveFlyingShop', 'Remove flying shop', settings.removeFlyingShop)}
                     ${this.createCheckbox('tntCityShowResources', 'Show resources', resourceSettings.showResources)}
-                    <div class="tnt_left" style="padding-left:20px;">
+                    <div class="tnt_left tnt-styles-city-options-indent">
                         ${this.createCheckbox('tntCityShowResourcesPorpulation', 'Show population', resourceSettings.showPopulation)}
                         ${this.createCheckbox('tntCityShowResourcesCitizens', 'Show citizens', resourceSettings.showCitizens)}
                         ${this.createCheckbox('tntCityShowResourcesWoods', 'Show wood', resourceSettings.showWood)}
@@ -1017,20 +1017,20 @@ tnt.ui = {
                         ${this.createCheckbox('tntCityShowResourcesSulfur', 'Show Sulfur', resourceSettings.showSulfur)}
                     </div>
                 </div>
-                <div class="tnt_left" style="float:left;width:50%;">
+                <div class="tnt_left tnt-styles-half-col">
                     <legend>World Map:</legend>
                 </div>
-                <div class="tnt_left" style="float:left;width:50%;">
+                <div class="tnt_left tnt-styles-half-col">
                     <legend>Layout:</legend>
                     ${this.createCheckbox('tntLayoutMaintain', 'Maintain layout from URL', layoutPrefs.maintainLayout)}
-                    <div id="tntLayoutUrlSection" style="padding-left:20px;${layoutPrefs.maintainLayout ? '' : 'display:none;'}">
-                        <label for="tntLayoutUrl" style="display:block;margin-top:5px;font-size:11px;">Paste Ikariam layout URL:</label>
-                        <input id="tntLayoutUrl" type="text" style="width:90%;margin-top:2px;font-size:11px;" placeholder="https://s##-us.ikariam.gameforge.com/?view=city&..." />
+                    <div id="tntLayoutUrlSection" class="tnt-styles-layout-url-section${layoutPrefs.maintainLayout ? '' : ' tnt-hide'}">
+                        <label for="tntLayoutUrl" class="tnt-styles-layout-url-label">Paste Ikariam layout URL:</label>
+                        <input id="tntLayoutUrl" type="text" class="tnt-styles-layout-url-input" placeholder="https://s##-us.ikariam.gameforge.com/?view=city&..." />
                         ${layoutDataHtml}
                     </div>
                 </div>
             </div>
-            <div align="center" style="clear:both;">
+            <div align="center" class="tnt-styles-clear-both">
                 <input id="tntOptionsClose" type="button" class="button" value="Close and refresh" />
             </div>
         `;
@@ -1053,9 +1053,7 @@ tnt.ui = {
             if (settings.removeFlyingShop && $("body").attr("id") === "city") {
                 $('.premiumOfferBox').hide();
                 $('#leftMenu .expandable.resourceShop, #leftMenu .expandable.slot1, #leftMenu .expandable.slot2').remove();
-                $('#js_viewCityMenu').css({
-                    'top': '195px'
-                });
+                $('#js_viewCityMenu').addClass('tnt-view-city-menu-positioned');
             }
         }, 200);
     }
@@ -1470,7 +1468,9 @@ tnt.utils = {
         if (layout.citymap) {
             const citymap = layout.citymap;
             if (citymap) {
-                $('#worldmap').css({
+                const $worldmap = $('#worldmap');
+                $worldmap.addClass('tnt-layout-citymap');
+                $worldmap.css({
                     top: citymap.top + 'px',
                     left: citymap.left + 'px',
                     transform: `scale(${citymap.zoom || 1})` // Apply zoom if available
@@ -1537,12 +1537,12 @@ tnt.events = {
             const $buildingContent = $('#tnt_info_buildings_content');
 
             if ($resourceContent.is(':visible')) {
-                $resourceContent.hide();
-                $buildingContent.show();
+                $resourceContent.addClass('tnt-hide');
+                $buildingContent.removeClass('tnt-hide');
                 $(this).addClass('active');
             } else {
-                $buildingContent.hide();
-                $resourceContent.show();
+                $buildingContent.addClass('tnt-hide');
+                $resourceContent.removeClass('tnt-hide');
                 $(this).removeClass('active');
             }
         });
@@ -1596,11 +1596,11 @@ tnt.events = {
 
             if (isChecked) {
                 layoutPrefs.maintainLayout = true;
-                $("#tntLayoutUrlSection").show();
+                $("#tntLayoutUrlSection").removeClass('tnt-hide');
             } else {
                 // Clear layout preferences when unchecked
                 tnt.settings.clearLayoutPrefs();
-                $("#tntLayoutUrlSection").hide();
+                $("#tntLayoutUrlSection").addClass('tnt-hide');
             }
 
             if (isChecked) {
@@ -1638,7 +1638,7 @@ tnt.events = {
                         const citymap = fmt(layout.citymap);
                         const mainbox = fmt(layout.mainbox);
                         const sidebar = fmt(layout.sidebar);
-                        const layoutDataHtml = `<div id="tntLayoutCurrentData" style="margin-top:5px;font-size:10px;color:#666;word-break:break-all;line-height:1.4;">
+                        const layoutDataHtml = `<div id="tntLayoutCurrentData" class="tnt-styles-layout-current-data">
                             <span><b>citymap</b>: ${citymap || '-'}</span><br/>
                             <span><b>mainbox</b>: ${mainbox || '-'}</span><br/>
                             <span><b>sidebar</b>: ${sidebar || '-'}</span>
@@ -1794,9 +1794,6 @@ tnt.dataCollector = {
                 $('body').append(tnt.template.resources);
             }
 
-            // $('#tnt_info_resources_content').empty();
-            // $('#tnt_info_buildings_content').empty();
-
             // Build and display the resource table
             const resourceTable = tnt.tableBuilder.buildTable('resources');
             $('#tnt_info_resources_content').html(resourceTable);
@@ -1805,32 +1802,12 @@ tnt.dataCollector = {
             const buildingTable = tnt.tableBuilder.buildTable('buildings');
             $('#tnt_info_buildings_content').html(buildingTable);
 
-            // Create external controls (buttons) and attach event handlers
-            this.createExternalControls();
-            tnt.tableBuilder.attachEventHandlers(); // Is this needed here?
-        }
-    },
+            // Attach event handlers for city navigation and buttons
+            tnt.tableBuilder.attachEventHandlers(); // City navigation events
+            tnt.events.attachButtonEvents(); // buttons events
 
-    createExternalControls() {
-        // Only create if they don't exist yet
-        if ($('.tnt_external_controls').length === 0) {
-            const $externalControls = $('<div class="tnt_external_controls"></div>');
-
-            // Left side buttons (Min/Max)
-            const $leftButtons = $('<div class="tnt_left_buttons"></div>');
-            $leftButtons.append('<span class="tnt_panel_minimize_btn tnt_back" title="Minimize/Maximize panel"></span>');
-
-            // Right side buttons (Refresh, Toggle)
-            const $rightButtons = $('<div class="tnt_right_buttons"></div>');
-            $rightButtons.append('<span class="tnt_refresh_btn" title="Refresh all cities"></span>');
-            $rightButtons.append('<span class="tnt_table_toggle_btn" title="Show buildings/resources"></span>');
-
-            $externalControls.append($leftButtons);
-            $externalControls.append($rightButtons);
-            $('#tnt_info_resources').prepend($externalControls);
-
-            // Attach event handlers for the new buttons
-            tnt.events.attachButtonEvents();
+            // Add tooltips to elements with class 'tnt_tooltip_target' and data-resource attributes
+            tnt.tooltip.attachTooltips();
         }
     },
 
@@ -1974,7 +1951,7 @@ tnt.dataCollector = {
             case 2: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_marble.png">';
             case 3: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_crystal.png">';
             case 4: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_sulfur.png">';
-            case 'population': return '<img class="tnt_resource_icon tnt_icon_po" src="//gf3.geo.gfsrv.net/cdn2f/6d077d68d9ae22f9095515f282a112.png" style="width: 10px !important;">';
+            case 'population': return '<img class="tnt_resource_icon tnt_population_icon tnt-styles-population-icon" src="//gf3.geo.gfsrv.net/cdn2f/6d077d68d9ae22f9095515f282a112.png">';
             case 'citizens': return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_population.png">';
             default: return '';
         }
@@ -2063,9 +2040,6 @@ tnt.citySwitcher = {
 
             const buildingTable = tnt.tableBuilder.buildTable('buildings');
             $('#tnt_info_buildings_content').html(buildingTable);
-
-            // Shouldn't need to reattach handlers here. We are going to move to a new city anyway.
-            // tnt.tableBuilder.attachEventHandlers();
         }
     },
 
@@ -2080,7 +2054,12 @@ tnt.citySwitcher = {
             const buildingTable = tnt.tableBuilder.buildTable('buildings');
             $('#tnt_info_buildings_content').html(buildingTable);
 
-            tnt.tableBuilder.attachEventHandlers();
+            // Attach event handlers for city navigation and buttons
+            tnt.tableBuilder.attachEventHandlers(); // City navigation events
+            tnt.events.attachButtonEvents(); // Buttons events
+
+            // Add tooltips to elements with class 'tnt_tooltip_target' and data-resource attributes
+            tnt.tooltip.attachTooltips();
         }
     },
 
@@ -2130,7 +2109,7 @@ tnt.tooltip = {
     },
 
     formatTemplateTooltip({ title, body }) {
-        return `<div style="padding:8px;"><strong>${title}</strong><br/>${body}</div>`;
+        return `<div class="tnt-tooltip-content"><strong>${title}</strong><br/>${body}</div>`;
     },
 
     // Bind a tooltip HTML to an element
@@ -2143,7 +2122,7 @@ tnt.tooltip = {
             try {
                 BubbleTips.clear?.();
                 BubbleTips.init?.();
-                $(BubbleTips.infoNode).css({ 'z-index': '100000001', 'display': 'block' });
+                $(BubbleTips.infoNode).addClass('tnt-bubble-high-z-index tnt-bubble-display-block');
                 BubbleTips.bindBubbleTip(6, 13, html, null, this, false);
             } catch (err) {
                 tnt.core.debug.warn('TNT: Tooltip bind failed: ' + err, 2);
@@ -2175,10 +2154,10 @@ tnt.tooltip = {
         }
 
         if (BubbleTips.bubbleNode) {
-            $(BubbleTips.bubbleNode).css('z-index', '100000001');
+            $(BubbleTips.bubbleNode).addClass('tnt-bubble-high-z-index');
         }
         if (BubbleTips.infoNode) {
-            $(BubbleTips.infoNode).css('z-index', '100000001');
+            $(BubbleTips.infoNode).addClass('tnt-bubble-high-z-index');
         }
 
         const $containers = $('.tnt_tooltip_target');
@@ -2219,6 +2198,7 @@ tnt.tableBuilder = {
         } else if (type === 'buildings') {
             return this.buildBuildingTable();
         }
+
         return '';
     },
 
@@ -2248,57 +2228,57 @@ tnt.tableBuilder = {
         if (settings.showSulfur) resourcesSpan++;
 
         // Build the HTML table structure
-        let html = '<table id="tnt_resources_table" border="1" style="border-collapse:collapse;font:12px Arial,Helvetica,sans-serif;background-color:#fdf7dd;"><tbody>';
+        let html = '<table id="tnt_resources_table" class="tnt-table tnt-table-resources" border="1"><tbody>';
 
         // Category header row - NO CONTROLS TEXT
         html += '<tr class="tnt_category_header">';
-        html += '<th class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;width:60px;"></th>';
-        html += `<th colspan="${cityColspan}" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">City Info</th>`;
+        html += '<th class="tnt_category_header tnt-table-header-empty">' + this.createNavigationButtons() + '</th>';
+        html += `<th colspan="${cityColspan}" class="tnt_category_header tnt-table-header-category">City Info</th>`;
         if (resourcesSpan > 0) {
-            html += `<th colspan="${resourcesSpan}" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">Resources</th>`;
+            html += `<th colspan="${resourcesSpan}" class="tnt_category_header tnt-table-header-category">Resources</th>`;
         }
         html += '</tr>';
 
         // Subcategory header row - COMPLETELY CLEAN with NO buttons whatsoever
         html += '<tr class="tnt_subcategory_header">';
-        html += '<th class="tnt_center tnt_bold" style="position:relative;text-align:center;padding:4px;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
-        html += '<div style="position:relative; min-width:120px; text-align:center;">';
-        html += '<span style="display:inline-block; text-align:center; min-width:60px;">City</span>';
+        html += '<th class="tnt_center tnt_bold tnt-table-header-subcategory">';
+        html += '<div class="tnt-table-header-city-container">';
+        html += '<span class="tnt-table-header-city-text">City</span>';
         html += '</div></th>';
 
         // Town Hall header
-        html += '<th class="tnt_center tnt_bold" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
+        html += '<th class="tnt_center tnt_bold tnt-table-header-subcategory">';
         html += `<a href="#" onclick="ajaxHandlerCall('?view=buildingDetail&buildingId=0&helpId=1');return false;" title="Learn more about Town Hall...">`;
         html += '<img class="tnt_resource_icon tnt_building_icon" title="Town Hall" src="/cdn/all/both/img/city/townhall_l.png">';
         html += '</a></th>';
 
         // Optional columns
         if (settings.showPopulation) {
-            html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
+            html += '<th class="tnt_center tnt-table-header-subcategory">';
             html += '<span class="tnt_tooltip_target" data-resource="population">' + tnt.dataCollector.getIcon('population') + '</span></th>';
         }
         if (settings.showCitizens) {
-            html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
+            html += '<th class="tnt_center tnt-table-header-subcategory">';
             html += '<span class="tnt_tooltip_target" data-resource="citizens">' + tnt.dataCollector.getIcon('citizens') + '</span></th>';
         }
         if (settings.showWood) {
-            html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
+            html += '<th class="tnt_center tnt-table-header-subcategory">';
             html += '<span class="tnt_tooltip_target" data-resource="wood">' + tnt.dataCollector.getIcon(0) + '</span></th>';
         }
         if (settings.showWine) {
-            html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
+            html += '<th class="tnt_center tnt-table-header-subcategory">';
             html += '<span class="tnt_tooltip_target" data-resource="wine">' + tnt.dataCollector.getIcon(1) + '</span></th>';
         }
         if (settings.showMarble) {
-            html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
+            html += '<th class="tnt_center tnt-table-header-subcategory">';
             html += '<span class="tnt_tooltip_target" data-resource="marble">' + tnt.dataCollector.getIcon(2) + '</span></th>';
         }
         if (settings.showCrystal) {
-            html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
+            html += '<th class="tnt_center tnt-table-header-subcategory">';
             html += '<span class="tnt_tooltip_target" data-resource="crystal">' + tnt.dataCollector.getIcon(3) + '</span></th>';
         }
         if (settings.showSulfur) {
-            html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
+            html += '<th class="tnt_center tnt-table-header-subcategory">';
             html += '<span class="tnt_tooltip_target" data-resource="sulfur">' + tnt.dataCollector.getIcon(4) + '</span></th>';
         }
         html += '</tr>';
@@ -2322,7 +2302,7 @@ tnt.tableBuilder = {
             html += `<tr${rowClass}>`;
 
             // City name cell with progress styling
-            html += `<td class="tnt_city tnt_left${progressClass}" style="padding:4px;text-align:left;border:1px solid #000;background-color:#fdf7dd;">`;
+            html += `<td class="tnt_city tnt_left${progressClass} tnt-table-cell-city">`;
             html += `<a href="#" class="tnt_city_link" data-city-id="${cityId}">`;
             html += tnt.dataCollector.getIcon(city.producedTradegood) + ' ' + tnt.get.city.name(cityId);
             html += '</a></td>';
@@ -2335,45 +2315,45 @@ tnt.tableBuilder = {
                 townHallLevel = arr.reduce((acc, b) => acc + (parseInt(b.level) || 0), 0);
                 if (arr.some(b => b.upgradable)) townHallGreen = true;
             }
-            html += `<td class="tnt_building_level${townHallGreen ? ' green' : ''}" style="padding:4px;text-align:center;border:1px solid #000;background-color:#fdf7dd;">${townHallLevel}</td>`;
+            html += `<td class="tnt_building_level${townHallGreen ? ' green' : ''} tnt-table-cell-building">${townHallLevel}</td>`;
 
             // Optional data columns
             if (settings.showPopulation) {
                 const val = parseInt(Math.round(city.population)).toLocaleString();
-                html += `<td class="tnt_population" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${val}</td>`;
+                html += `<td class="tnt_population tnt-table-cell-population">${val}</td>`;
             }
             if (settings.showCitizens) {
                 const val = parseInt(Math.round(city.citizens)).toLocaleString();
-                html += `<td class="tnt_citizens" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${val}</td>`;
+                html += `<td class="tnt_citizens tnt-table-cell-citizens">${val}</td>`;
             }
             if (settings.showWood) {
                 const cssClass = tnt.dataCollector.checkMinMax(city, 0);
                 const production = tnt.utils.calculateProduction(cityId, 24).wood;
-                html += `<td class="tnt_wood${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;"><span title="${production}">${city.wood.toLocaleString()}</span></td>`;
+                html += `<td class="tnt_wood${cssClass} tnt-table-cell-resource"><span title="${production}">${city.wood.toLocaleString()}</span></td>`;
             }
             if (settings.showWine) {
                 const cssClass = tnt.dataCollector.checkMinMax(city, 1);
                 const production = tnt.utils.calculateProduction(cityId, 24).wine;
-                const fontWeight = city.producedTradegood == 1 ? 'font-weight:bold;color:black;' : '';
-                html += `<td class="tnt_wine${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;${fontWeight}"><span title="${production}">${city.wine.toLocaleString()}</span></td>`;
+                const isTradegood = city.producedTradegood == 1;
+                html += `<td class="tnt_wine${cssClass} tnt-table-cell-resource${isTradegood ? ' tnt-tradegood-bold' : ''}"><span title="${production}">${city.wine.toLocaleString()}</span></td>`;
             }
             if (settings.showMarble) {
                 const cssClass = tnt.dataCollector.checkMinMax(city, 2);
                 const production = tnt.utils.calculateProduction(cityId, 24).marble;
-                const fontWeight = city.producedTradegood == 2 ? 'font-weight:bold;color:black;' : '';
-                html += `<td class="tnt_marble${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;${fontWeight}"><span title="${production}">${city.marble.toLocaleString()}</span></td>`;
+                const isTradegood = city.producedTradegood == 2;
+                html += `<td class="tnt_marble${cssClass} tnt-table-cell-resource${isTradegood ? ' tnt-tradegood-bold' : ''}"><span title="${production}">${city.marble.toLocaleString()}</span></td>`;
             }
             if (settings.showCrystal) {
                 const cssClass = tnt.dataCollector.checkMinMax(city, 3);
                 const production = tnt.utils.calculateProduction(cityId, 24).crystal;
-                const fontWeight = city.producedTradegood == 3 ? 'font-weight:bold;color:black;' : '';
-                html += `<td class="tnt_crystal${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;${fontWeight}"><span title="${production}">${city.crystal.toLocaleString()}</span></td>`;
+                const isTradegood = city.producedTradegood == 3;
+                html += `<td class="tnt_crystal${cssClass} tnt-table-cell-resource${isTradegood ? ' tnt-tradegood-bold' : ''}"><span title="${production}">${city.crystal.toLocaleString()}</span></td>`;
             }
             if (settings.showSulfur) {
                 const cssClass = tnt.dataCollector.checkMinMax(city, 4);
                 const production = tnt.utils.calculateProduction(cityId, 24).sulfur;
-                const fontWeight = city.producedTradegood == 4 ? 'font-weight:bold;color:black;' : '';
-                html += `<td class="tnt_sulfur${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;${fontWeight}"><span title="${production}">${city.sulfur.toLocaleString()}</span></td>`;
+                const isTradegood = city.producedTradegood == 4;
+                html += `<td class="tnt_sulfur${cssClass} tnt-table-cell-resource${isTradegood ? ' tnt-tradegood-bold' : ''}"><span title="${production}">${city.sulfur.toLocaleString()}</span></td>`;
             }
 
             html += '</tr>';
@@ -2382,30 +2362,30 @@ tnt.tableBuilder = {
         // Totals row
         const totals = tnt.dataCollector.calculateTotals();
         html += '<tr>';
-        html += '<td class="tnt_total" style="padding:4px;text-align:left;border:1px solid #000;background-color:#faeac6;font-weight:bold;">Total</td>';
-        html += '<td style="padding:4px;text-align:center;border:1px solid #000;background-color:#faeac6;"></td>';
+        html += '<td class="tnt_total tnt-table-cell-total">Total</td>';
+        html += '<td class="tnt-table-cell-total-empty"></td>';
 
         if (settings.showPopulation) {
-            html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totals.population.toLocaleString()}</td>`;
+            html += `<td class="tnt_total tnt-table-cell-total">${totals.population.toLocaleString()}</td>`;
         }
         if (settings.showCitizens) {
 
-            html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totals.citizens.toLocaleString()}</td>`;
+            html += `<td class="tnt_total tnt-table-cell-total">${totals.citizens.toLocaleString()}</td>`;
         }
         if (settings.showWood) {
-            html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totals.wood.toLocaleString()}</td>`;
+            html += `<td class="tnt_total tnt-table-cell-total">${totals.wood.toLocaleString()}</td>`;
         }
         if (settings.showWine) {
-            html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totals.wine.toLocaleString()}</td>`;
+            html += `<td class="tnt_total tnt-table-cell-total">${totals.wine.toLocaleString()}</td>`;
         }
         if (settings.showMarble) {
-            html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totals.marble.toLocaleString()}</td>`;
+            html += `<td class="tnt_total tnt-table-cell-total">${totals.marble.toLocaleString()}</td>`;
         }
         if (settings.showCrystal) {
-            html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totals.crystal.toLocaleString()}</td>`;
+            html += `<td class="tnt_total tnt-table-cell-total">${totals.crystal.toLocaleString()}</td>`;
         }
         if (settings.showSulfur) {
-            html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totals.sulfur.toLocaleString()}</td>`;
+            html += `<td class="tnt_total tnt-table-cell-total">${totals.sulfur.toLocaleString()}</td>`;
         }
         html += '</tr>';
 
@@ -2425,11 +2405,11 @@ tnt.tableBuilder = {
             return `<div>No city data available</div>`;
         }
 
-        let html = `<table id="tnt_buildings_table" border="1" style="border-collapse:collapse;font:12px Arial,Helvetica,sans-serif;background-color:#fdf7dd;"><tbody>`;
+        let html = `<table id="tnt_buildings_table" class="tnt-table tnt-table-buildings" border="1"><tbody>`;
 
         // Category header row
         html += `<tr class="tnt_category_header">`;
-        html += `<th class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;width:60px;"></th>`;
+        html += `<th class="tnt_category_header tnt-table-header-empty">` + this.createNavigationButtons() + `</th>`;
         // html += `<th class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">City</th>`;
         Object.entries(categorySpans).forEach(([category, span]) => {
             if (span > 0) {
@@ -2437,22 +2417,22 @@ tnt.tableBuilder = {
                     .split(' ')
                     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                     .join(' ');
-                html += `<th colspan="${span}" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">${displayName}</th>`;
+                html += `<th colspan="${span}" class="tnt_category_header tnt-table-header-category">${displayName}</th>`;
             }
         });
         html += `</tr>`;
 
         // Subcategory header row
         html += `<tr class="tnt_subcategory_header">`;
-        html += `<th class="tnt_center tnt_bold" style="position:relative;text-align:center;padding:4px;font-weight:bold;border:1px solid #000;background-color:#faeac6;">`;
-        html += `<div style="position:relative; min-width:120px; text-align:center;">`;
-        html += `<span style="display:inline-block; text-align:center; min-width:60px;">City</span>`;
+        html += `<th class="tnt_center tnt_bold tnt-table-header-subcategory">`;
+        html += `<div class="tnt-table-header-city-container">`;
+        html += `<span class="tnt-table-header-city-text">City</span>`;
         html += `</div></th>`;
 
         // Building column headers
         mergedColumns.forEach(building => {
             if (building.key === 'palaceOrColony') {
-                html += `<th class="tnt_center tnt_bold" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">`;
+                html += `<th class="tnt_center tnt_bold tnt-table-header-subcategory">`;
                 html += `<a href="#" onclick="ajaxHandlerCall('?view=buildingDetail&buildingId=11&helpId=1');return false;">`;
                 html += `<img class="tnt_resource_icon tnt_building_icon" title="Palace" src="${building.icon}">`;
                 html += `</a>`;
@@ -2460,7 +2440,7 @@ tnt.tableBuilder = {
                 html += `<img class="tnt_resource_icon tnt_building_icon" title="Governor's Residence" src="${building.icon2}">`;
                 html += `</a></th>`;
             } else {
-                html += `<th class="tnt_center tnt_bold" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">`;
+                html += `<th class="tnt_center tnt_bold tnt-table-header-subcategory">`;
                 html += `<a href="#" onclick="ajaxHandlerCall('?view=buildingDetail&buildingId=${building.buildingId}&helpId=${building.helpId}');return false;">`;
                 html += `<img class="tnt_resource_icon tnt_building_icon" title="${building.name}" src="${building.icon}">`;
                 html += `</a></th>`;
@@ -2483,7 +2463,7 @@ tnt.tableBuilder = {
             html += `<tr${rowClass}>`;
 
             // City name cell with progress styling
-            html += `<td class="tnt_city tnt_left${progressClass}" style="padding:4px;text-align:left;border:1px solid #000;background-color:#fdf7dd;">`;
+            html += `<td class="tnt_city tnt_left${progressClass} tnt-table-cell-city">`;
             html += `<a href="#" class="tnt_city_link" data-city-id="${cityId}">`;
             html += tnt.dataCollector.getIcon(city.producedTradegood) + ' ' + tnt.get.city.name(cityId);
             html += '</a></td>';
@@ -2508,11 +2488,11 @@ tnt.tableBuilder = {
 
         // Total row with building level totals
         html += '<tr>';
-        html += '<td class="tnt_total" style="padding:4px;text-align:left;border:1px solid #000;background-color:#faeac6;font-weight:bold;">Total</td>';
+        html += '<td class="tnt_total tnt-table-cell-total">Total</td>';
         const buildingTotals = tnt.dataCollector.calculateBuildingTotals(mergedColumns);
         mergedColumns.forEach(col => {
             const total = buildingTotals[col.key] || '';
-            html += `<td class="tnt_building_level" style="padding:4px;text-align:center;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${total}</td>`;
+            html += `<td class="tnt_building_level tnt-table-cell-total">${total}</td>`;
         });
         html += '</tr>';
 
@@ -2522,14 +2502,13 @@ tnt.tableBuilder = {
 
     renderBuildingLevelCell(buildingArray, buildingKey, cityId) {
         let tdClass = "tnt_building_level";
-        let bgColor = "#fdf7dd";
         let tooltip = "";
         let levelSum = 0;
         let hasConstruction = false;
         let upgradable = false;
 
         if (!Array.isArray(buildingArray) || buildingArray.length === 0) {
-            return `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};"></td>`;
+            return `<td class="${tdClass} tnt-table-cell-building-empty"></td>`;
         }
 
         const buildingDef = TNT_BUILDING_DEFINITIONS.find(def => def.key === buildingKey);
@@ -2543,13 +2522,14 @@ tnt.tableBuilder = {
             tooltip += `Pos ${b.position}: lvl ${lvl}${upgradeNote}\n`;
         });
 
+        const cellClasses = [`${tdClass}`, 'tnt-table-cell-building'];
         if (buildingDef && levelSum >= buildingDef.maxedLvl * buildingArray.length) {
-            tdClass += " tnt_building_maxed";
+            cellClasses.push('tnt_building_maxed');
         }
-        if (upgradable) tdClass += " green";
-        if (hasConstruction) bgColor = "#80404050";
+        if (upgradable) cellClasses.push('green');
+        if (hasConstruction) cellClasses.push('tnt-construction-background');
 
-        return `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};" title="${tooltip.trim().replace(/"/g, '&quot;')}">${levelSum > 0 ? levelSum : '0'}</td>`;
+        return `<td class="${cellClasses.join(' ')}" title="${tooltip.trim().replace(/"/g, '&quot;')}">${levelSum > 0 ? levelSum : '0'}</td>`;
     },
 
     // Visual progress class determination
@@ -2573,10 +2553,7 @@ tnt.tableBuilder = {
             event.preventDefault();
             event.stopPropagation();
 
-            // console.log('[TNT] City link clicked!');
-
             const cityId = $(this).data('city-id');
-            // console.log('[TNT] Switching to city:', cityId);
 
             // Try multiple methods to switch cities
             let switchSuccess = false;
@@ -2693,9 +2670,20 @@ tnt.tableBuilder = {
 
             return false;
         });
+    },
 
-        // Add tooltips to resource icons
-        tnt.tooltip.attachTooltips(); // Not sure where to move this. One run once after tables has been build!
+    createNavigationButtons() {
+        return `
+            <div class="tnt-inline-controls-bar">
+                <div class="tnt-inline-controls tnt_left_buttons">
+                    <span class="tnt_panel_minimize_btn tnt_back" title="Minimize/Maximize panel"></span>
+                </div>
+                <div class="tnt-inline-controls tnt_right_buttons">
+                    <span class="tnt_refresh_btn" title="Refresh all cities"></span>
+                    <span class="tnt_table_toggle_btn" title="Toggle buildings/resources"></span>
+                </div>
+            </div>
+        `;
     }
 };
 
