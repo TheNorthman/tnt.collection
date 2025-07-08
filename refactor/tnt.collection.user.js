@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection
-// @version      3.0.62
+// @version      3.0.65
 // @namespace    tnt.collection.core
 // @author       Ronny Jespersen
 // @description  TNT Collection Core - Stable functionality for Ikariam enhancements

@@ -146,7 +146,7 @@ img[src*='/city/wall.png'].tnt_building_icon {
     margin-bottom: 0 !important;
 }
 #tnt_info_buildings_content {
-    display: none !important;
+    /* display: none !important; */
 }
 `);
 
@@ -273,7 +273,11 @@ addStyle(`
 .tnt_refresh_btn::after {
     content: '⟳';
     font-size: 15px;
-    transform: translateY(1px);
+    transform: translateY(-1px); /* was 1px, now nudged up */
+    line-height: 1;
+    vertical-align: middle;
+    font-weight: bold;
+    color: #333;
 }
 .tnt_table_toggle_btn::after {
     content: '≡';
@@ -314,6 +318,11 @@ addStyle(`
 .tnt_storage_min,
 .tnt_storage_max {
     background-color: #ffaaaa !important;
+}
+
+.tnt-construction-background {
+    background-color: #dbc49c !important; /* Matches TNT panel tone */
+    color: #222 !important;
 }
 
 `);
