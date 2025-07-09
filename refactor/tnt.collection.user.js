@@ -75,36 +75,6 @@ const TNT_BUILDING_DEFINITIONS = Object.freeze([
 // validBuildingTypes is always in sync with TNT_BUILDING_DEFINITIONS
 const validBuildingTypes = Object.freeze(TNT_BUILDING_DEFINITIONS.map(b => b.key));
 
-const TNT_TOOLTIP_TEMPLATES = {
-    wood: {
-        title: 'Wood Resources',
-        body: 'Basic material used in nearly all construction. Gathered from forests by Foresters.'
-    },
-    wine: {
-        title: 'Wine',
-        body: 'Luxury good consumed in Taverns to keep citizens happy. Produced by Winegrowers.'
-    },
-    marble: {
-        title: 'Marble',
-        body: 'Used for structural buildings and town upgrades. Supplied by Stonemasons.'
-    },
-    crystal: {
-        title: 'Crystal Glass',
-        body: 'Essential for research and scientific progress. Refined by Opticians.'
-    },
-    sulfur: {
-        title: 'Sulfur',
-        body: 'Powerful military resource used to create weapons and explosives. Extracted by Fireworkers.'
-    },
-    population: {
-        title: 'Population',
-        body: 'Total inhabitants of your city. Affects growth, tax income, and workforce availability.'
-    },
-    citizens: {
-        title: 'Citizens',
-        body: 'Free population available for jobs, research, or military service.'
-    }
-};
 
 const template = Object.freeze({
     resources: `
@@ -118,6 +88,7 @@ const template = Object.freeze({
 // Register plugin system
 window.tnt = window.tnt || {};
 window.tnt.plugins = window.tnt.plugins || [];
+window.tnt.console = Object.assign({}, window.console);
 
 const tnt = {
 
@@ -1678,7 +1649,7 @@ tnt.events = {
     },
 };
 
-// dataCollector = Collects and stores resource data
+// dataCollector module = Collects and stores resource data  
 tnt.dataCollector = {
     update() {
         const currentCityId = tnt.get.city.id();
@@ -2093,6 +2064,40 @@ tnt.citySwitcher = {
 
 // Tooltip/Bubbletip Testing Module
 tnt.tooltip = {
+    // Template for tooltips
+    templates: {
+        wood: {
+            title: 'Wood Resources',
+            body: 'Basic material used in nearly all construction. Gathered from forests by Foresters.'
+        },
+        wine: {
+            title: 'Wine',
+            body: 'Luxury good consumed in Taverns to keep citizens happy. Produced by Winegrowers.'
+        },
+        marble: {
+            title: 'Marble',
+            body: 'Used for structural buildings and town upgrades. Supplied by Stonemasons.'
+        },
+        crystal: {
+            title: 'Crystal Glass',
+            body: 'Essential for research and scientific progress. Refined by Opticians.'
+        },
+        sulfur: {
+            title: 'Sulfur',
+            body: 'Powerful military resource used to create weapons and explosives. Extracted by Fireworkers.'
+        },
+        population: {
+            title: 'Population',
+            body: 'Total inhabitants of your city. Affects growth, tax income, and workforce availability.'
+        },
+        citizens: {
+            title: 'Citizens',
+            body: 'Free population available for jobs, research, or military service.'
+        }
+    },
+
+
+
     // Initialize the tooltip system (ensure BubbleTips is ready)
     init() {
         if (typeof BubbleTips === 'undefined' || typeof BubbleTips.bindBubbleTip !== 'function') {
@@ -2136,7 +2141,7 @@ tnt.tooltip = {
     bindTemplateTooltip($el, section, key) {
         if (!$el || $el.length === 0) return;
 
-        const template = TNT_TOOLTIP_TEMPLATES?.[section]?.[key] || TNT_TOOLTIP_TEMPLATES?.[key];
+        const template = this.templates?.[section]?.[key] || this.templates?.[key];
         if (!template) {
             tnt.core.debug.log(`[TNT] No tooltip template found for section="${section}", key="${key}"`, 2);
             return;
