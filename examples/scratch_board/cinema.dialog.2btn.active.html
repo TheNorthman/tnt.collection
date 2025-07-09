@@ -1,0 +1,115 @@
+<!-- Cinema dialog with buttons for wood and marble production bonuses. Favor button not active -->
+<div id="cinema_c" class="templateView focusable focus" style="left: 603px; top: -123px; right: auto; z-index: 98;">
+    <div id="cinema" class="mainContentBox contentBox01h toggleMenu">
+        <div class="hd header mainHeader draggable">
+            <h3 id="js_mainBoxHeaderTitle">Cinetheater</h3>
+            <div id="js_backlinkButton" class="back invisible" title=""></div>
+            <div class="close"></div>
+        </div>
+        <div class="bd mainContentScroll" style="height: 795.5px;">
+            <div class="scroll_area">
+                <div class="scroll_arrow_top"></div>
+                <div class="scroller" style="width: 16px; height: 708px; left: 0px; top: 0px;"></div>
+                <div class="scroll_arrow_bottom" style="top: 56px;"></div>
+            </div>
+            <div class="mainContent minimizableContent">
+                <div class="center" style="height: 60px; padding-bottom: 8px;"><a
+                        onclick="ajaxHandlerCall('?view=premium');return false;"><img class="clickable"
+                            src="//gf1.geo.gfsrv.net/cdn68/5066eac72f056f2f549c05094cfa9b.jpg"></a></div>
+                <div class="buildingDescription">
+                    <h1>Cinetheater</h1>
+                    <p>The comedies and dramas of the Cinetheater make your workers happy and motivate them. Afterwards
+                        they will labour all the more. The cultural feature does not interest your workers in the
+                        slightest, yet it is the most favorite of the Gods! They will give you favor for it.</p>
+                </div>
+
+                <div class="contentBox01h">
+                    <h3 class="header">Cinetheater</h3>
+                    <div class="content theater_rewards_bg">
+                        <iframe id="externPlayerBox"></iframe>
+                        <div id="externAdDisclaimer" class="infobox invisible">
+                            Should you have any <b>problems</b> displaying a video or activating your bonus, please
+                            check whether you currently have an <b>ad-blocker</b>, <b>script blocker</b> or other
+                            <b>script</b> active in your browser. Let the video play through completely so that you can
+                            be certain of receiving your bonus. You will receive a <b>town advisor message</b> once it
+                            activates.
+                        </div>
+                        <div id="playerBox">
+                            <div id="player"></div>
+                            <div id="playerControls">
+                                <span id="videoTime">0:00</span> / <span id="videoLength">0:00</span>
+                                <input type="range" name="volume" id="videoVolume" value="100">
+                                <a href="#" id="videoButton" class="volumeLoud"></a>
+                            </div>
+                            <div class="playbox">
+                                <div id="cinemaBoxClose"></div>
+                                <p>Did you enjoy that?</p>
+                                <a id="gameLink"
+                                    href="https://en.ogame.gameforge.com/landing/landing1?kid=1-00107-03802-1608-a47801ce"
+                                    class="button" target="_blank">Play now!</a>
+                                <p>Your bonus is now active.</p>
+                            </div>
+                        </div>
+
+                        <div id="cinema_hideable">
+                            <p class="textbox">Which feature would you like to show?</p>
+
+                            <ul id="VideoRewards">
+                                <li>
+                                    <h4>Drama</h4>
+                                    <p>Building material production</p>
+                                    <p><img src="//gf2.geo.gfsrv.net/cdn19/c3527b2f694fb882563c04df6d8972.png"
+                                            style="vertical-align: middle;">+ 20 % for 12 hrs</p>
+                                    <form onsubmit="return false;" action="index.php" method="POST" class="bonusForm"
+                                        id="resourceBonusForm">
+                                        <input type="hidden" name="action" value="AdVideoRewardAction">
+                                        <input type="hidden" name="function" value="RequestBonus">
+                                        <input type="hidden" name="bonusId" value="51">
+                                        <input type="hidden" name="videoId" value="58147119">
+                                        <input id="resourceSubmitButton" type="submit" name="submit" class="button"
+                                            value="Show feature" title="">
+                                    </form>
+                                </li>
+
+                                <li>
+                                    <h4>Comedy</h4>
+                                    <p id="tradegoodTicket">Marble production</p>
+                                    <p><img id="tradegoodImage"
+                                            src="//gf3.geo.gfsrv.net/cdnbf/fc258b990c1a2a36c5aeb9872fc08a.png"
+                                            width="25px" height="20px" style="vertical-align: middle;">&nbsp;+ 20 % for
+                                        12 hrs</p>
+                                    <form onsubmit="return false;" action="index.php" method="POST" class="bonusForm"
+                                        id="tradegoodBonusForm">
+                                        <input type="hidden" name="action" value="AdVideoRewardAction">
+                                        <input type="hidden" name="function" value="RequestBonus">
+                                        <input type="hidden" name="bonusId" value="52">
+                                        <input type="hidden" name="videoId" value="58147119">
+                                        <input id="tradegoodSubmitButton" type="submit" name="submit" class="button"
+                                            value="Show feature" title="">
+                                    </form>
+                                </li>
+                                <li>
+                                    <h4>No feature available at this time</h4>
+                                    <p id="js_nextPossibleFavour">08h 41m</p>
+                                </li>
+                            </ul>
+
+                            <div class="infobox">
+                                You can earn production bonuses and favour here by watching videos from other Gameforge
+                                titles. <ul class="list">
+                                    <li>You must watch the video to the end in order to get the bonus.</li>
+                                    <li>The production bonuses last 12 hours and only apply to the town where you
+                                        watched the video. So think carefully about where you're going to visit the
+                                        theatre.</li>
+                                    <li>You can only earn favour here once per day.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="footer"></div>
+                </div>
+            </div>
+        </div>
+        <div class="ft footer"></div>
+    </div>
+</div>
