@@ -1,17 +1,19 @@
 // ==UserScript==
 // @name         TNT Collection
-// @version      3.0.67
+// @version      3.0.68
 // @namespace    tnt.collection.core
 // @author       Ronny Jespersen
 // @description  TNT Collection Core - Stable functionality for Ikariam enhancements
 // @license      MIT
 // @include      http*s*.ikariam.*/*
 // @exclude      http*support*.ikariam.*/*
+// @require      unsafeWindow
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_log
 // @grant        GM_xmlhttpRequest
+// @icon         https://www.google.com/s2/favicons?domain=ikariam.com
 // @require      http://localhost/refactor/tnt.collection.styles.plugin.js
 // ==/UserScript==
 
