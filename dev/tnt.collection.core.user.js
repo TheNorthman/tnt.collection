@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection Core
-// @version      2.1.7
+// @version      2.1.8
 // @namespace    tnt.collection.core
 // @author       Ronny Jespersen
 // @description  TNT Collection Core - Stable functionality for Ikariam enhancements
@@ -76,31 +76,31 @@ const validBuildingTypes = Object.freeze(TNT_BUILDING_DEFINITIONS.map(b => b.key
 const TNT_TOOLTIP_TEMPLATES = {
     wood: {
         title: 'Wood Resources',
-        body: 'Basic material used in nearly all construction.\nGathered from forests by Foresters.'
+        body: 'Basic material used in nearly all construction.<br>Gathered from forests by Foresters.'
     },
     wine: {
         title: 'Wine',
-        body: 'Luxury good consumed in Taverns to keep citizens happy.Produced by Winegrowers.'
+        body: 'Luxury good consumed in Taverns to keep citizens happy.<br>Produced by Winegrowers.'
     },
     marble: {
         title: 'Marble',
-        body: 'Used for structural buildings and town upgrades.\nSupplied by Stonemasons.'
+        body: 'Used for structural buildings and town upgrades.<br>Supplied by Stonemasons.'
     },
     crystal: {
         title: 'Crystal Glass',
-        body: 'Essential for research and scientific progress.\nRefined by Opticians.'
+        body: 'Essential for research and scientific progress.<br>Refined by Opticians.'
     },
     sulfur: {
         title: 'Sulfur',
-        body: 'Powerful military resource used to create weapons and explosives.\nExtracted by Fireworkers.'
+        body: 'Powerful military resource used to create weapons and explosives.<br>Extracted by Fireworkers.'
     },
     population: {
         title: 'Population',
-        body: 'Total inhabitants of your city.\nAffects growth, tax income, and workforce availability.'
+        body: 'Total inhabitants of your city.<br>Affects growth, tax income, and workforce availability.'
     },
     citizens: {
         title: 'Citizens',
-        body: 'Free population available for jobs,\nresearch, or military service.'
+        body: 'Free population available for jobs,<br>research, or military service.'
     }
 };
 
