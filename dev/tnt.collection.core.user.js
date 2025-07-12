@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection Core
-// @version      2.1.8
+// @version      2.1.9
 // @namespace    tnt.collection.core
 // @author       Ronny Jespersen
 // @description  TNT Collection Core - Stable functionality for Ikariam enhancements
@@ -76,23 +76,23 @@ const validBuildingTypes = Object.freeze(TNT_BUILDING_DEFINITIONS.map(b => b.key
 const TNT_TOOLTIP_TEMPLATES = {
     wood: {
         title: 'Wood Resources',
-        body: 'Basic material used in nearly all construction.<br>Gathered from forests by Foresters.'
+        body: 'Production:<br><span class="tnt_tooltip_indent">1h: {1hwood}</span><br><span class="tnt_tooltip_indent">24h: {24hwood}</span><br>'
     },
     wine: {
         title: 'Wine',
-        body: 'Luxury good consumed in Taverns to keep citizens happy.<br>Produced by Winegrowers.'
+        body: 'Production:<br><span class="tnt_tooltip_indent">1h: {1hwine}</span><br><span class="tnt_tooltip_indent">24h: {24hwine}</span><br>Luxury good consumed in Taverns to keep citizens happy.<br>Produced by Winegrowers.'
     },
     marble: {
         title: 'Marble',
-        body: 'Used for structural buildings and town upgrades.<br>Supplied by Stonemasons.'
+        body: 'Production:<br><span class="tnt_tooltip_indent">1h: {1hmarble}</span><br><span class="tnt_tooltip_indent">24h: {24hmarble}</span><br>Used for structural buildings and town upgrades.<br>Supplied by Stonemasons.'
     },
     crystal: {
         title: 'Crystal Glass',
-        body: 'Essential for research and scientific progress.<br>Refined by Opticians.'
+        body: 'Production:<br><span class="tnt_tooltip_indent">1h: {1hcrystal}</span><br><span class="tnt_tooltip_indent">24h: {24hcrystal}</span><br>Essential for research and scientific progress.<br>Refined by Opticians.'
     },
     sulfur: {
         title: 'Sulfur',
-        body: 'Powerful military resource used to create weapons and explosives.<br>Extracted by Fireworkers.'
+        body: 'Production:<br><span class="tnt_tooltip_indent">1h: {1hsulfur}</span><br><span class="tnt_tooltip_indent">24h: {24hsulfur}</span><br>Powerful military resource used to create weapons and explosives.<br>Extracted by Fireworkers.'
     },
     population: {
         title: 'Population',
@@ -2145,16 +2145,48 @@ tnt.tooltip = {
         $el.on('mouseleave.tnt', () => BubbleTips.clear?.());
     },
 
-    // Bind a template tooltip to an element
+    // Bind a template tooltip to an element, filling in calculated values for resources
     bindTemplateTooltip($el, section, key) {
         if (!$el || $el.length === 0) return;
 
+        // If this is a resource tooltip, fill in calculated values
+        if (section === 'resource' && ['wood','wine','marble','crystal','sulfur'].includes(key)) {
+            // Try to get cityId from closest row or from current city
+            let cityId = null;
+            // Try to find cityId from parent row data attribute or fallback
+            const $row = $el.closest('tr');
+            if ($row.length && $row.data('city-id')) {
+                cityId = $row.data('city-id');
+            } else if (typeof tnt.get?.city?.id === 'function') {
+                cityId = tnt.get.city.id();
+            }
+            if (!cityId) return;
+            const template = TNT_TOOLTIP_TEMPLATES[key];
+            if (!template) return;
+            const prod1h = tnt.utils.calculateProduction(cityId, 1);
+            const prod24h = tnt.utils.calculateProduction(cityId, 24);
+            let body = template.body;
+            body = body.replace('{1hwood}', prod1h.wood)
+                       .replace('{24hwood}', prod24h.wood)
+                       .replace('{1hwine}', prod1h.wine)
+                       .replace('{24hwine}', prod24h.wine)
+                       .replace('{1hmarble}', prod1h.marble)
+                       .replace('{24hmarble}', prod24h.marble)
+                       .replace('{1hcrystal}', prod1h.crystal)
+                       .replace('{24hcrystal}', prod24h.crystal)
+                       .replace('{1hsulfur}', prod1h.sulfur)
+                       .replace('{24hsulfur}', prod24h.sulfur);
+            const html = `<div style="padding:8px;"><strong>${template.title}</strong><br/>${body}</div>`;
+            tnt.tooltip.bindToElement($el, html);
+            return;
+        }
+
+        // Fallback: use static template
         const template = TNT_TOOLTIP_TEMPLATES?.[section]?.[key] || TNT_TOOLTIP_TEMPLATES?.[key];
         if (!template) {
             tnt.core.debug.log(`[TNT] No tooltip template found for section="${section}", key="${key}"`, 2);
             return;
         }
-
         const html = tnt.tooltip.formatTemplateTooltip(template);
         tnt.tooltip.bindToElement($el, html);
     },
