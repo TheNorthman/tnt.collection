@@ -188,6 +188,19 @@ const tnt = {
             return def && def.maxedLvl ? def.maxedLvl : 0;
         },
 
+        resetMaxedLvl(buildingType) {
+            if (!tnt.data.storage.settings || !tnt.data.storage.settings.maxedLvl) return;
+            const maxed = tnt.data.storage.settings.maxedLvl;
+            if (buildingType === 'palaceOrColony') {
+                delete maxed.palace;
+                delete maxed.palaceColony;
+                delete maxed.palaceOrColony;
+            } else {
+                delete maxed[buildingType];
+            }
+            tnt.core.storage.save();
+        },
+
         setMaxedLvl(buildingType, value) {
             if (!tnt.data.storage.settings) {
                 tnt.data.storage.settings = {};
@@ -195,8 +208,25 @@ const tnt = {
             if (!tnt.data.storage.settings.maxedLvl) {
                 tnt.data.storage.settings.maxedLvl = {};
             }
+
+            // empty means reset to default
+            if (value === '' || value === null || typeof value === 'undefined') {
+                this.resetMaxedLvl(buildingType);
+                return;
+            }
+
             const parsed = parseInt(value, 10);
-            tnt.data.storage.settings.maxedLvl[buildingType] = (isNaN(parsed) || parsed < 0) ? 0 : parsed;
+            if (isNaN(parsed) || parsed < 0) {
+                this.resetMaxedLvl(buildingType);
+            } else {
+                // remove override if equal final default (reduces stored state)
+                const def = this.getMaxedLvl(buildingType);
+                if (parsed === def) {
+                    this.resetMaxedLvl(buildingType);
+                } else {
+                    tnt.data.storage.settings.maxedLvl[buildingType] = parsed;
+                }
+            }
             tnt.core.storage.save();
         },
 
@@ -2817,7 +2847,21 @@ tnt.tableBuilder = {
 
             input.on('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    const newValue = parseInt(input.val(), 10);
+                    const entered = input.val().trim();
+                    if (entered === '') {
+                        if (buildingType === 'palaceOrColony') {
+                            tnt.settings.resetMaxedLvl('palace');
+                            tnt.settings.resetMaxedLvl('palaceColony');
+                            tnt.settings.resetMaxedLvl('palaceOrColony');
+                        } else {
+                            tnt.settings.resetMaxedLvl(buildingType);
+                        }
+                        saved = true;
+                        tnt.dataCollector.show();
+                        return;
+                    }
+
+                    const newValue = parseInt(entered, 10);
                     if (isNaN(newValue) || newValue < 0) {
                         alert('Please enter a positive integer for maxed level.');
                         input.focus().select();
