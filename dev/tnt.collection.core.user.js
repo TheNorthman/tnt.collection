@@ -93,7 +93,7 @@ const validBuildingTypes = Object.freeze(TNT_BUILDING_DEFINITIONS.map(b => b.key
 
 const TNT_TOOLTIP_TEMPLATES = {
     wood: {
-        title: 'Wood Resources',
+        title: 'Wood',
         body: 'Production:<br><span class="tnt_tooltip_indent">1h: {1hwood}</span><br><span class="tnt_tooltip_indent">24h: {24hwood}</span><br>'
     },
     wine: {
@@ -105,7 +105,7 @@ const TNT_TOOLTIP_TEMPLATES = {
         body: 'Production:<br><span class="tnt_tooltip_indent">1h: {1hmarble}</span><br><span class="tnt_tooltip_indent">24h: {24hmarble}</span><br>Used for structural buildings and town upgrades.<br>Supplied by Stonemasons.'
     },
     crystal: {
-        title: 'Crystal Glass',
+        title: 'Crystal',
         body: 'Production:<br><span class="tnt_tooltip_indent">1h: {1hcrystal}</span><br><span class="tnt_tooltip_indent">24h: {24hcrystal}</span><br>Essential for research and scientific progress.<br>Refined by Opticians.'
     },
     sulfur: {
