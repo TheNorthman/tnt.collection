@@ -165,6 +165,41 @@ const tnt = {
             return !current;
         },
 
+        // Get persistent per-building max-level (editable by user)
+        getMaxedLvl(buildingType) {
+            if (!tnt.data.storage.settings) return 0;
+            const maxed = tnt.data.storage.settings.maxedLvl || {};
+            if (buildingType === 'palaceOrColony') {
+                if (maxed && typeof maxed[buildingType] !== 'undefined' && maxed[buildingType] !== null) {
+                    const parsed = parseInt(maxed[buildingType], 10);
+                    if (!isNaN(parsed) && parsed >= 0) return parsed;
+                }
+                const p = this.getMaxedLvl('palace');
+                const c = this.getMaxedLvl('palaceColony');
+                return Math.max(p, c);
+            }
+
+            if (maxed && typeof maxed[buildingType] !== 'undefined' && maxed[buildingType] !== null) {
+                const parsed = parseInt(maxed[buildingType], 10);
+                if (!isNaN(parsed) && parsed >= 0) return parsed;
+            }
+
+            const def = TNT_BUILDING_DEFINITIONS.find(b => b.key === buildingType);
+            return def && def.maxedLvl ? def.maxedLvl : 0;
+        },
+
+        setMaxedLvl(buildingType, value) {
+            if (!tnt.data.storage.settings) {
+                tnt.data.storage.settings = {};
+            }
+            if (!tnt.data.storage.settings.maxedLvl) {
+                tnt.data.storage.settings.maxedLvl = {};
+            }
+            const parsed = parseInt(value, 10);
+            tnt.data.storage.settings.maxedLvl[buildingType] = (isNaN(parsed) || parsed < 0) ? 0 : parsed;
+            tnt.core.storage.save();
+        },
+
         // Get layout preferences
         getLayoutPrefs() {
             return this.get("layoutPrefs", {
@@ -305,6 +340,11 @@ const tnt = {
                     this.set(key, defaultValue);
                 }
             });
+
+            // Ensure maxedLvl mapping exists
+            if (!this.get("maxedLvl")) {
+                this.set("maxedLvl", {});
+            }
 
             this.set("version", tnt.version);
         }
@@ -2569,7 +2609,7 @@ tnt.tableBuilder = {
         return html;
     },
 
-    renderBuildingLevelCell(buildingArray, buildingKey, cityId) {
+    renderBuildingLevelCell(buildingArray, buildingType, cityId) {
         let tdClass = "tnt_building_level";
         let bgColor = "#fdf7dd";
         let tooltip = "";
@@ -2578,10 +2618,10 @@ tnt.tableBuilder = {
         let upgradable = false;
 
         if (!Array.isArray(buildingArray) || buildingArray.length === 0) {
-            return `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};"></td>`;
+            return `<td class="${tdClass}" data-building-type="${buildingType}" data-city-id="${cityId}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};"></td>`;
         }
 
-        const buildingDef = TNT_BUILDING_DEFINITIONS.find(def => def.key === buildingKey);
+        const buildingDef = TNT_BUILDING_DEFINITIONS.find(def => def.key === buildingType);
 
         buildingArray.forEach(b => {
             const lvl = typeof b.level === 'number' ? b.level : 0;
@@ -2592,13 +2632,14 @@ tnt.tableBuilder = {
             tooltip += `Pos ${b.position}: lvl ${lvl}${upgradeNote}\n`;
         });
 
-        if (buildingDef && levelSum >= buildingDef.maxedLvl * buildingArray.length) {
+        const maxedLvl = tnt.settings.getMaxedLvl(buildingType);
+        if (maxedLvl && levelSum >= maxedLvl * buildingArray.length) {
             tdClass += " tnt_building_maxed";
         }
         if (upgradable) tdClass += " green";
         if (hasConstruction) bgColor = "#80404050";
 
-        return `<td class="${tdClass}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};" title="${tooltip.trim().replace(/"/g, '&quot;')}">${levelSum > 0 ? levelSum : '0'}</td>`;
+        return `<td class="${tdClass}" data-building-type="${buildingType}" data-city-id="${cityId}" style="padding:4px;text-align:center;border:1px solid #000;background-color:${bgColor};" title="${tooltip.trim().replace(/"/g, '&quot;')}">${levelSum > 0 ? levelSum : '0'}</td>`;
     },
 
     // Visual progress class determination
@@ -2741,6 +2782,63 @@ tnt.tableBuilder = {
             }
 
             return false;
+        });
+
+        // Double-click to edit global maxed level per building type in the table
+        $(document).off('dblclick', '#tnt_buildings_table td.tnt_building_level').on('dblclick', '#tnt_buildings_table td.tnt_building_level', function () {
+            const $cell = $(this);
+            if ($cell.find('input').length > 0) return;
+
+            const buildingType = $cell.data('building-type');
+            if (!buildingType) return;
+
+            const originalValue = $cell.text().trim();
+            const initialValue = (buildingType === 'palaceOrColony') ? tnt.settings.getMaxedLvl('palaceOrColony') : originalValue;
+            const input = $('<input type="text" class="tnt_maxedlvl_input" />').val(initialValue).css({
+                width: '30px',
+                boxSizing: 'border-box',
+                margin: 0,
+                padding: '0 2px',
+                border: '1px solid #999',
+                lineHeight: '1.2em',
+                fontSize: '11px',
+                textAlign: 'center'
+            });
+            $cell.empty().css({overflow: 'hidden', padding: '0 2px'}).append(input);
+            input.focus().select();
+
+            let saved = false;
+
+            const finish = () => {
+                if (!saved) {
+                    $cell.text(originalValue);
+                }
+            };
+
+            input.on('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const newValue = parseInt(input.val(), 10);
+                    if (isNaN(newValue) || newValue < 0) {
+                        alert('Please enter a positive integer for maxed level.');
+                        input.focus().select();
+                        return;
+                    }
+                    if (buildingType === 'palaceOrColony') {
+                        tnt.settings.setMaxedLvl('palace', newValue);
+                        tnt.settings.setMaxedLvl('palaceColony', newValue);
+                        tnt.settings.setMaxedLvl('palaceOrColony', newValue);
+                    } else {
+                        tnt.settings.setMaxedLvl(buildingType, newValue);
+                    }
+                    saved = true;
+                    tnt.dataCollector.show();
+                } else if (e.key === 'Escape') {
+                    saved = false;
+                    finish();
+                }
+            });
+
+            input.on('blur', finish);
         });
 
         // Add tooltips to resource icons
