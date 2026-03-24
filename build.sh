@@ -82,7 +82,7 @@ fi
 mkdir -p "${OUT_DIR}"
 
 # Metadata header (edit fields as needed)
-read -r -d '' METADATA <<EOF
+METADATA=$(cat <<EOF
 // ==UserScript==
 // @name         ${SCRIPT_NAME}
 // @version      ${VERSION}
@@ -105,6 +105,7 @@ read -r -d '' METADATA <<EOF
 // ==/UserScript==
 
 EOF
+)
 
 # Build: metadata + core + styles
 {

@@ -1,9 +1,9 @@
-﻿// ==UserScript==
-// @name         TNT Collection
-// @version      2.1.0
-// @namespace    tnt.collection
-// @author       Kingfisher
-// @description  TNT Collection for Ikariam enhancements
+// ==UserScript==
+// @name         TNT Collection (dev)
+// @version      2.1.0-dev.47f8bfe
+// @namespace    https://github.com/TheNorthman/tnt.collection
+// @author       Ronny
+// @description  Ikariam TNT Collection Tools
 // @license      MIT
 // @include      http*s*.ikariam.*/*
 // @exclude      http*support*.ikariam.*/*
@@ -13,9 +13,12 @@
 // @grant        GM_setValue
 // @grant        GM_log
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/TheNorthman/tnt.collection/main/dist/tnt-collection.user.js
-// @updateURL    https://raw.githubusercontent.com/TheNorthman/tnt.collection/main/dist/tnt-collection.user.js
+// @downloadURL  https://raw.githubusercontent.com/TheNorthman/tnt.collection/dev/dist/tnt.collection.user.js
+// @updateURL    https://raw.githubusercontent.com/TheNorthman/tnt.collection/dev/dist/tnt.collection.user.js
+// @homepageURL  https://github.com/TheNorthman/tnt.collection
+// @supportURL   https://github.com/TheNorthman/tnt.collection/issues
 // ==/UserScript==
+// --- core.js ---
 
 // Ikariam scaling fix
 //ikariam.worldview_scale_city = 1;
@@ -3101,6 +3104,9 @@ tnt.tableBuilder = {
 
 // Initialize the TNT core
 $(document).ready(() => tnt.core.init());
+
+
+// --- styles.js ---
 
 // Apply styles at the end
 GM_addStyle(`
