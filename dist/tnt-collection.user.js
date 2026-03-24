@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name         TNT Collection
-// @version      2.1.0
+// @version      2.1.10
 // @namespace    tnt.collection
 // @author       Ronny Jespersen
 // @description  TNT Collection (Core + Styles) for Ikariam enhancements
@@ -3103,15 +3103,6 @@ tnt.tableBuilder = {
 $(document).ready(() => tnt.core.init());
 
 // Apply styles at the end
-GM_addStyle(TNT_STYLES);
-// This extension is designed to work alongside tnt.collection.core.user.js
-// Things to be aware of:
-// - This script only applies styles, no JavaScript logic
-// - Styles are applied immediately when the script loads
-// - All styles use high specificity to override Ikariam's default styles
-// !!! Changes here affect the visual appearance of all TNT Collection elements
-// =============================================================
-
 GM_addStyle(`
     /* Show level styles - using table background color */
     .tntLvl{
@@ -3311,7 +3302,7 @@ GM_addStyle(`
     
     /* Refresh button icon - perfectly centered */
     .tnt_right_buttons .tnt_refresh_btn:before {
-        content: "âŸ³";
+        content: "⟳";
         color: #333;
         font-size: 13px;
         font-weight: bold;
@@ -3406,7 +3397,7 @@ GM_addStyle(`
     
     /* Refresh button icon */
     .tnt_control_buttons .tnt_refresh_btn:before {
-        content: "âŸ³";
+        content: "⟳";
         color: #333;
         font-size: 14px;
         font-weight: bold;
@@ -3683,7 +3674,7 @@ GM_addStyle(`
         top: 2px;
     }
     #tnt_info_resources .tnt_back:before {
-        content: "â—€";
+        content: "◀";
         color: #333;
         display: inline-block;
         width: 100%;
@@ -3701,7 +3692,7 @@ GM_addStyle(`
         top: 3px;
     }
     #tnt_info_resources .tnt_foreward:before {
-        content: "â–¶";
+        content: "▶";
         color: #333;
         display: inline-block;
         width: 100%;
@@ -3743,7 +3734,7 @@ GM_addStyle(`
         overflow: hidden;
     }
     .tnt_panel_minimize_btn.tnt_back:before { 
-        content: "â—€";
+        content: "◀";
         color: #333;
         display: inline-block;
         width: 100%;
@@ -3763,7 +3754,7 @@ GM_addStyle(`
         top: 3px; 
     }
     .tnt_panel_minimize_btn.tnt_foreward:before { 
-        content: "â–¶";
+        content: "▶";
         color: #333;
         display: inline-block;
         width: 100%;
@@ -3799,7 +3790,7 @@ GM_addStyle(`
         overflow: hidden;
     }
     .tnt_table_toggle_btn:before {
-        content: "â‡„";
+        content: "⇄";
         color: #333;
         display: inline-block;
         width: 100%;
@@ -3816,7 +3807,7 @@ GM_addStyle(`
         color: #000;
     }
     .tnt_table_toggle_btn.active:before {
-        content: "â‡„";
+        content: "⇄";
         color: #006600;
         font-weight: bold;
     }
