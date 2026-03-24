@@ -1,5 +1,10 @@
 # Changelog - All notable changes to TNT Collection will be documented in this file.
 
+## [2.1.9] - 2025-07-05
+
+### Fixed
+- Tooltip separator now renders as a true sub-pixel line (0.5px) in BubbleTips to avoid appearing too thick.
+
 ## [2.1.4] - 2025-07-05
 
 ### Added
