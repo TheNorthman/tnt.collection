@@ -2,8 +2,8 @@
 // @name         TNT Collection
 // @version      2.1.0
 // @namespace    tnt.collection
-// @author       Ronny Jespersen
-// @description  TNT Collection (Core + Styles) for Ikariam enhancements
+// @author       Kingfisher
+// @description  TNT Collection for Ikariam enhancements
 // @license      MIT
 // @include      http*s*.ikariam.*/*
 // @exclude      http*support*.ikariam.*/*
