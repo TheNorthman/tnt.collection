@@ -524,7 +524,6 @@ const tnt = {
             tnt.core.events.init();
 
             // Initialize all core components
-            tnt.core.storage.init();
             tnt.core.notification.init();
             tnt.core.options.init();
 
