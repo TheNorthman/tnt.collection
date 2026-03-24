@@ -13,8 +13,8 @@
 // @grant        GM_setValue
 // @grant        GM_log
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://github.com/TheNorthman/ikariam.user.js/raw/refs/heads/main/tnt-collection.user.js
-// @updateURL    https://github.com/TheNorthman/ikariam.user.js/raw/refs/heads/main/tnt-collection.user.js
+// @downloadURL  https://github.com/TheNorthman/tnt-collection.user.js/raw/refs/heads/main/tnt-collection.user.js
+// @updateURL    https://github.com/TheNorthman/tnt-collection.user.js/raw/refs/heads/main/tnt-collection.user.js
 // ==/UserScript==
 
 // Ikariam scaling fix
