@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name         TNT Collection
-// @version      2.1.10
+// @version      2.1.0
 // @namespace    tnt.collection
 // @author       Ronny Jespersen
 // @description  TNT Collection (Core + Styles) for Ikariam enhancements
