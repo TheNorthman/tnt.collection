@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.0-dev.47f8bfe
+// @version      2.1.0-dev.3e1c508
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -546,7 +546,6 @@ const tnt = {
             tnt.core.events.init();
 
             // Initialize all core components
-            tnt.core.storage.init();
             tnt.core.notification.init();
             tnt.core.options.init();
 
@@ -3137,8 +3136,8 @@ GM_addStyle(`
         transition: all 0.2s ease !important;
     }
     /* TNT table styles with higher specificity - override Ikariam's .table01 styles */
-    body #tnt_info_resources #tnt_resources_table,
-    body #tnt_info_buildings_content #tnt_buildings_table{
+    #tnt_info_resources #tnt_resources_table,
+    #tnt_info_buildings_content #tnt_buildings_table{
         border-collapse: collapse !important;
         font: 12px Arial, Helvetica, sans-serif !important;
         background-color: #fdf7dd !important;
@@ -3146,13 +3145,13 @@ GM_addStyle(`
     }
     
     /* Category header cells - CLEAN and SIMPLE with no internal elements */
-    body #tnt_info_resources #tnt_resources_table th.tnt_category_header,
-    body #tnt_info_buildings_content #tnt_buildings_table th.tnt_category_header {
+    #tnt_info_resources #tnt_resources_table th.tnt_category_header,
+    #tnt_info_buildings_content #tnt_buildings_table th.tnt_category_header {
         height: 25px !important;
         max-height: 25px !important;
         min-height: 25px !important;
         background-color: #DBBE8C !important;
-        border: 1px solid #000 !important;
+        border: 1px solid #8B4513 !important;
         padding: 4px !important;
         font-weight: bold !important;
         text-align: center !important;
