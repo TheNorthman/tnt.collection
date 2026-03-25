@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.0-dev.4
+// @version      2.1.0-dev.5
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -2240,21 +2240,21 @@ GM_addStyle(`
     /* Current city highlighting with 2px selection border matching theme */
     body #tnt_info_resources .tnt_selected,
     body #tnt_info_buildings_content .tnt_selected {
-        border: 2px solid #8B4513 !important;
+        border: 2px solid #000000 !important;
     }
     body #tnt_info_resources .tnt_selected td,
     body #tnt_info_buildings_content .tnt_selected td {
-        border-top: 2px solid #8B4513 !important;
-        border-bottom: 2px solid #8B4513 !important;
+        border-top: 2px solid #000000 !important;
+        border-bottom: 2px solid #000000 !important;
         // color: #000 !important;
     }
     body #tnt_info_resources .tnt_selected td:first-child,
     body #tnt_info_buildings_content .tnt_selected td:first-child {
-        border-left: 2px solid #8B4513 !important;
+        border-left: 2px solid #000000 !important;
     }
     body #tnt_info_resources .tnt_selected td:last-child,
     body #tnt_info_buildings_content .tnt_selected td:last-child {
-        border-right: 2px solid #8B4513 !important;
+        border-right: 2px solid #000000 !important;
     }
     /* Make tradegood production more visible with dark grey text color */
     body #tnt_info_resources .tnt_bold,

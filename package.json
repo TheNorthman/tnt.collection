@@ -1,7 +1,7 @@
 {
   "name": "tnt.collection",
   "version": "2.1.0",
-  "devCounter": 4,
+  "devCounter": 5,
   "description": "TNT Collection Tools for Ikariam",
   "private": true,
   "author": "Ronny Jespersen",
