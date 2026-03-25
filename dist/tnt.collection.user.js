@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         TNT Collection (dev)
-// @version      2.1.0-dev.5
+// @name         TNT Collection
+// @version      2.1.1
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -13,8 +13,8 @@
 // @grant        GM_setValue
 // @grant        GM_log
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/TheNorthman/tnt.collection/dev/dist/tnt.collection.user.js
-// @updateURL    https://raw.githubusercontent.com/TheNorthman/tnt.collection/dev/dist/tnt.collection.user.js
+// @downloadURL  https://raw.githubusercontent.com/TheNorthman/tnt.collection/main/dist/tnt.collection.user.js
+// @updateURL    https://raw.githubusercontent.com/TheNorthman/tnt.collection/main/dist/tnt.collection.user.js
 // @homepageURL  https://github.com/TheNorthman/tnt.collection
 // @supportURL   https://github.com/TheNorthman/tnt.collection/issues
 // ==/UserScript==
@@ -1816,7 +1816,6 @@ tnt.events = {
         });
     },
 };
-
 
 
 // Initialize the TNT core
