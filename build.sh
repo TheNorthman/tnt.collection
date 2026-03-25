@@ -12,6 +12,8 @@ MODE="${1:-dev}"                # dev or prod
 SRC_DIR="src"
 CORE="${SRC_DIR}/core.js"
 STYLES="${SRC_DIR}/styles.js"
+CITY_SWITCHER="${SRC_DIR}/citySwitcher.js"
+TOOLTIP="${SRC_DIR}/tooltip.js"
 TABLE_BUILDER="${SRC_DIR}/tableBuilder.js"
 OUT_DIR="dist"
 OUT_FILE="${OUT_DIR}/tnt.collection.user.js"
@@ -116,8 +118,16 @@ if [ ! -f "${STYLES}" ]; then
   echo "ERROR: missing ${STYLES}. Copy your styles into ${STYLES} first." >&2
   exit 1
 fi
+if [ ! -f "${CITY_SWITCHER}" ]; then
+  echo "ERROR: missing ${CITY_SWITCHER}. Copy your city switcher into ${CITY_SWITCHER} first." >&2
+  exit 1
+fi
 if [ ! -f "${TABLE_BUILDER}" ]; then
   echo "ERROR: missing ${TABLE_BUILDER}. Copy your table builder into ${TABLE_BUILDER} first." >&2
+  exit 1
+fi
+if [ ! -f "${TOOLTIP}" ]; then
+  echo "ERROR: missing ${TOOLTIP}. Copy your tooltip into ${TOOLTIP} first." >&2
   exit 1
 fi
 
@@ -149,7 +159,7 @@ METADATA=$(cat <<EOF
 EOF
 )
 
-# Build: metadata + core + styles + table builder
+# Build: metadata + core + styles + table builder + tooltip + city switcher
 {
   printf "%s\n" "${METADATA}"
   printf "// --- core.js ---\n\n"
@@ -158,6 +168,10 @@ EOF
   cat "${STYLES}"
   printf "\n\n// --- tableBuilder.js ---\n\n"
   cat "${TABLE_BUILDER}"
+  printf "\n\n// --- tooltip.js ---\n\n"
+  cat "${TOOLTIP}"
+  printf "\n\n// --- citySwitcher.js ---\n\n"
+  cat "${CITY_SWITCHER}"
 } > "${OUT_FILE}"
 
 # For prod: collapse excessive blank lines (tiny cleanup)
