@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.0-dev.3e1c508
+// @version      2.1.0-dev.6e9d394
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -3585,7 +3585,7 @@ GM_addStyle(`
         text-align: center !important;
         vertical-align: middle !important;
         padding: 4px !important;
-        border: 1px #000000 solid !important;
+        border: 1px #8B4513 solid !important;
     }
     #container body #tnt_info_resources #tnt_resources_table.table01 th,
     #container body #tnt_info_buildings_content #tnt_buildings_table.table01 th {
@@ -3594,7 +3594,7 @@ GM_addStyle(`
         height: auto !important;
         padding: 4px !important;
         font-weight: bold !important;
-        border: 1px #000000 solid !important;
+        border: 1px #8B4513 solid !important;
     }
     
     #mainview a:hover{ text-decoration:none; }
