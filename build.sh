@@ -12,6 +12,7 @@ MODE="${1:-dev}"                # dev or prod
 SRC_DIR="src"
 CORE="${SRC_DIR}/core.js"
 STYLES="${SRC_DIR}/styles.js"
+DATA_COLLECTOR="${SRC_DIR}/dataCollector.js"
 CITY_SWITCHER="${SRC_DIR}/citySwitcher.js"
 TOOLTIP="${SRC_DIR}/tooltip.js"
 TABLE_BUILDER="${SRC_DIR}/tableBuilder.js"
@@ -118,6 +119,10 @@ if [ ! -f "${STYLES}" ]; then
   echo "ERROR: missing ${STYLES}. Copy your styles into ${STYLES} first." >&2
   exit 1
 fi
+if [ ! -f "${DATA_COLLECTOR}" ]; then
+  echo "ERROR: missing ${DATA_COLLECTOR}. Copy your data collector into ${DATA_COLLECTOR} first." >&2
+  exit 1
+fi
 if [ ! -f "${CITY_SWITCHER}" ]; then
   echo "ERROR: missing ${CITY_SWITCHER}. Copy your city switcher into ${CITY_SWITCHER} first." >&2
   exit 1
@@ -159,7 +164,7 @@ METADATA=$(cat <<EOF
 EOF
 )
 
-# Build: metadata + core + styles + table builder + tooltip + city switcher
+# Build: metadata + core + styles + table builder + tooltip + city switcher + data collector
 {
   printf "%s\n" "${METADATA}"
   printf "// --- core.js ---\n\n"
@@ -170,6 +175,8 @@ EOF
   cat "${TABLE_BUILDER}"
   printf "\n\n// --- tooltip.js ---\n\n"
   cat "${TOOLTIP}"
+  printf "\n\n// --- dataCollector.js ---\n\n"
+  cat "${DATA_COLLECTOR}"
   printf "\n\n// --- citySwitcher.js ---\n\n"
   cat "${CITY_SWITCHER}"
 } > "${OUT_FILE}"
