@@ -47,16 +47,51 @@ else
   BASE_VERSION="0.0.0"
 fi
 
-# Short git sha for dev builds (fallback to local)
-if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  SHORT_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo local)"
-else
-  SHORT_SHA="local"
-fi
+# Helper to read a numeric devCounter from package.json (falls back to 0)
+get_dev_counter() {
+  [ ! -f "${PKG}" ] && echo 0 && return
+
+  local candidate
+  candidate=$(grep -oE '"devCounter"[[:space:]]*:[[:space:]]*[0-9]+' "${PKG}" | head -n1 | grep -oE '[0-9]+')
+  if ! [[ "${candidate}" =~ ^[0-9]+$ ]]; then
+    echo 0
+  else
+    echo "${candidate}"
+  fi
+}
+
+# Helper to write devCounter to package.json
+set_dev_counter() {
+  local value="${1:-0}"
+  if ! [[ "${value}" =~ ^[0-9]+$ ]]; then
+    value=0
+  fi
+
+  if [ ! -f "${PKG}" ]; then
+    cat > "${PKG}" <<EOF
+{
+  "name": "tnt.collection",
+  "version": "0.0.0",
+  "devCounter": ${value}
+}
+EOF
+    return
+  fi
+
+  if grep -qE '"devCounter"[[:space:]]*:' "${PKG}"; then
+    sed -i -E 's/("devCounter"[[:space:]]*:[[:space:]]*)[0-9]+/\1'"${value}"'/' "${PKG}"
+  else
+    sed -i -E '/"version"[[:space:]]*:/a \  "devCounter": '"${value}"',' "${PKG}"
+  fi
+}
 
 # Decide version, name, and default URLs based on mode
 if [ "${MODE}" = "dev" ]; then
-  VERSION="${BASE_VERSION}-dev.${SHORT_SHA}"
+  DEV_COUNTER="$(get_dev_counter)"
+  DEV_COUNTER=$((DEV_COUNTER + 1))
+  set_dev_counter "${DEV_COUNTER}"
+
+  VERSION="${BASE_VERSION}-dev.${DEV_COUNTER}"
   SCRIPT_NAME="TNT Collection (dev)"
   # default dev URLs if not overridden
   DOWNLOAD_URL="${DOWNLOAD_URL:-${DEFAULT_DEV_RAW}}"
@@ -64,6 +99,8 @@ if [ "${MODE}" = "dev" ]; then
 else
   VERSION="${BASE_VERSION}"
   SCRIPT_NAME="TNT Collection"
+  # reset dev counter when prod builds are created
+  set_dev_counter 0
   # default prod URLs if not overridden
   DOWNLOAD_URL="${DOWNLOAD_URL:-${DEFAULT_PROD_RAW}}"
   UPDATE_URL="${UPDATE_URL:-${DEFAULT_PROD_RAW}}"
