@@ -1,0 +1,30 @@
+{
+  "name": "tnt.collection",
+  "version": "2.1.1",
+  "devCounter": 1,
+  "description": "TNT Collection Tools for Ikariam",
+  "private": true,
+  "author": "Ronny Jespersen",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheNorthman/tnt.collection.git"
+  },
+  "homepage": "https://github.com/TheNorthman/tnt.collection",
+  "bugs": {
+    "url": "https://github.com/TheNorthman/tnt.collection/issues"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build:dev": "bash ./build.sh dev",
+    "build:prod": "bash ./build.sh prod",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "userscript",
+    "ikariam",
+    "tnt.collection"
+  ]
+}

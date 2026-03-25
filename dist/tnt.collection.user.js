@@ -1,9 +1,9 @@
-﻿// ==UserScript==
-// @name         TNT Collection
-// @version      2.1.0
-// @namespace    tnt.collection
-// @author       Kingfisher
-// @description  TNT Collection for Ikariam enhancements
+// ==UserScript==
+// @name         TNT Collection (dev)
+// @version      2.1.0-dev.5
+// @namespace    https://github.com/TheNorthman/tnt.collection
+// @author       Ronny
+// @description  Ikariam TNT Collection Tools
 // @license      MIT
 // @include      http*s*.ikariam.*/*
 // @exclude      http*support*.ikariam.*/*
@@ -13,9 +13,12 @@
 // @grant        GM_setValue
 // @grant        GM_log
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/TheNorthman/tnt.collection/main/dist/tnt-collection.user.js
-// @updateURL    https://raw.githubusercontent.com/TheNorthman/tnt.collection/main/dist/tnt-collection.user.js
+// @downloadURL  https://raw.githubusercontent.com/TheNorthman/tnt.collection/dev/dist/tnt.collection.user.js
+// @updateURL    https://raw.githubusercontent.com/TheNorthman/tnt.collection/dev/dist/tnt.collection.user.js
+// @homepageURL  https://github.com/TheNorthman/tnt.collection
+// @supportURL   https://github.com/TheNorthman/tnt.collection/issues
 // ==/UserScript==
+// --- core.js ---
 
 // Ikariam scaling fix
 //ikariam.worldview_scale_city = 1;
@@ -543,7 +546,6 @@ const tnt = {
             tnt.core.events.init();
 
             // Initialize all core components
-            tnt.core.storage.init();
             tnt.core.notification.init();
             tnt.core.options.init();
 
@@ -1815,730 +1817,861 @@ tnt.events = {
     },
 };
 
-// dataCollector = Collects and stores resource data
-tnt.dataCollector = {
-    update() {
-        const currentCityId = tnt.get.city.id();
 
-        // Skip data collection if no valid city ID
-        if (!currentCityId || currentCityId === 'undefined') {
-            return;
-        }
 
-        const isOwnCity = tnt.is.ownCity();
+// Initialize the TNT core
+$(document).ready(() => tnt.core.init());
 
-        if (isOwnCity) {
-            this.collectOwnCityData(currentCityId);
-        } else {
-            this.collectForeignCityData(currentCityId);
-        }
 
-        // Update visual progress AFTER data collection with proper timing
-        if (tnt.citySwitcher.isActive) {
-            // console.log(`[TNT] Data collected for ${currentCityId} - scheduling visual update`);
-            setTimeout(() => {
-                tnt.citySwitcher.updateVisualProgress();
-            }, 500);
-        }
-    },
+// --- styles.js ---
 
-    collectOwnCityData(currentCityId) {
-        const prev = $.extend(true, {}, tnt.data.storage.city[currentCityId] || {});
-
-        const cityData = {
-            ...prev,
-            name: tnt.get.city.name(currentCityId),
-            buildings: {},
-            cityIslandCoords: tnt.get.city.coords(),
-            producedTradegood: parseInt(tnt.get.city.tradegood()),
-            population: tnt.get.city.resources.population(),
-            citizens: tnt.get.city.resources.citizens(),
-            max: tnt.get.city.resources.max(),
-            wood: tnt.get.city.resources.wood(),
-            wine: tnt.get.city.resources.wine(),
-            marble: tnt.get.city.resources.marble(),
-            crystal: tnt.get.city.resources.crystal(),
-            sulfur: tnt.get.city.resources.sulfur(),
-            hasConstruction: false,
-            cityLvl: tnt.get.city.level(),
-            resourceProduction: tnt.get.city.production.resource(),
-            tradegoodProduction: tnt.get.city.production.tradegood(),
-            lastUpdate: Date.now(),
-            isOwn: true
-        };
-
-        // Only update buildings when in city view
-        if ($("body").attr("id") === "city") {
-            const buildingData = tnt.utils.scanAllBuildings();
-            cityData.buildings = buildingData.buildings;
-            cityData.hasConstruction = buildingData.hasConstruction;
-        } else {
-            cityData.hasConstruction = prev.hasConstruction || false;
-        }
-
-        // Store in own city data
-        tnt.data.storage.city[currentCityId] = cityData;
-        tnt.core.storage.save();
-        // tnt.dataCollector.show(); // Moved to tnt.core.init() to avoid double updates. Remove if not needed
-    },
-
-    collectForeignCityData(currentCityId) {
-        // console.log('[TNT] Collecting foreign city data for:', currentCityId);
-
-        const hasSpyAccess = $('.spy_warning').length > 0 || $('#js_spiesInsideText').length > 0;
-        const ownerName = tnt.utils.safeGet(() => ikariam.backgroundView.screen.data.ownerName, 'Unknown');
-        const ownerId = tnt.utils.safeGet(() => ikariam.backgroundView.screen.data.ownerId, 0);
-
-        const foreignCityData = {
-            cityId: currentCityId,
-            name: tnt.utils.safeGet(() => ikariam.backgroundView.screen.data.name, 'Unknown City'),
-            ownerName: ownerName,
-            ownerId: parseInt(ownerId),
-            cityIslandCoords: tnt.get.city.coords(),
-            cityLvl: tnt.get.city.level(),
-            producedTradegood: parseInt(tnt.get.city.tradegood()),
-            hasSpyAccess: hasSpyAccess,
-            buildings: {},
-            lastUpdate: Date.now(),
-            isOwn: false
-        };
-
-        // Collect visible building data
-        if ($("body").attr("id") === "city") {
-            const buildingData = tnt.utils.scanAllBuildings();
-            foreignCityData.buildings = buildingData.buildings;
-            foreignCityData.hasConstruction = buildingData.hasConstruction;
-        }
-
-        // Store in foreign city data
-        tnt.data.storage.foreign[currentCityId] = foreignCityData;
-
-        // Also store in spy data if we have spy access
-        if (hasSpyAccess) {
-            tnt.data.storage.spy[currentCityId] = foreignCityData;
-            // console.log('[TNT] Stored spy data for city:', currentCityId);
-        }
-
-        tnt.core.storage.save();
-        // console.log('[TNT] Foreign city data collected and stored');
-    },
-
-    show() {
-        // Only show resource tables for own cities
-        if (tnt.settings.getResourceDisplaySettings().showResources && $("body").attr("id") == "city" && tnt.is.ownCity()) {
-
-            // Show resource tables
-            if ($('#tnt_info_resources').length === 0) {
-                $('body').append(tnt.template.resources);
-            }
-
-            // $('#tnt_info_resources_content').empty();
-            // $('#tnt_info_buildings_content').empty();
-
-            // Build and display the resource table
-            const resourceTable = tnt.tableBuilder.buildTable('resources');
-            $('#tnt_info_resources_content').html(resourceTable);
-
-            // Build and display the buildings table
-            const buildingTable = tnt.tableBuilder.buildTable('buildings');
-            $('#tnt_info_buildings_content').html(buildingTable);
-
-            // Create external controls (buttons) and attach event handlers
-            this.createExternalControls();
-            tnt.tableBuilder.attachEventHandlers(); // Is this needed here?
-        }
-    },
-
-    createExternalControls() {
-        // Only create if they don't exist yet
-        if ($('.tnt_external_controls').length === 0) {
-            const $externalControls = $('<div class="tnt_external_controls"></div>');
-
-            // Left side buttons (Min/Max)
-            const $leftButtons = $('<div class="tnt_left_buttons"></div>');
-            $leftButtons.append('<span class="tnt_panel_minimize_btn tnt_back" title="Minimize/Maximize panel"></span>');
-
-            // Right side buttons (Refresh, Toggle)
-            const $rightButtons = $('<div class="tnt_right_buttons"></div>');
-            $rightButtons.append('<span class="tnt_refresh_btn" title="Refresh all cities"></span>');
-            $rightButtons.append('<span class="tnt_table_toggle_btn" title="Show buildings/resources"></span>');
-
-            $externalControls.append($leftButtons);
-            $externalControls.append($rightButtons);
-            $('#tnt_info_resources').prepend($externalControls);
-
-            // Attach event handlers for the new buttons
-            tnt.events.attachButtonEvents();
-        }
-    },
-
-    // NEW: Calculate totals across all cities
-    calculateTotals() {
-        let total = {
-            population: 0,
-            citizens: 0,
-            wood: 0,
-            wine: 0,
-            marble: 0,
-            crystal: 0,
-            sulfur: 0
-        };
-
-        $.each(tnt.data.storage.city, function (cityID, cityData) {
-            total.population += parseInt(cityData.population) || 0;
-            total.citizens += parseInt(cityData.citizens) || 0;
-            total.wood += cityData.wood || 0;
-            total.wine += cityData.wine || 0;
-            total.marble += cityData.marble || 0;
-            total.crystal += cityData.crystal || 0;
-            total.sulfur += cityData.sulfur || 0;
-        });
-
-        return total;
-    },
-
-    getMergedBuildingColumns(buildingColumns) {
-        // Determine which building columns are used in any city
-        const usedColumns = buildingColumns.filter(function (col) {
-            const cities = Object.values(tnt.data.storage.city);
-            if (col.key === 'palace' || col.key === 'palaceColony') {
-                return cities.some(city =>
-                    (city.buildings?.['palace']?.length > 0) ||
-                    (city.buildings?.['palaceColony']?.length > 0)
-                );
-            }
-            return cities.some(city => city.buildings?.[col.key]?.length > 0);
-        });
-
-        // Merge palace/palaceColony into a single column for display
-        const mergedColumns = [];
-        let seenPalace = false;
-        usedColumns.forEach(function (col) {
-            if ((col.key === 'palace' || col.key === 'palaceColony') && !seenPalace) {
-                mergedColumns.push({
-                    key: 'palaceOrColony',
-                    name: 'Palace / Governor\'s Residence',
-                    icon: '/cdn/all/both/img/city/palace_l.png',
-                    icon2: '/cdn/all/both/img/city/palaceColony_l.png',
-                    buildingId: 11,
-                    helpId: 1
-                });
-                seenPalace = true;
-            } else if (col.key !== 'palace' && col.key !== 'palaceColony') {
-                mergedColumns.push(col);
-            }
-        });
-
-        return mergedColumns;
-    },
-
-    calculateCategorySpans(mergedColumns) {
-        // Dynamically generate buildingCategories from TNT_BUILDING_DEFINITIONS
-        const buildingCategories = TNT_BUILDING_DEFINITIONS.reduce((acc, b) => {
-            if (!acc[b.category]) acc[b.category] = [];
-            acc[b.category].push(b.key);
-            return acc;
-        }, {});
-
-        const categorySpans = {};
-        mergedColumns.forEach(col => {
-            for (let [category, buildings] of Object.entries(buildingCategories)) {
-                if (buildings.includes(col.key) ||
-                    (col.key === 'palaceOrColony' && (buildings.includes('palace') || buildings.includes('palaceColony')))) {
-                    categorySpans[category] = (categorySpans[category] || 0) + 1;
-                }
-            }
-        });
-
-        return categorySpans;
-    },
-
-    // PHASE 1: Add calculateBuildingTotals helper
-    calculateBuildingTotals(mergedColumns) {
-        const totals = {};
-
-        mergedColumns.forEach(col => {
-            let total = 0;
-
-            Object.values(tnt.data.storage.city || {}).forEach(city => {
-                if (!city.buildings) return;
-
-                if (col.key === 'palaceOrColony') {
-                    const palace = city.buildings.palace || [];
-                    const colony = city.buildings.palaceColony || [];
-                    total += palace.reduce((sum, b) => sum + (b.level || 0), 0);
-                    total += colony.reduce((sum, b) => sum + (b.level || 0), 0);
-                } else {
-                    const arr = city.buildings[col.key] || [];
-                    total += arr.reduce((sum, b) => sum + (b.level || 0), 0);
-                }
-            });
-
-            totals[col.key] = total;
-        });
-
-        return totals;
-    },
-
-    sortCities() {
-        var list = {};
-        var cities = tnt.data.storage.city || {};
-        $.each(cities, (cityID, value) => {
-            if (value && typeof value.producedTradegood !== 'undefined') {
-                list[cityID] = value.producedTradegood;
-            }
-        });
-        var order = { 2: 0, 1: 1, 3: 2, 4: 3 };
-        return Object.keys(list).sort((a, b) => order[list[a]] - order[list[b]]);
-    },
-
-    checkMinMax(city, resource) {
-        if (!tnt.settings.getResourceDisplaySettings().showResources || !city || !city.max) return '';
-        var max = city.max, txt = '';
-        switch (resource) {
-            case 0: if (city.wood > max * .8) txt += ' tnt_storage_danger'; if (city.wood < 100000) txt += ' tnt_storage_min'; break;
-            case 1: if (city.wine > max * .8) txt += ' tnt_storage_danger'; if (city.wine < 100000) txt += ' tnt_storage_min'; break;
-            case 2: if (city.marble > max * .8) txt += ' tnt_storage_danger'; if (city.marble < 50000) txt += ' tnt_storage_min'; break;
-            case 3: if (city.crystal > max * .8) txt += ' tnt_storage_danger'; if (city.crystal < 50000) txt += ' tnt_storage_min'; break;
-            case 4: if (city.sulfur > max * .8) txt += ' tnt_storage_danger'; if (city.sulfur < 50000) txt += ' tnt_storage_min'; break;
-        }
-        return txt;
-    },
-
-    getIcon(resource) {
-        switch (resource) {
-            case 0: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_wood.png">';
-            case 1: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_wine.png">';
-            case 2: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_marble.png">';
-            case 3: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_crystal.png">';
-            case 4: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_sulfur.png">';
-            case 'population': return '<img class="tnt_resource_icon tnt_icon_po" src="//gf3.geo.gfsrv.net/cdn2f/6d077d68d9ae22f9095515f282a112.png" style="width: 10px !important;">';
-            case 'citizens': return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_population.png">';
-            default: return '';
-        }
+// Apply styles at the end
+GM_addStyle(`
+    /* Show level styles - using table background color */
+    .tntLvl{
+        position: absolute !important;
+        top: 32px !important;
+        left: 44px !important;
+        color: #000 !important;
+        line-height: 16px !important;
+        background-color: #DBBE8C !important;
+        font-size: 9px !important;
+        font-weight: bold !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        height: 16px !important;
+        width: 16px !important;
+        border-radius: 50% !important;
+        border: 1px solid #000 !important;
+        display: inline-block !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+        z-index: 1000 !important;
+        pointer-events: none !important;
     }
-};
-
-// City switcher module - CLEANER debug version
-tnt.citySwitcher = {
-    isActive: false,
-    startCityId: null,
-    visitedCities: [],
-
-    start() {
-        this.startCityId = tnt.get.city.id();
-
-        if (!this.startCityId) {
-            // console.log('[TNT] Cannot start - no valid city ID detected');
-            return;
-        }
-
-        this.isActive = true;
-        this.visitedCities = [this.startCityId];
-
-        tnt.settings.set("citySwitcherActive", true);
-        tnt.settings.set("citySwitcherStartCity", this.startCityId);
-        tnt.settings.set("citySwitcherVisited", this.visitedCities);
-
-        // console.log(`[TNT] CitySwitcher STARTED from city: ${this.startCityId}`);
-
-        // Update visual immediately for starting city
-        this.updateVisualProgress();
-
-        // Start with 1.5 second delay
-        setTimeout(() => {
-            this.nextCity();
-        }, 1500);
-    },
-
-    nextCity() {
-        const allCities = Object.keys(tnt.get.player.list.cities());
-        // console.log(`[TNT] Looking for next city. Visited: [${this.visitedCities.join(', ')}]`);
-
-        for (const cityId of allCities) {
-            if (!this.visitedCities.includes(cityId)) {
-                // console.log(`[TNT] Next city: ${cityId}`);
-                this.switchToCity(cityId);
-                return;
-            }
-        }
-
-        // console.log('[TNT] All cities visited - ending cycle');
-        this.end();
-    },
-
-    switchToCity(cityId) {
-        // console.log(`[TNT] === SWITCHING TO CITY ${cityId} ===`);
-
-        // Add to visited list BEFORE switching
-        if (!this.visitedCities.includes(cityId)) {
-            this.visitedCities.push(cityId);
-            tnt.settings.set("citySwitcherVisited", this.visitedCities);
-            // console.log(`[TNT] Visited list updated: [${this.visitedCities.join(', ')}]`);
-        }
-
-        return tnt.utils.switchToCity(cityId);
-    },
-
-    // Switch back to the starting city and update the states. Before resuming normal visual state
-    end() {
-        this.switchToCity(this.startCityId);
-        this.isActive = false;
-        tnt.settings.set("citySwitcherActive", false);
-
-        // Restore normal state after final switch
-        // setTimeout(() => {
-        // console.log('[TNT] Restoring normal visual state');
-        this.restoreNormalVisualState();
-        // }, 2000);
-    },
-
-    updateVisualProgress() {
-        // 
-        if ($('#tnt_info_resources').is(':visible') && $("body").attr("id") === "city") {
-            const resourceTable = tnt.tableBuilder.buildTable('resources');
-            $('#tnt_info_resources_content').html(resourceTable);
-
-            const buildingTable = tnt.tableBuilder.buildTable('buildings');
-            $('#tnt_info_buildings_content').html(buildingTable);
-
-            // Shouldn't need to reattach handlers here. We are going to move to a new city anyway.
-            // tnt.tableBuilder.attachEventHandlers();
-        }
-    },
-
-    restoreNormalVisualState() {
-        // Restore normal visual state of the resources/buildings tables
-        this.visitedCities = [];
-
-        if ($('#tnt_info_resources').is(':visible') && $("body").attr("id") === "city") {
-            const resourceTable = tnt.tableBuilder.buildTable('resources');
-            $('#tnt_info_resources_content').html(resourceTable);
-
-            const buildingTable = tnt.tableBuilder.buildTable('buildings');
-            $('#tnt_info_buildings_content').html(buildingTable);
-
-            tnt.tableBuilder.attachEventHandlers();
-        }
-    },
-
-    checkAndContinue() {
-        const isActive = tnt.settings.get("citySwitcherActive", false);
-
-        if (isActive) {
-            const visitedCities = tnt.settings.get("citySwitcherVisited", []);
-
-            if (visitedCities.length > 1) {
-                // console.log('[TNT] Continuing citySwitcher cycle');
-                this.isActive = true;
-                this.startCityId = tnt.settings.get("citySwitcherStartCity");
-                this.visitedCities = visitedCities;
-
-                this.updateVisualProgress();
-
-                // 2 second delay between city switches
-                setTimeout(() => {
-                    this.nextCity();
-                }, 100);
-            } else {
-                // Direct navigation detected - stopping citySwitcher
-                this.isActive = false;
-                tnt.settings.set("citySwitcherActive", false);
-                this.restoreNormalVisualState();
-            }
-        }
+    .tntLvl:hover {
+        background-color: #faeac6 !important;
+        transform: scale(1.05) !important;
+        transition: all 0.2s ease !important;
     }
-};
-
-// Tooltip/Bubbletip Testing Module
-tnt.tooltip = {
-    // Initialize the tooltip system (ensure BubbleTips is ready)
-    init() {
-        if (typeof BubbleTips === 'undefined' || typeof BubbleTips.bindBubbleTip !== 'function') {
-            tnt.core.debug.log('[TNT] BubbleTips system is not available');
-            return false;
-        }
-
-        if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
-            BubbleTips.init?.();
-        }
-
-        // Ensure hover/info bubbles are non-interactive so they do not steal mouse events and cause flicker
-        $(BubbleTips.bubbleNode).css('pointer-events', 'none');
-        $(BubbleTips.infoNode).css('pointer-events', 'none');
-
-        // Patch BubbleTips hover tooltip position to auto-flip above cursor when near viewport bottom
-        if (!BubbleTips._tntTooltipAutoFlip) {
-            const originalBindBubbleTip = BubbleTips.bindBubbleTip.bind(BubbleTips);
-            BubbleTips.bindBubbleTip = function (location, type, html, n, target, minSize) {
-                const result = originalBindBubbleTip(location, type, html, n, target, minSize);
-
-                if (type === 13 && target) {
-                    const $target = $(target);
-
-                    // Remove the original BubbleTips mousemove for this target and use our own logic
-                    $target.off('mousemove');
-                    $target.off('mousemove.tnt_tooltip_auto_flip');
-
-                    $target.on('mousemove.tnt_tooltip_auto_flip', function (event) {
-                        if (!BubbleTips.infotip || !BubbleTips.infoNode) return;
-
-                        const $tip = $(BubbleTips.infotip);
-                        const tooltipWidth = $tip.outerWidth();
-                        const tooltipHeight = $tip.outerHeight();
-                        const scrollLeft = $(document).scrollLeft();
-                        const scrollTop = $(window).scrollTop();
-                        const winWidth = $(window).width();
-                        const winHeight = $(window).height();
-
-                        const pageX = event.pageX || event.clientX + scrollLeft;
-                        const pageY = event.pageY || event.clientY + scrollTop;
-
-                        const xOffset = Number(BubbleTips.offsetLeft || 0);
-                        const yOffset = Number(BubbleTips.offsetTop || 0) + (window.isIE ? 10 : 0);
-                        const aboveGap = 15; // keep a small gap when flipped above cursor
-
-                        let left = pageX + xOffset;
-                        let top = pageY + yOffset;
-
-                        if (left + tooltipWidth - 20 > winWidth + scrollLeft) {
-                            left = pageX - tooltipWidth + 20;
-                        }
-                        if (left < scrollLeft + 20) {
-                            left = scrollLeft + 20;
-                        }
-
-                        if (top + tooltipHeight + 10 > winHeight + scrollTop) {
-                            top = pageY - tooltipHeight - aboveGap;
-                        }
-                        if (top < scrollTop + 10) {
-                            top = scrollTop + 10;
-                        }
-
-                        $(BubbleTips.infoNode).css({ top: top + 'px', left: left + 'px' });
-                    });
-                }
-
-                return result;
-            };
-
-            BubbleTips._tntTooltipAutoFlip = true;
-        }
-
-        tnt.core.debug.log('[TNT] BubbleTips system is available and initialized');
-        return true;
-    },
-
-    formatTemplateTooltip({ title, body }) {
-        const titleHtml = title ? `<div style="font-weight:bold !important;color:#000 !important;font-size:12px;line-height:1.2;">${title}</div><div style="height:0.5px;min-height:0.5px;background:#000;margin:2px 0;line-height:0;overflow:hidden;"></div>` : '';
-        const bodyHtml = body ? `<div style="font-size:12px;line-height:1.4;">${body}</div>` : '';
-        return `<div>${titleHtml}${bodyHtml}</div>`;
-    },
-
-    // Bind a tooltip HTML to an element
-    bindToElement($el, html) {
-        if (!$el || $el.length === 0 || !html) return;
-
-        $el.off('mouseover.tnt mouseout.tnt');
-
-        const showTooltip = (element) => {
-            try {
-                BubbleTips.clear?.();
-                BubbleTips.init?.();
-                $(BubbleTips.infoNode).css({ 'z-index': '100000001', 'display': 'block' });
-                BubbleTips.bindBubbleTip(6, 13, html, null, element, false);
-            } catch (err) {
-                tnt.core.debug.warn('TNT: Tooltip bind failed: ' + err, 2);
-            }
-        };
-
-        const hideTooltip = () => BubbleTips.clear?.();
-
-        $el.on('mouseover.tnt', function (event) {
-            const related = event.relatedTarget;
-            if (related && $(related).closest($el).length) return;
-            showTooltip(this);
-        });
-
-        $el.on('mouseout.tnt', function (event) {
-            const related = event.relatedTarget;
-            if (related && $(related).closest($el).length) return;
-            hideTooltip();
-        });
-    },
-
-    // Bind a template tooltip to an element, filling in calculated values for resources/buildings
-    bindTemplateTooltip($el, section, key, context = 'header') {
-        if (!$el || $el.length === 0) return;
-
-        // Helpers
-        const replaceAll = (template, replacements) => {
-            let out = template;
-            Object.entries(replacements).forEach(([k, v]) => {
-                out = out.split(`{${k}}`).join(v || '');
-            });
-            return out;
-        };
-
-        // Lookup template
-        const template =
-            TNT_TOOLTIP_TEMPLATES?.[section]?.[context]?.[key] ||
-            TNT_TOOLTIP_TEMPLATES?.[section]?.[context]?.default ||
-            TNT_TOOLTIP_TEMPLATES?.[section]?.[key] ||
-            TNT_TOOLTIP_TEMPLATES?.[key];
-
-        if (!template) {
-            tnt.core.debug.log(`[TNT] No tooltip template found for section="${section}", context="${context}", key="${key}"`, 2);
-            return;
-        }
-
-        const fillTemplate = (tpl, replacements = {}) => {
-            const titleText = tpl.title ? replaceAll(tpl.title, replacements) : '';
-            const bodyText = tpl.body ? replaceAll(tpl.body, replacements) : '';
-            return { title: titleText, body: bodyText };
-        };
-
-        if (section === 'resource') {
-            const $row = $el.closest('tr');
-            const cityId = $el.data('city-id') || ($row.length ? $row.data('city-id') : null);
-            if (!cityId) return;
-
-            const prod1h = tnt.utils.calculateProduction(cityId, 1);
-            const prod24h = tnt.utils.calculateProduction(cityId, 24);
-
-            const storeCity = tnt.data.storage.city?.[cityId];
-            const storeForeignCity = tnt.data.storage.foreign?.[cityId];
-            const allCities = tnt.get.player.list.cities() || {};
-            const cityName = storeCity?.name || storeCity?.cityName || storeForeignCity?.name || allCities?.[cityId]?.name || allCities?.[cityId]?.cityName || `City ${cityId}`;
-            const cityValue = String(storeCity?.[key] ?? storeForeignCity?.[key] ?? '');
-
-            const replacements = {
-                '1hwood': prod1h.wood,
-                '24hwood': prod24h.wood,
-                '1hwine': prod1h.wine,
-                '24hwine': prod24h.wine,
-                '1hmarble': prod1h.marble,
-                '24hmarble': prod24h.marble,
-                '1hcrystal': prod1h.crystal,
-                '24hcrystal': prod24h.crystal,
-                '1hsulfur': prod1h.sulfur,
-                '24hsulfur': prod24h.sulfur,
-                'cityName': cityName,
-                'value': cityValue
-            };
-
-            const display = fillTemplate(template, replacements);
-            tnt.tooltip.bindToElement($el, tnt.tooltip.formatTemplateTooltip(display));
-            return;
-        }
-
-        if (section === 'building') {
-            const cityId = $el.data('city-id') || $el.closest('tr').data('city-id');
-            const def = TNT_BUILDING_DEFINITIONS.find(d => d.key === key) || { name: key };
-            const maxedLvl = tnt.settings.getMaxedLvl(key);
-            const defaultMaxedLvl = def.maxedLvl || 0;
-
-            let totalLevel = 0;
-            Object.values(tnt.data.storage.city || {}).forEach(city => {
-                if (!city.buildings) return;
-                if (key === 'palaceOrColony') {
-                    const palace = city.buildings.palace || [];
-                    const colony = city.buildings.palaceColony || [];
-                    totalLevel += palace.reduce((sum, b) => sum + (b.level || 0), 0);
-                    totalLevel += colony.reduce((sum, b) => sum + (b.level || 0), 0);
-                } else {
-                    const arr = city.buildings[key] || [];
-                    totalLevel += arr.reduce((sum, b) => sum + (b.level || 0), 0);
-                }
-            });
-
-            const allCities = tnt.get.player.list.cities() || {};
-            const city = tnt.data.storage.city?.[cityId] || tnt.data.storage.foreign?.[cityId] || {};
-            const cityName = city.name || city.cityName || allCities?.[cityId]?.name || allCities?.[cityId]?.cityName || `City ${cityId}`;
-
-            let levelSum = 0;
-            let statusText = '-';
-            if (context === 'cell') {
-                let levels = [];
-                if (key === 'palaceOrColony') {
-                    levels = (city.buildings?.palace || []).concat(city.buildings?.palaceColony || []);
-                } else {
-                    levels = city.buildings?.[key] || [];
-                }
-                levelSum = levels.reduce((sum, b) => sum + (b.level || 0), 0);
-                statusText = levels.some(b => b.underConstruction) ? '<span class="red">Under construction</span>' : levels.some(b => b.upgradable) ? '<span class="green">Upgradable</span>' : '-';
-            }
-
-            const replacements = {
-                cityName,
-                buildingName: def.name || key,
-                levelSum: String(levelSum),
-                statusText,
-                totalLevel: String(totalLevel),
-                maxedLvl: String(maxedLvl),
-                defaultMaxedLvl: String(defaultMaxedLvl)
-            };
-
-            const display = fillTemplate(template, replacements);
-            tnt.tooltip.bindToElement($el, tnt.tooltip.formatTemplateTooltip(display));
-            return;
-        }
-
-        const display = tnt.tooltip.formatTemplateTooltip(template);
-        tnt.tooltip.bindToElement($el, display);
-    },
-
-    // Attach tooltips to elements with class 'tnt_tooltip_target'
-    attachTooltips() {
-        if (!tnt.tooltip.init()) {
-            tnt.core.debug.log('TNT: BubbleTips not available', 2);
-            return;
-        }
-
-        if (BubbleTips.bubbleNode) {
-            $(BubbleTips.bubbleNode).css('z-index', '100000001');
-        }
-        if (BubbleTips.infoNode) {
-            $(BubbleTips.infoNode).css('z-index', '100000001');
-        }
-
-        const $containers = $('.tnt_tooltip_target');
-        tnt.core.debug.log(`[TNT] Adding tooltips to ${$containers.length} elements`, 3);
-
-        $containers.each(function () {
-            const $container = $(this);
-            const section = $container.data('tooltip-section') || ($container.data('resource') ? 'resource' : ($container.data('building-type') ? 'building' : null));
-            const context = $container.data('tooltip-context') || 'header';
-            const key = $container.data('resource') || $container.data('building-type');
-            if (!section || !key) return;
-
-            // For building header cells, also bind tooltip to inner link/image nodes so hovering them triggers the same tooltip.
-            const $bindTargets = $container.add($container.find('a, img'));
-            tnt.tooltip.bindTemplateTooltip($bindTargets, section, key, context);
-        });
-    },
-
-    // NOT USED: Create a simple tooltip on an element - Kept for now
-    // Types: 10 = success (green), 11 = info (yellow), 12 = error (red), 13 = hover tooltip
-    create(element, text, type = 13) {
-        if (!this.init()) {
-            tnt.core.debug.warn('TNT: BubbleTips not available, cannot create tooltip', 3);
-            return false;
-        }
-
-        try {
-            // Type 13 = hover tooltip that follows mouse
-            // Parameters: location(6=custom element), type(13=tooltip), text, null, element, minSize
-            BubbleTips.bindBubbleTip(6, type, text, null, element, false);
-            return true;
-        } catch (e) {
-            tnt.core.debug.error('TNT: Error creating tooltip: ' + e.message, 1);
-            return false;
-        }
+    /* TNT table styles with higher specificity - override Ikariam's .table01 styles */
+    #tnt_info_resources #tnt_resources_table,
+    #tnt_info_buildings_content #tnt_buildings_table{
+        border-collapse: collapse !important;
+        font: 12px Arial, Helvetica, sans-serif !important;
+        background-color: #fdf7dd !important;
+        table-layout: fixed !important;
     }
-};
+    
+    /* Category header cells - CLEAN and SIMPLE with no internal elements */
+    #tnt_info_resources #tnt_resources_table th.tnt_category_header,
+    #tnt_info_buildings_content #tnt_buildings_table th.tnt_category_header {
+        height: 25px !important;
+        max-height: 25px !important;
+        min-height: 25px !important;
+        background-color: #DBBE8C !important;
+        border: 1px solid #8B4513 !important;
+        padding: 4px !important;
+        font-weight: bold !important;
+        text-align: center !important;
+        box-sizing: border-box !important;
+        line-height: 17px !important;
+        font-size: 12px !important;
+        vertical-align: middle !important;
+    }
+    
+    /* External control buttons container - positioned OUTSIDE table, overlaying */
+    .tnt_external_controls {
+        position: absolute !important;
+        top: 2px !important;
+        left: 2px !important;
+        width: 116px !important;
+        height: 18px !important;
+        z-index: 1000 !important;
+        pointer-events: none !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Left buttons container (Min/Max) */
+    .tnt_left_buttons {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0px !important;
+        pointer-events: none !important;
+        flex-shrink: 0 !important;
+    }
+    
+    /* Right buttons container (Refresh, Toggle) */
+    .tnt_right_buttons {
+        margin-top: 5px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 2px !important;
+        pointer-events: none !important;
+        flex-shrink: 0 !important;
+        height: 18px !important;
+    }
+    
+    /* Individual control buttons - perfectly sized and aligned */
+    .tnt_left_buttons span,
+    .tnt_right_buttons span {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 18px !important;
+        width: 18px !important;
+        min-height: 18px !important;
+        min-width: 18px !important;
+        max-height: 18px !important;
+        max-width: 18px !important;
+        border: 1px solid #8B4513 !important;
+        background: linear-gradient(135deg, #E6D3A3 0%, #D2B48C 50%, #C4A47C 100%) !important;
+        border-radius: 3px !important;
+        cursor: pointer !important;
+        flex-shrink: 0 !important;
+        pointer-events: auto !important;
+        position: relative !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        font-size: 0 !important;
+        line-height: 1 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+    
+    .tnt_left_buttons span:hover,
+    .tnt_right_buttons span:hover {
+        background: linear-gradient(135deg, #F0E4B6 0%, #E6D3A3 50%, #D2B48C 100%) !important;
+        transform: translateY(-1px) scale(1.05) !important;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.4) !important;
+        border-color: #654321 !important;
+    }
+    
+    .tnt_left_buttons span:active,
+    .tnt_right_buttons span:active {
+        transform: translateY(0px) scale(1.02) !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+    }
+    
+    /* Minimize button icons - properly centered triangles */
+    .tnt_left_buttons .tnt_panel_minimize_btn.tnt_back:after { 
+        content: "";
+        display: block;
+        width: 0;
+        height: 0;
+        border: 3px solid transparent;
+        border-right: 5px solid #333;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    .tnt_left_buttons .tnt_panel_minimize_btn.tnt_back:hover:after { 
+        border-right-color: #000;
+    }
+    
+    .tnt_left_buttons .tnt_panel_minimize_btn.tnt_foreward:after { 
+        content: "";
+        display: block;
+        width: 0;
+        height: 0;
+        border: 3px solid transparent;
+        border-left: 5px solid #333;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    .tnt_left_buttons .tnt_panel_minimize_btn.tnt_foreward:hover:after { 
+        border-left-color: #000;
+    }
+    
+    /* Toggle button icon - three centered lines */
+    .tnt_right_buttons .tnt_table_toggle_btn:after {
+        content: "";
+        display: block;
+        width: 8px;
+        height: 2px;
+        background: #333;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 
+            0 -3px 0 #333,
+            0 3px 0 #333;
+        border-radius: 1px;
+    }
+    
+    .tnt_right_buttons .tnt_table_toggle_btn:hover:after {
+        background: #000;
+        box-shadow: 
+            0 -3px 0 #000,
+            0 3px 0 #000;
+    }
+    
+    .tnt_right_buttons .tnt_table_toggle_btn.active:after {
+        background: #006600;
+        box-shadow: 
+            0 -3px 0 #006600,
+            0 3px 0 #006600;
+    }
+    
+    /* Refresh button icon - perfectly centered */
+    .tnt_right_buttons .tnt_refresh_btn:before {
+        content: "⟳";
+        color: #333;
+        font-size: 13px;
+        font-weight: bold;
+        text-shadow: 0 1px 2px rgba(255,255,255,0.7) !important;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        line-height: 1;
+        width: 13px;
+        height: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .tnt_right_buttons .tnt_refresh_btn:hover:before {
+        color: #000;
+        font-weight: 900;
+        text-shadow: 0 1px 3px rgba(255,255,255,0.9) !important;
+    }
+    
+    /* Remove old control button styles that are no longer needed */
+    .tnt_control_buttons {
+        display: none !important;
+    }
+    
+    /* Minimize button icons */
+    .tnt_control_buttons .tnt_panel_minimize_btn.tnt_back:after { 
+        content: "";
+        display: block;
+        width: 0;
+        height: 0;
+        border: 3px solid transparent;
+        border-right: 5px solid #333;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    .tnt_control_buttons .tnt_panel_minimize_btn.tnt_back:hover:after { 
+        border-right-color: #000;
+    }
+    
+    .tnt_control_buttons .tnt_panel_minimize_btn.tnt_foreward:after { 
+        content: "";
+        display: block;
+        width: 0;
+        height: 0;
+        border: 3px solid transparent;
+        border-left: 5px solid #333;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    .tnt_control_buttons .tnt_panel_minimize_btn.tnt_foreward:hover:after { 
+        border-left-color: #000;
+    }
+    
+    /* Toggle button icon */
+    .tnt_control_buttons .tnt_table_toggle_btn:after {
+        content: "";
+        display: block;
+        width: 6px;
+        height: 1px;
+        background: #333;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 
+            0 -2px 0 #333,
+            0 2px 0 #333;
+    }
+    
+    .tnt_control_buttons .tnt_table_toggle_btn:hover:after {
+        background: #000;
+        box-shadow: 
+            0 -2px 0 #000,
+            0 2px 0 #000;
+    }
+    
+    .tnt_control_buttons .tnt_table_toggle_btn.active:after {
+        background: #006600;
+        box-shadow: 
+            0 -2px 0 #006600,
+            0 2px 0 #006600;
+    }
+    
+    /* Refresh button icon */
+    .tnt_control_buttons .tnt_refresh_btn:before {
+        content: "⟳";
+        color: #333;
+        font-size: 14px;
+        font-weight: bold;
+        text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        line-height: 1;
+    }
+    
+    .tnt_control_buttons .tnt_refresh_btn:hover:before {
+        color: #000;
+        font-weight: 900;
+        text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    }
+    
+    /* Remove all old button styles that conflict with new structure */
+    // .tnt_table_toggle_btn:not(.tnt_control_buttons *), // Should always be visible
+    #tnt_info_resources .tnt_back,
+    #tnt_info_resources .tnt_foreward,
+    #tnt_info_updateCities,
+    .tnt_panel_minimize_btn:not(.tnt_control_buttons *) {
+        display: none !important;
+    }
+    
+    .tnt_city .tnt_panel_minimize_btn {
+        display: none !important;
+    }
+    
+    /* Remove old category spacer styles that are no longer needed */
+    .tnt_category_spacer {
+        display: none !important;
+    }
+    /* Construction status styling applies to the first cell in any row across all tables */
+    // .tnt_construction{
+    //     background-color: #80404050 !important;
+    // }
+    .tnt_construction {
+        background-color: #80404050 !important;
+        border-left: 2px solid #804040 !important;
+    }    
+    /* Phase 4: Visual progress indicators */
+    .tnt_progress_visited {
+        background-color: #90EE9050 !important;
+        border-left: 2px solid #32CD32 !important;
+    }
+    
+    /* Ensure progress indicators work with selected state */
+    body #tnt_info_resources .tnt_selected .tnt_progress_visited,
+    body #tnt_info_buildings_content .tnt_selected .tnt_progress_visited {
+        background-color: #90EE9050 !important;
+        border-left: 2px solid #32CD32 !important;
+    }
+    
+    /* Progress indicator takes precedence over construction during active switching */
+    // .tnt_progress_visited.tnt_construction {
+    //     background-color: #90EE9050 !important;
+    //     border-left: 2px solid #32CD32 !important;
+    // }
+    .tnt_progress_visited.tnt_construction {
+        background-color: #d4edda !important;
+        color: #155724 !important;
+    }    
+    /* === RESOURCE STORAGE INDICATORS (FIX FOR ISSUE #002) === */
+    
+    /* Storage danger - high storage warning (RED text, no borders) */
+    .tnt_storage_danger {
+        //background-color: #ffaaaa !important;
+        color: #ff0000 !important;
+    }
+    
+    /* Storage minimum - low resource warning (YELLOW background, no borders) */
+    .tnt_storage_min {
+        background-color: #ffaaaa !important;
+    }
+    
+    /* Ensure storage indicators work with TNT table styling */
+    body #tnt_info_resources .tnt_storage_danger,
+    body #tnt_info_buildings_content .tnt_storage_danger {
+        //background-color: #ffaaaa !important;
+    }
+    
+    body #tnt_info_resources .tnt_storage_min,
+    body #tnt_info_buildings_content .tnt_storage_min {
+        background-color: #ffaaaa !important;
+    }
+    
+    /* Storage indicators with current city selection */
+    body #tnt_info_resources .tnt_selected .tnt_storage_danger,
+    body #tnt_info_buildings_content .tnt_selected .tnt_storage_danger {
+        //background-color: #ffaaaa !important;
+    }
+    
+    body #tnt_info_resources .tnt_selected .tnt_storage_min,
+    body #tnt_info_buildings_content .tnt_selected .tnt_storage_min {
+        background-color: #ffaaaa !important;
+    }
+    
+    /* Storage indicators take precedence over construction status */
+    .tnt_storage_danger.tnt_construction {
+        //background-color: #ffaaaa !important;
+    }
+    
+    .tnt_storage_min.tnt_construction {
+        background-color: #ffaaaa !important;
+    }
+    
+    /* Remove old category spacer styles that are no longer needed */
+    .tnt_category_spacer {
+        display: none !important;
+    }
+    /* Construction status styling applies to the first cell in any row across all tables */
+    .tnt_construction{
+        background-color: #80404050 !important;
+    }
+    /* Current city highlighting with 2px selection border matching theme */
+    body #tnt_info_resources .tnt_selected,
+    body #tnt_info_buildings_content .tnt_selected {
+        border: 2px solid #000000 !important;
+    }
+    body #tnt_info_resources .tnt_selected td,
+    body #tnt_info_buildings_content .tnt_selected td {
+        border-top: 2px solid #000000 !important;
+        border-bottom: 2px solid #000000 !important;
+        // color: #000 !important;
+    }
+    body #tnt_info_resources .tnt_selected td:first-child,
+    body #tnt_info_buildings_content .tnt_selected td:first-child {
+        border-left: 2px solid #000000 !important;
+    }
+    body #tnt_info_resources .tnt_selected td:last-child,
+    body #tnt_info_buildings_content .tnt_selected td:last-child {
+        border-right: 2px solid #000000 !important;
+    }
+    /* Make tradegood production more visible with dark grey text color */
+    body #tnt_info_resources .tnt_bold,
+    body #tnt_info_buildings_content .tnt_bold {
+        color: #333333 !important;
+        font-weight: bold !important;
+    }
+    .tnt_resource_icon{
+        vertical-align:middle !important;
+        width:18px !important;
+        height:16px !important;
+        display:inline-block !important;
+    }
+    .tnt_building_icon {
+        width: 36px !important;
+        height: 32px !important;
+    }
+    img[src*='/city/wall.png'].tnt_building_icon {
+        transform: scale(0.8) !important;
+        transform-origin: 0 0;
+        margin-right: -8px;
+    }
+    body #tnt_info_resources .tnt_population{ text-align:right !important; }
+    body #tnt_info_resources .tnt_citizens{ text-align:right !important; }
+    body #tnt_info_resources .tnt_wood{ text-align:right !important; }
+    body #tnt_info_resources .tnt_marble{ text-align:right !important; }
+    body #tnt_info_resources .tnt_wine{ text-align:right !important; }
+    body #tnt_info_resources .tnt_crystal{ text-align:right !important; }
+    body #tnt_info_resources .tnt_sulfur{ text-align:right !important; }
+    body #tnt_info_resources .tnt_city{ text-align:left !important; }
+    body #tnt_info_buildings_content .tnt_city{ text-align:left !important; }
+    body #tnt_info_buildings_content .tnt_building_level{ text-align:center !important; }
+    
+    /* Override Ikariam's container table styles specifically for our TNT tables */
+    #container body #tnt_info_resources #tnt_resources_table,
+    #container body #tnt_info_buildings_content #tnt_buildings_table {
+        border: none !important;
+        margin: 0px !important;
+        background-color: #fdf7dd !important;
+        border-bottom: none !important;
+        text-align: center !important;
+        width: auto !important;
+    }
+    #container body #tnt_info_resources #tnt_resources_table td,
+    #container body #tnt_info_buildings_content #tnt_buildings_table td {
+        text-align: center !important;
+        vertical-align: middle !important;
+        padding: 4px !important;
+        border: 1px #8B4513 solid !important;
+    }
+    #container body #tnt_info_resources #tnt_resources_table th,
+    #container body #tnt_info_buildings_content #tnt_buildings_table th {
+        background-color: #faeac6 !important;
+        text-align: center !important;
+        height: auto !important;
+        padding: 4px !important;
+        font-weight: bold !important;
+        border: 1px #8B4513 solid !important;
+    }
+    
+    #mainview a:hover{ text-decoration:none; }
+    #tntOptions {
+        position:absolute;
+        top:40px;
+        left:380px;
+        width:620px;
+        border:1px #755931 solid;
+        border-top:none;
+        background-color: #FEE8C3;
+        padding:10px 10px 0px   10px;
+    }
 
-// Table builder - complete implementation matching working HTML structure
+    #tntOptions legend{ font-weight:bold; }
+    .tntHide, #infocontainer .tntLvl, #actioncontainer .tntLvl{ display:none; }
+    #tntInfoWidget {
+        position:fixed;
+        bottom:0px;
+        left:0px;
+        width:716px;
+        background-color: #DBBE8C;
+        z-index:100000000;
+    }
+    #tntInfoWidget .accordionTitle {
+
+        background: url(/cdn/all/both/layout/bg_maincontentbox_header.jpg) no-repeat;
+        padding: 6px 0 0;
+        width: 728px;
+    }
+    #tntInfoWidget .accordionContent {
+        background: url(/cdn/all/both/layout/bg_maincontentbox_left.png) left center repeat-y #FAF3D7;
+        overflow: hidden;
+        padding: 0;
+        position: relative;
+        width: 725px;
+    }
+    #tntInfoWidget .scroll_disabled {
+        background: url(/cdn/all/both/layout/bg_maincontentbox_left.png) repeat-y scroll left center transparent;
+        width: 9px;
+    }
+    #tntInfoWidget .scroll_area {
+        background: url(/cdn/all/both/interface/scroll_bg.png) right top repeat-y transparent;
+        display: block;
+        height: 100%;
+        overflow: hidden;
+        position: absolute;
+        right: -3px;
+        width: 24px;
+        z-index: 100000;
+    }
+    .txtCenter{ text-align:center; }
+    .tnt_center{ text-align:center!important; white-space:nowrap; }
+    .tnt_right{ text-align:right!important; white-space:nowrap; }
+    .tnt_left{ text-align:left!important; white-space:nowrap; }
+    #tnt_info_resources{
+        position:fixed;
+        bottom:20px;
+        left:0px;
+        width:auto;
+        height:auto;
+        background-color: #DBBE8C;
+        z-index:100000000;
+    }
+    #tnt_info_resources .tnt_back, #tnt_info_resources .tnt_foreward {
+        cursor: pointer;
+        display: block!important;
+        height: 18px;
+        width: 18px;
+        border: 1px solid #8B4513;
+        background: #D2B48C;
+        border-radius: 2px;
+        text-align: center;
+        line-height: 16px;
+        font-size: 12px;
+        min-width: 18px;
+        min-height: 18px;
+    }
+    #tnt_info_resources .tnt_back {
+        left: 2px;
+        position: absolute;
+        top: 2px;
+    }
+    #tnt_info_resources .tnt_back:before {
+        content: "◀";
+        color: #333;
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+    }
+    #tnt_info_resources .tnt_back:hover {
+        background: #DDD;
+    }
+    #tnt_info_resources .tnt_back:hover:before {
+        color: #000;
+    }
+    #tnt_info_resources .tnt_foreward {
+        left: 2px;
+        position: absolute;
+        top: 3px;
+    }
+    #tnt_info_resources .tnt_foreward:before {
+        content: "▶";
+        color: #333;
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+    }
+    #tnt_info_resources .tnt_foreward:hover {
+        background: #DDD;
+    }
+    #tnt_info_resources .tnt_foreward:hover:before {
+        color: #000;
+    }
+    #tnt_info_updateCities {
+        position:fixed;
+        bottom:20px;
+        right:0px;
+        width:auto;
+        height:auto;
+        background-color: #DBBE8C;
+        z-index:100000000;
+    }
+    .tnt_panel_minimize_btn {
+        cursor: pointer;
+        display: block!important;
+        height: 18px;
+        width: 18px;
+        position: absolute;
+        left: 2px;
+        top: 2px;
+        z-index: 10;
+        border: 1px solid #8B4513;
+        background: #D2B48C;
+        border-radius: 2px;
+        text-align: center;
+        line-height: 16px;
+        font-size: 12px;
+        min-width: 18px;
+        min-height: 18px;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    .tnt_panel_minimize_btn.tnt_back:before { 
+        content: "◀";
+        color: #333;
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+        line-height: 16px;
+        text-align: center;
+        font-size: 10px;
+        vertical-align: middle;
+    }
+    .tnt_panel_minimize_btn.tnt_back:hover { 
+        background: #DDD;
+    }
+    .tnt_panel_minimize_btn.tnt_back:hover:before { 
+        color: #000;
+    }
+    .tnt_panel_minimize_btn.tnt_foreward { 
+        top: 3px; 
+    }
+    .tnt_panel_minimize_btn.tnt_foreward:before { 
+        content: "▶";
+        color: #333;
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+        line-height: 16px;
+        text-align: center;
+        font-size: 10px;
+        vertical-align: middle;
+    }
+    .tnt_panel_minimize_btn.tnt_foreward:hover { 
+        background: #DDD;
+    }
+    .tnt_panel_minimize_btn.tnt_foreward:hover:before { 
+        color: #000;
+    }
+    .tnt_table_toggle_btn {
+        cursor: pointer;
+        display: inline-block;
+        height: 18px;
+        width: 18px;
+        vertical-align: middle;
+        float: right;
+        margin-left: 6px;
+        border: 1px solid #8B4513;
+        background: #D2B48C;
+        border-radius: 2px;
+        text-align: center;
+        line-height: 16px;
+        font-size: 12px;
+        min-width: 18px;
+        min-height: 18px;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    .tnt_table_toggle_btn:before {
+        content: "⇄";
+        color: #333;
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+        line-height: 16px;
+        text-align: center;
+        font-size: 10px;
+        vertical-align: middle;
+    }
+    .tnt_table_toggle_btn:hover { 
+        background: #DDD;
+    }
+    .tnt_table_toggle_btn:hover:before {
+        color: #000;
+    }
+    .tnt_table_toggle_btn.active:before {
+        content: "⇄";
+        color: #006600;
+        font-weight: bold;
+    }
+    /* Remove duplicate old button styles - keep only this section */
+    .tnt_city .tnt_panel_minimize_btn { 
+        display: none !important;
+    }
+    
+    /* Change the minimized state to show the first cell completely for both tables */
+    #tnt_info_resources.minimized,
+    #tnt_info_buildings.minimized {
+        width: auto !important;
+        min-width: auto !important;
+        max-width: none !important;
+        overflow: hidden !important;
+    }
+    
+    /* Simple minimized state - just hide columns */
+    #tnt_info_resources.minimized table tr td:not(:first-child),
+    #tnt_info_resources.minimized table tr th:not(:first-child),
+    #tnt_info_buildings.minimized table tr td:not(:first-child),
+    #tnt_info_buildings.minimized table tr th:not(:first-child) {
+        display: none !important;
+    }
+    
+    /* Show only the first cell when minimized - keep as table-cell */
+    #tnt_info_resources.minimized table tr th:first-child,
+    #tnt_info_resources.minimized table tr td:first-child,
+    #tnt_info_buildings.minimized table tr th:first-child,
+    #tnt_info_buildings.minimized table tr td:first-child {
+        display: table-cell !important;
+        width: auto !important;
+        min-width: 60px !important;
+    }
+    
+    /* Special handling for the header row when minimized */
+    #tnt_info_resources.minimized table thead tr,
+    #tnt_info_buildings.minimized table thead tr {
+        display: table-row !important;
+    }
+    
+    #tnt_info_resources.minimized table thead tr th:first-child,
+    #tnt_info_buildings.minimized table thead tr th:first-child {
+        display: table-cell !important;
+        width: auto !important;
+    }
+    
+    /* Ensure the tables maintain proper structure when minimized */
+    #tnt_info_resources.minimized table,
+    #tnt_info_buildings.minimized table {
+        width: auto !important;
+    }
+    
+    /* FORCE exact same heights in minimized state - now completely independent */
+    #tnt_info_resources.minimized table tr.tnt_category_header,
+    #tnt_info_buildings.minimized table tr.tnt_category_header {
+        height: 25px !important;
+        max-height: 25px !important;
+        display: table-row !important;
+    }
+    
+    #tnt_info_resources.minimized table tr.tnt_category_header th,
+    #tnt_info_buildings.minimized table tr.tnt_category_header th {
+        height: 25px !important;
+        max-height: 25px !important;
+        padding: 4px !important;
+        vertical-align: middle !important;
+        box-sizing: border-box !important;
+        line-height: 17px !important;
+        overflow: hidden !important;
+    }
+    
+    /* External controls remain visible and positioned in minimized state */
+    #tnt_info_resources.minimized .tnt_external_controls,
+    #tnt_info_buildings.minimized .tnt_external_controls {
+        position: absolute !important;
+        top: 2px !important;
+        left: 2px !important;
+        width: 116px !important;
+        height: 18px !important;
+        z-index: 1000 !important;
+        pointer-events: none !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Remove all conflicting minimized button positioning - buttons are now external */
+    /* 
+    #tnt_info_resources.minimized .tnt_control_buttons,
+    #tnt_info_buildings.minimized .tnt_control_buttons {
+        // REMOVED - buttons are external now
+    }
+    
+    #tnt_info_resources.minimized .tnt_control_buttons span,
+    #tnt_info_buildings.minimized .tnt_control_buttons span {
+        // REMOVED - buttons are external now  
+    }
+    */
+    
+    /* FORCE exact same subcategory header height in minimized state */
+    #tnt_info_resources.minimized table tr.tnt_subcategory_header,
+    #tnt_info_buildings.minimized table tr.tnt_subcategory_header {
+        height: 41px !important;
+        min-height: 41px !important;
+        max-height: 41px !important;
+        display: table-row !important;
+    }
+    
+    #tnt_info_resources.minimized table tr.tnt_subcategory_header th:first-child,
+    #tnt_info_buildings.minimized table tr.tnt_subcategory_header th:first-child {
+        display: table-cell !important;
+        height: 41px !important;
+        min-height: 41px !important;
+        max-height: 41px !important;
+        line-height: 1.2 !important;
+        vertical-align: middle !important;
+        box-sizing: border-box !important;
+        padding: 4px !important;
+    }
+    
+    /* Override any conflicting styles for subcategory header cells in minimized state */
+    #tnt_info_resources.minimized table tr.tnt_subcategory_header th,
+    #tnt_info_buildings.minimized table tr.tnt_subcategory_header th {
+        height: 41px !important;
+        min-height: 41px !important;
+        max-height: 41px !important;
+        line-height: 1.2 !important;
+        vertical-align: middle !important;
+        box-sizing: border-box !important;
+        padding: 4px !important;
+    }
+    #tnt_info_resources .tnt_building_maxed {
+        background-color: #d4edda !important;
+    }
+`);
+// Ensure the styles are applied immediately
+
+
+// --- tableBuilder.js ---
+
+// Table builder - Complete implementation matching working HTML structure
 tnt.tableBuilder = {
     buildTable(type) {
         if (type === 'resources') {
@@ -3099,848 +3232,734 @@ tnt.tableBuilder = {
     }
 };
 
-// Initialize the TNT core
-$(document).ready(() => tnt.core.init());
 
-// Apply styles at the end
-GM_addStyle(`
-    /* Show level styles - using table background color */
-    .tntLvl{
-        position: absolute !important;
-        top: 32px !important;
-        left: 44px !important;
-        color: #000 !important;
-        line-height: 16px !important;
-        background-color: #DBBE8C !important;
-        font-size: 9px !important;
-        font-weight: bold !important;
-        text-align: center !important;
-        vertical-align: middle !important;
-        height: 16px !important;
-        width: 16px !important;
-        border-radius: 50% !important;
-        border: 1px solid #000 !important;
-        display: inline-block !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
-        z-index: 1000 !important;
-        pointer-events: none !important;
-    }
-    .tntLvl:hover {
-        background-color: #faeac6 !important;
-        transform: scale(1.05) !important;
-        transition: all 0.2s ease !important;
-    }
-    /* TNT table styles with higher specificity - override Ikariam's .table01 styles */
-    body #tnt_info_resources #tnt_resources_table,
-    body #tnt_info_buildings_content #tnt_buildings_table{
-        border-collapse: collapse !important;
-        font: 12px Arial, Helvetica, sans-serif !important;
-        background-color: #fdf7dd !important;
-        table-layout: fixed !important;
-    }
-    
-    /* Category header cells - CLEAN and SIMPLE with no internal elements */
-    body #tnt_info_resources #tnt_resources_table th.tnt_category_header,
-    body #tnt_info_buildings_content #tnt_buildings_table th.tnt_category_header {
-        height: 25px !important;
-        max-height: 25px !important;
-        min-height: 25px !important;
-        background-color: #DBBE8C !important;
-        border: 1px solid #000 !important;
-        padding: 4px !important;
-        font-weight: bold !important;
-        text-align: center !important;
-        box-sizing: border-box !important;
-        line-height: 17px !important;
-        font-size: 12px !important;
-        vertical-align: middle !important;
-    }
-    
-    /* External control buttons container - positioned OUTSIDE table, overlaying */
-    .tnt_external_controls {
-        position: absolute !important;
-        top: 2px !important;
-        left: 2px !important;
-        width: 116px !important;
-        height: 18px !important;
-        z-index: 1000 !important;
-        pointer-events: none !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
-    }
-    
-    /* Left buttons container (Min/Max) */
-    .tnt_left_buttons {
-        display: flex !important;
-        align-items: center !important;
-        gap: 0px !important;
-        pointer-events: none !important;
-        flex-shrink: 0 !important;
-    }
-    
-    /* Right buttons container (Refresh, Toggle) */
-    .tnt_right_buttons {
-        margin-top: 5px !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 2px !important;
-        pointer-events: none !important;
-        flex-shrink: 0 !important;
-        height: 18px !important;
-    }
-    
-    /* Individual control buttons - perfectly sized and aligned */
-    .tnt_left_buttons span,
-    .tnt_right_buttons span {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        height: 18px !important;
-        width: 18px !important;
-        min-height: 18px !important;
-        min-width: 18px !important;
-        max-height: 18px !important;
-        max-width: 18px !important;
-        border: 1px solid #8B4513 !important;
-        background: linear-gradient(135deg, #E6D3A3 0%, #D2B48C 50%, #C4A47C 100%) !important;
-        border-radius: 3px !important;
-        cursor: pointer !important;
-        flex-shrink: 0 !important;
-        pointer-events: auto !important;
-        position: relative !important;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        font-size: 0 !important;
-        line-height: 1 !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        box-sizing: border-box !important;
-    }
-    
-    .tnt_left_buttons span:hover,
-    .tnt_right_buttons span:hover {
-        background: linear-gradient(135deg, #F0E4B6 0%, #E6D3A3 50%, #D2B48C 100%) !important;
-        transform: translateY(-1px) scale(1.05) !important;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.4) !important;
-        border-color: #654321 !important;
-    }
-    
-    .tnt_left_buttons span:active,
-    .tnt_right_buttons span:active {
-        transform: translateY(0px) scale(1.02) !important;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
-    }
-    
-    /* Minimize button icons - properly centered triangles */
-    .tnt_left_buttons .tnt_panel_minimize_btn.tnt_back:after { 
-        content: "";
-        display: block;
-        width: 0;
-        height: 0;
-        border: 3px solid transparent;
-        border-right: 5px solid #333;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    
-    .tnt_left_buttons .tnt_panel_minimize_btn.tnt_back:hover:after { 
-        border-right-color: #000;
-    }
-    
-    .tnt_left_buttons .tnt_panel_minimize_btn.tnt_foreward:after { 
-        content: "";
-        display: block;
-        width: 0;
-        height: 0;
-        border: 3px solid transparent;
-        border-left: 5px solid #333;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    
-    .tnt_left_buttons .tnt_panel_minimize_btn.tnt_foreward:hover:after { 
-        border-left-color: #000;
-    }
-    
-    /* Toggle button icon - three centered lines */
-    .tnt_right_buttons .tnt_table_toggle_btn:after {
-        content: "";
-        display: block;
-        width: 8px;
-        height: 2px;
-        background: #333;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        box-shadow: 
-            0 -3px 0 #333,
-            0 3px 0 #333;
-        border-radius: 1px;
-    }
-    
-    .tnt_right_buttons .tnt_table_toggle_btn:hover:after {
-        background: #000;
-        box-shadow: 
-            0 -3px 0 #000,
-            0 3px 0 #000;
-    }
-    
-    .tnt_right_buttons .tnt_table_toggle_btn.active:after {
-        background: #006600;
-        box-shadow: 
-            0 -3px 0 #006600,
-            0 3px 0 #006600;
-    }
-    
-    /* Refresh button icon - perfectly centered */
-    .tnt_right_buttons .tnt_refresh_btn:before {
-        content: "⟳";
-        color: #333;
-        font-size: 13px;
-        font-weight: bold;
-        text-shadow: 0 1px 2px rgba(255,255,255,0.7) !important;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        line-height: 1;
-        width: 13px;
-        height: 13px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .tnt_right_buttons .tnt_refresh_btn:hover:before {
-        color: #000;
-        font-weight: 900;
-        text-shadow: 0 1px 3px rgba(255,255,255,0.9) !important;
-    }
-    
-    /* Remove old control button styles that are no longer needed */
-    .tnt_control_buttons {
-        display: none !important;
-    }
-    
-    /* Minimize button icons */
-    .tnt_control_buttons .tnt_panel_minimize_btn.tnt_back:after { 
-        content: "";
-        display: block;
-        width: 0;
-        height: 0;
-        border: 3px solid transparent;
-        border-right: 5px solid #333;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    
-    .tnt_control_buttons .tnt_panel_minimize_btn.tnt_back:hover:after { 
-        border-right-color: #000;
-    }
-    
-    .tnt_control_buttons .tnt_panel_minimize_btn.tnt_foreward:after { 
-        content: "";
-        display: block;
-        width: 0;
-        height: 0;
-        border: 3px solid transparent;
-        border-left: 5px solid #333;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    
-    .tnt_control_buttons .tnt_panel_minimize_btn.tnt_foreward:hover:after { 
-        border-left-color: #000;
-    }
-    
-    /* Toggle button icon */
-    .tnt_control_buttons .tnt_table_toggle_btn:after {
-        content: "";
-        display: block;
-        width: 6px;
-        height: 1px;
-        background: #333;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        box-shadow: 
-            0 -2px 0 #333,
-            0 2px 0 #333;
-    }
-    
-    .tnt_control_buttons .tnt_table_toggle_btn:hover:after {
-        background: #000;
-        box-shadow: 
-            0 -2px 0 #000,
-            0 2px 0 #000;
-    }
-    
-    .tnt_control_buttons .tnt_table_toggle_btn.active:after {
-        background: #006600;
-        box-shadow: 
-            0 -2px 0 #006600,
-            0 2px 0 #006600;
-    }
-    
-    /* Refresh button icon */
-    .tnt_control_buttons .tnt_refresh_btn:before {
-        content: "⟳";
-        color: #333;
-        font-size: 14px;
-        font-weight: bold;
-        text-shadow: 0 1px 1px rgba(255,255,255,0.5);
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        line-height: 1;
-    }
-    
-    .tnt_control_buttons .tnt_refresh_btn:hover:before {
-        color: #000;
-        font-weight: 900;
-        text-shadow: 0 1px 2px rgba(255,255,255,0.8);
-    }
-    
-    /* Remove all old button styles that conflict with new structure */
-    // .tnt_table_toggle_btn:not(.tnt_control_buttons *), // Should always be visible
-    #tnt_info_resources .tnt_back,
-    #tnt_info_resources .tnt_foreward,
-    #tnt_info_updateCities,
-    .tnt_panel_minimize_btn:not(.tnt_control_buttons *) {
-        display: none !important;
-    }
-    
-    .tnt_city .tnt_panel_minimize_btn {
-        display: none !important;
-    }
-    
-    /* Remove old category spacer styles that are no longer needed */
-    .tnt_category_spacer {
-        display: none !important;
-    }
-    /* Construction status styling applies to the first cell in any row across all tables */
-    // .tnt_construction{
-    //     background-color: #80404050 !important;
-    // }
-    .tnt_construction {
-        background-color: #80404050 !important;
-        border-left: 2px solid #804040 !important;
-    }    
-    /* Phase 4: Visual progress indicators */
-    .tnt_progress_visited {
-        background-color: #90EE9050 !important;
-        border-left: 2px solid #32CD32 !important;
-    }
-    
-    /* Ensure progress indicators work with selected state */
-    body #tnt_info_resources .tnt_selected .tnt_progress_visited,
-    body #tnt_info_buildings_content .tnt_selected .tnt_progress_visited {
-        background-color: #90EE9050 !important;
-        border-left: 2px solid #32CD32 !important;
-    }
-    
-    /* Progress indicator takes precedence over construction during active switching */
-    // .tnt_progress_visited.tnt_construction {
-    //     background-color: #90EE9050 !important;
-    //     border-left: 2px solid #32CD32 !important;
-    // }
-    .tnt_progress_visited.tnt_construction {
-        background-color: #d4edda !important;
-        color: #155724 !important;
-    }    
-    /* === RESOURCE STORAGE INDICATORS (FIX FOR ISSUE #002) === */
-    
-    /* Storage danger - high storage warning (RED text, no borders) */
-    .tnt_storage_danger {
-        //background-color: #ffaaaa !important;
-        color: #ff0000 !important;
-    }
-    
-    /* Storage minimum - low resource warning (YELLOW background, no borders) */
-    .tnt_storage_min {
-        background-color: #ffaaaa !important;
-    }
-    
-    /* Ensure storage indicators work with TNT table styling */
-    body #tnt_info_resources .tnt_storage_danger,
-    body #tnt_info_buildings_content .tnt_storage_danger {
-        //background-color: #ffaaaa !important;
-    }
-    
-    body #tnt_info_resources .tnt_storage_min,
-    body #tnt_info_buildings_content .tnt_storage_min {
-        background-color: #ffaaaa !important;
-    }
-    
-    /* Storage indicators with current city selection */
-    body #tnt_info_resources .tnt_selected .tnt_storage_danger,
-    body #tnt_info_buildings_content .tnt_selected .tnt_storage_danger {
-        //background-color: #ffaaaa !important;
-    }
-    
-    body #tnt_info_resources .tnt_selected .tnt_storage_min,
-    body #tnt_info_buildings_content .tnt_selected .tnt_storage_min {
-        background-color: #ffaaaa !important;
-    }
-    
-    /* Storage indicators take precedence over construction status */
-    .tnt_storage_danger.tnt_construction {
-        //background-color: #ffaaaa !important;
-    }
-    
-    .tnt_storage_min.tnt_construction {
-        background-color: #ffaaaa !important;
-    }
-    
-    /* Remove old category spacer styles that are no longer needed */
-    .tnt_category_spacer {
-        display: none !important;
-    }
-    /* Construction status styling applies to the first cell in any row across all tables */
-    .tnt_construction{
-        background-color: #80404050 !important;
-    }
-    /* Current city highlighting with 2px black border - no background change */
-    body #tnt_info_resources .tnt_selected,
-    body #tnt_info_buildings_content .tnt_selected {
-        border: 2px solid black !important;
-    }
-    body #tnt_info_resources .tnt_selected td,
-    body #tnt_info_buildings_content .tnt_selected td {
-        border-top: 2px solid black !important;
-        border-bottom: 2px solid black !important;
-        // color: #000 !important;
-    }
-    body #tnt_info_resources .tnt_selected td:first-child,
-    body #tnt_info_buildings_content .tnt_selected td:first-child {
-        border-left: 2px solid black !important;
-    }
-    body #tnt_info_resources .tnt_selected td:last-child,
-    body #tnt_info_buildings_content .tnt_selected td:last-child {
-        border-right: 2px solid black !important;
-    }
-    /* Make tradegood production more visible with dark grey text color */
-    body #tnt_info_resources .tnt_bold,
-    body #tnt_info_buildings_content .tnt_bold {
-        color: #333333 !important;
-        font-weight: bold !important;
-    }
-    .tnt_resource_icon{
-        vertical-align:middle !important;
-        width:18px !important;
-        height:16px !important;
-        display:inline-block !important;
-    }
-    .tnt_building_icon {
-        width: 36px !important;
-        height: 32px !important;
-    }
-    img[src*='/city/wall.png'].tnt_building_icon {
-        transform: scale(0.8) !important;
-        transform-origin: 0 0;
-        margin-right: -8px;
-    }
-    body #tnt_info_resources .tnt_population{ text-align:right !important; }
-    body #tnt_info_resources .tnt_citizens{ text-align:right !important; }
-    body #tnt_info_resources .tnt_wood{ text-align:right !important; }
-    body #tnt_info_resources .tnt_marble{ text-align:right !important; }
-    body #tnt_info_resources .tnt_wine{ text-align:right !important; }
-    body #tnt_info_resources .tnt_crystal{ text-align:right !important; }
-    body #tnt_info_resources .tnt_sulfur{ text-align:right !important; }
-    body #tnt_info_resources .tnt_city{ text-align:left !important; }
-    body #tnt_info_buildings_content .tnt_city{ text-align:left !important; }
-    body #tnt_info_buildings_content .tnt_building_level{ text-align:center !important; }
-    
-    /* Override Ikariam's container table styles specifically for our TNT tables */
-    #container body #tnt_info_resources #tnt_resources_table.table01,
-    #container body #tnt_info_buildings_content #tnt_buildings_table.table01 {
-        border: none !important;
-        margin: 0px !important;
-        background-color: #fdf7dd !important;
-        border-bottom: none !important;
-        text-align: center !important;
-        width: auto !important;
-    }
-    #container body #tnt_info_resources #tnt_resources_table.table01 td,
-    #container body #tnt_info_buildings_content #tnt_buildings_table.table01 td {
-        text-align: center !important;
-        vertical-align: middle !important;
-        padding: 4px !important;
-        border: 1px #000000 solid !important;
-    }
-    #container body #tnt_info_resources #tnt_resources_table.table01 th,
-    #container body #tnt_info_buildings_content #tnt_buildings_table.table01 th {
-        background-color: #faeac6 !important;
-        text-align: center !important;
-        height: auto !important;
-        padding: 4px !important;
-        font-weight: bold !important;
-        border: 1px #000000 solid !important;
-    }
-    
-    #mainview a:hover{ text-decoration:none; }
-    #tntOptions {
-        position:absolute;
-        top:40px;
-        left:380px;
-        width:620px;
-        border:1px #755931 solid;
-        border-top:none;
-        background-color: #FEE8C3;
-        padding:10px 10px 0px   10px;
-    }
+// --- tooltip.js ---
 
-    #tntOptions legend{ font-weight:bold; }
-    .tntHide, #infocontainer .tntLvl, #actioncontainer .tntLvl{ display:none; }
-    #tntInfoWidget {
-        position:fixed;
-        bottom:0px;
-        left:0px;
-        width:716px;
-        background-color: #DBBE8C;
-        z-index:100000000;
-    }
-    #tntInfoWidget .accordionTitle {
+// Tooltip/Bubbletip Testing Module
+tnt.tooltip = {
+    // Initialize the tooltip system (ensure BubbleTips is ready)
+    init() {
+        if (typeof BubbleTips === 'undefined' || typeof BubbleTips.bindBubbleTip !== 'function') {
+            tnt.core.debug.log('[TNT] BubbleTips system is not available');
+            return false;
+        }
 
-        background: url(/cdn/all/both/layout/bg_maincontentbox_header.jpg) no-repeat;
-        padding: 6px 0 0;
-        width: 728px;
+        if (!BubbleTips.bubbleNode || !BubbleTips.infoNode) {
+            BubbleTips.init?.();
+        }
+
+        // Ensure hover/info bubbles are non-interactive so they do not steal mouse events and cause flicker
+        $(BubbleTips.bubbleNode).css('pointer-events', 'none');
+        $(BubbleTips.infoNode).css('pointer-events', 'none');
+
+        // Patch BubbleTips hover tooltip position to auto-flip above cursor when near viewport bottom
+        if (!BubbleTips._tntTooltipAutoFlip) {
+            const originalBindBubbleTip = BubbleTips.bindBubbleTip.bind(BubbleTips);
+            BubbleTips.bindBubbleTip = function (location, type, html, n, target, minSize) {
+                const result = originalBindBubbleTip(location, type, html, n, target, minSize);
+
+                if (type === 13 && target) {
+                    const $target = $(target);
+
+                    // Remove the original BubbleTips mousemove for this target and use our own logic
+                    $target.off('mousemove');
+                    $target.off('mousemove.tnt_tooltip_auto_flip');
+
+                    $target.on('mousemove.tnt_tooltip_auto_flip', function (event) {
+                        if (!BubbleTips.infotip || !BubbleTips.infoNode) return;
+
+                        const $tip = $(BubbleTips.infotip);
+                        const tooltipWidth = $tip.outerWidth();
+                        const tooltipHeight = $tip.outerHeight();
+                        const scrollLeft = $(document).scrollLeft();
+                        const scrollTop = $(window).scrollTop();
+                        const winWidth = $(window).width();
+                        const winHeight = $(window).height();
+
+                        const pageX = event.pageX || event.clientX + scrollLeft;
+                        const pageY = event.pageY || event.clientY + scrollTop;
+
+                        const xOffset = Number(BubbleTips.offsetLeft || 0);
+                        const yOffset = Number(BubbleTips.offsetTop || 0) + (window.isIE ? 10 : 0);
+                        const aboveGap = 15; // keep a small gap when flipped above cursor
+
+                        let left = pageX + xOffset;
+                        let top = pageY + yOffset;
+
+                        if (left + tooltipWidth - 20 > winWidth + scrollLeft) {
+                            left = pageX - tooltipWidth + 20;
+                        }
+                        if (left < scrollLeft + 20) {
+                            left = scrollLeft + 20;
+                        }
+
+                        if (top + tooltipHeight + 10 > winHeight + scrollTop) {
+                            top = pageY - tooltipHeight - aboveGap;
+                        }
+                        if (top < scrollTop + 10) {
+                            top = scrollTop + 10;
+                        }
+
+                        $(BubbleTips.infoNode).css({ top: top + 'px', left: left + 'px' });
+                    });
+                }
+
+                return result;
+            };
+
+            BubbleTips._tntTooltipAutoFlip = true;
+        }
+
+        tnt.core.debug.log('[TNT] BubbleTips system is available and initialized');
+        return true;
+    },
+
+    formatTemplateTooltip({ title, body }) {
+        const titleHtml = title ? `<div style="font-weight:bold !important;color:#000 !important;font-size:12px;line-height:1.2;">${title}</div><div style="height:0.5px;min-height:0.5px;background:#000;margin:2px 0;line-height:0;overflow:hidden;"></div>` : '';
+        const bodyHtml = body ? `<div style="font-size:12px;line-height:1.4;">${body}</div>` : '';
+        return `<div>${titleHtml}${bodyHtml}</div>`;
+    },
+
+    // Bind a tooltip HTML to an element
+    bindToElement($el, html) {
+        if (!$el || $el.length === 0 || !html) return;
+
+        $el.off('mouseover.tnt mouseout.tnt');
+
+        const showTooltip = (element) => {
+            try {
+                BubbleTips.clear?.();
+                BubbleTips.init?.();
+                $(BubbleTips.infoNode).css({ 'z-index': '100000001', 'display': 'block' });
+                BubbleTips.bindBubbleTip(6, 13, html, null, element, false);
+            } catch (err) {
+                tnt.core.debug.warn('TNT: Tooltip bind failed: ' + err, 2);
+            }
+        };
+
+        const hideTooltip = () => BubbleTips.clear?.();
+
+        $el.on('mouseover.tnt', function (event) {
+            const related = event.relatedTarget;
+            if (related && $(related).closest($el).length) return;
+            showTooltip(this);
+        });
+
+        $el.on('mouseout.tnt', function (event) {
+            const related = event.relatedTarget;
+            if (related && $(related).closest($el).length) return;
+            hideTooltip();
+        });
+    },
+
+    // Bind a template tooltip to an element, filling in calculated values for resources/buildings
+    bindTemplateTooltip($el, section, key, context = 'header') {
+        if (!$el || $el.length === 0) return;
+
+        // Helpers
+        const replaceAll = (template, replacements) => {
+            let out = template;
+            Object.entries(replacements).forEach(([k, v]) => {
+                out = out.split(`{${k}}`).join(v || '');
+            });
+            return out;
+        };
+
+        // Lookup template
+        const template =
+            TNT_TOOLTIP_TEMPLATES?.[section]?.[context]?.[key] ||
+            TNT_TOOLTIP_TEMPLATES?.[section]?.[context]?.default ||
+            TNT_TOOLTIP_TEMPLATES?.[section]?.[key] ||
+            TNT_TOOLTIP_TEMPLATES?.[key];
+
+        if (!template) {
+            tnt.core.debug.log(`[TNT] No tooltip template found for section="${section}", context="${context}", key="${key}"`, 2);
+            return;
+        }
+
+        const fillTemplate = (tpl, replacements = {}) => {
+            const titleText = tpl.title ? replaceAll(tpl.title, replacements) : '';
+            const bodyText = tpl.body ? replaceAll(tpl.body, replacements) : '';
+            return { title: titleText, body: bodyText };
+        };
+
+        if (section === 'resource') {
+            const $row = $el.closest('tr');
+            const cityId = $el.data('city-id') || ($row.length ? $row.data('city-id') : null);
+            if (!cityId) return;
+
+            const prod1h = tnt.utils.calculateProduction(cityId, 1);
+            const prod24h = tnt.utils.calculateProduction(cityId, 24);
+
+            const storeCity = tnt.data.storage.city?.[cityId];
+            const storeForeignCity = tnt.data.storage.foreign?.[cityId];
+            const allCities = tnt.get.player.list.cities() || {};
+            const cityName = storeCity?.name || storeCity?.cityName || storeForeignCity?.name || allCities?.[cityId]?.name || allCities?.[cityId]?.cityName || `City ${cityId}`;
+            const cityValue = String(storeCity?.[key] ?? storeForeignCity?.[key] ?? '');
+
+            const replacements = {
+                '1hwood': prod1h.wood,
+                '24hwood': prod24h.wood,
+                '1hwine': prod1h.wine,
+                '24hwine': prod24h.wine,
+                '1hmarble': prod1h.marble,
+                '24hmarble': prod24h.marble,
+                '1hcrystal': prod1h.crystal,
+                '24hcrystal': prod24h.crystal,
+                '1hsulfur': prod1h.sulfur,
+                '24hsulfur': prod24h.sulfur,
+                'cityName': cityName,
+                'value': cityValue
+            };
+
+            const display = fillTemplate(template, replacements);
+            tnt.tooltip.bindToElement($el, tnt.tooltip.formatTemplateTooltip(display));
+            return;
+        }
+
+        if (section === 'building') {
+            const cityId = $el.data('city-id') || $el.closest('tr').data('city-id');
+            const def = TNT_BUILDING_DEFINITIONS.find(d => d.key === key) || { name: key };
+            const maxedLvl = tnt.settings.getMaxedLvl(key);
+            const defaultMaxedLvl = def.maxedLvl || 0;
+
+            let totalLevel = 0;
+            Object.values(tnt.data.storage.city || {}).forEach(city => {
+                if (!city.buildings) return;
+                if (key === 'palaceOrColony') {
+                    const palace = city.buildings.palace || [];
+                    const colony = city.buildings.palaceColony || [];
+                    totalLevel += palace.reduce((sum, b) => sum + (b.level || 0), 0);
+                    totalLevel += colony.reduce((sum, b) => sum + (b.level || 0), 0);
+                } else {
+                    const arr = city.buildings[key] || [];
+                    totalLevel += arr.reduce((sum, b) => sum + (b.level || 0), 0);
+                }
+            });
+
+            const allCities = tnt.get.player.list.cities() || {};
+            const city = tnt.data.storage.city?.[cityId] || tnt.data.storage.foreign?.[cityId] || {};
+            const cityName = city.name || city.cityName || allCities?.[cityId]?.name || allCities?.[cityId]?.cityName || `City ${cityId}`;
+
+            let levelSum = 0;
+            let statusText = '-';
+            if (context === 'cell') {
+                let levels = [];
+                if (key === 'palaceOrColony') {
+                    levels = (city.buildings?.palace || []).concat(city.buildings?.palaceColony || []);
+                } else {
+                    levels = city.buildings?.[key] || [];
+                }
+                levelSum = levels.reduce((sum, b) => sum + (b.level || 0), 0);
+                statusText = levels.some(b => b.underConstruction) ? '<span class="red">Under construction</span>' : levels.some(b => b.upgradable) ? '<span class="green">Upgradable</span>' : '-';
+            }
+
+            const replacements = {
+                cityName,
+                buildingName: def.name || key,
+                levelSum: String(levelSum),
+                statusText,
+                totalLevel: String(totalLevel),
+                maxedLvl: String(maxedLvl),
+                defaultMaxedLvl: String(defaultMaxedLvl)
+            };
+
+            const display = fillTemplate(template, replacements);
+            tnt.tooltip.bindToElement($el, tnt.tooltip.formatTemplateTooltip(display));
+            return;
+        }
+
+        const display = tnt.tooltip.formatTemplateTooltip(template);
+        tnt.tooltip.bindToElement($el, display);
+    },
+
+    // Attach tooltips to elements with class 'tnt_tooltip_target'
+    attachTooltips() {
+        if (!tnt.tooltip.init()) {
+            tnt.core.debug.log('TNT: BubbleTips not available', 2);
+            return;
+        }
+
+        if (BubbleTips.bubbleNode) {
+            $(BubbleTips.bubbleNode).css('z-index', '100000001');
+        }
+        if (BubbleTips.infoNode) {
+            $(BubbleTips.infoNode).css('z-index', '100000001');
+        }
+
+        const $containers = $('.tnt_tooltip_target');
+        tnt.core.debug.log(`[TNT] Adding tooltips to ${$containers.length} elements`, 3);
+
+        $containers.each(function () {
+            const $container = $(this);
+            const section = $container.data('tooltip-section') || ($container.data('resource') ? 'resource' : ($container.data('building-type') ? 'building' : null));
+            const context = $container.data('tooltip-context') || 'header';
+            const key = $container.data('resource') || $container.data('building-type');
+            if (!section || !key) return;
+
+            // For building header cells, also bind tooltip to inner link/image nodes so hovering them triggers the same tooltip.
+            const $bindTargets = $container.add($container.find('a, img'));
+            tnt.tooltip.bindTemplateTooltip($bindTargets, section, key, context);
+        });
+    },
+
+    // NOT USED: Create a simple tooltip on an element - Kept for now
+    // Types: 10 = success (green), 11 = info (yellow), 12 = error (red), 13 = hover tooltip
+    create(element, text, type = 13) {
+        if (!this.init()) {
+            tnt.core.debug.warn('TNT: BubbleTips not available, cannot create tooltip', 3);
+            return false;
+        }
+
+        try {
+            // Type 13 = hover tooltip that follows mouse
+            // Parameters: location(6=custom element), type(13=tooltip), text, null, element, minSize
+            BubbleTips.bindBubbleTip(6, type, text, null, element, false);
+            return true;
+        } catch (e) {
+            tnt.core.debug.error('TNT: Error creating tooltip: ' + e.message, 1);
+            return false;
+        }
     }
-    #tntInfoWidget .accordionContent {
-        background: url(/cdn/all/both/layout/bg_maincontentbox_left.png) left center repeat-y #FAF3D7;
-        overflow: hidden;
-        padding: 0;
-        position: relative;
-        width: 725px;
+};
+
+
+// --- dataCollector.js ---
+
+// dataCollector = Collects and stores resource data
+tnt.dataCollector = {
+    update() {
+        const currentCityId = tnt.get.city.id();
+
+        // Skip data collection if no valid city ID
+        if (!currentCityId || currentCityId === 'undefined') {
+            return;
+        }
+
+        const isOwnCity = tnt.is.ownCity();
+
+        if (isOwnCity) {
+            this.collectOwnCityData(currentCityId);
+        } else {
+            this.collectForeignCityData(currentCityId);
+        }
+
+        // Update visual progress AFTER data collection with proper timing
+        if (tnt.citySwitcher.isActive) {
+            // console.log(`[TNT] Data collected for ${currentCityId} - scheduling visual update`);
+            setTimeout(() => {
+                tnt.citySwitcher.updateVisualProgress();
+            }, 500);
+        }
+    },
+
+    collectOwnCityData(currentCityId) {
+        const prev = $.extend(true, {}, tnt.data.storage.city[currentCityId] || {});
+
+        const cityData = {
+            ...prev,
+            name: tnt.get.city.name(currentCityId),
+            buildings: {},
+            cityIslandCoords: tnt.get.city.coords(),
+            producedTradegood: parseInt(tnt.get.city.tradegood()),
+            population: tnt.get.city.resources.population(),
+            citizens: tnt.get.city.resources.citizens(),
+            max: tnt.get.city.resources.max(),
+            wood: tnt.get.city.resources.wood(),
+            wine: tnt.get.city.resources.wine(),
+            marble: tnt.get.city.resources.marble(),
+            crystal: tnt.get.city.resources.crystal(),
+            sulfur: tnt.get.city.resources.sulfur(),
+            hasConstruction: false,
+            cityLvl: tnt.get.city.level(),
+            resourceProduction: tnt.get.city.production.resource(),
+            tradegoodProduction: tnt.get.city.production.tradegood(),
+            lastUpdate: Date.now(),
+            isOwn: true
+        };
+
+        // Only update buildings when in city view
+        if ($("body").attr("id") === "city") {
+            const buildingData = tnt.utils.scanAllBuildings();
+            cityData.buildings = buildingData.buildings;
+            cityData.hasConstruction = buildingData.hasConstruction;
+        } else {
+            cityData.hasConstruction = prev.hasConstruction || false;
+        }
+
+        // Store in own city data
+        tnt.data.storage.city[currentCityId] = cityData;
+        tnt.core.storage.save();
+        // tnt.dataCollector.show(); // Moved to tnt.core.init() to avoid double updates. Remove if not needed
+    },
+
+    collectForeignCityData(currentCityId) {
+        // console.log('[TNT] Collecting foreign city data for:', currentCityId);
+
+        const hasSpyAccess = $('.spy_warning').length > 0 || $('#js_spiesInsideText').length > 0;
+        const ownerName = tnt.utils.safeGet(() => ikariam.backgroundView.screen.data.ownerName, 'Unknown');
+        const ownerId = tnt.utils.safeGet(() => ikariam.backgroundView.screen.data.ownerId, 0);
+
+        const foreignCityData = {
+            cityId: currentCityId,
+            name: tnt.utils.safeGet(() => ikariam.backgroundView.screen.data.name, 'Unknown City'),
+            ownerName: ownerName,
+            ownerId: parseInt(ownerId),
+            cityIslandCoords: tnt.get.city.coords(),
+            cityLvl: tnt.get.city.level(),
+            producedTradegood: parseInt(tnt.get.city.tradegood()),
+            hasSpyAccess: hasSpyAccess,
+            buildings: {},
+            lastUpdate: Date.now(),
+            isOwn: false
+        };
+
+        // Collect visible building data
+        if ($("body").attr("id") === "city") {
+            const buildingData = tnt.utils.scanAllBuildings();
+            foreignCityData.buildings = buildingData.buildings;
+            foreignCityData.hasConstruction = buildingData.hasConstruction;
+        }
+
+        // Store in foreign city data
+        tnt.data.storage.foreign[currentCityId] = foreignCityData;
+
+        // Also store in spy data if we have spy access
+        if (hasSpyAccess) {
+            tnt.data.storage.spy[currentCityId] = foreignCityData;
+            // console.log('[TNT] Stored spy data for city:', currentCityId);
+        }
+
+        tnt.core.storage.save();
+        // console.log('[TNT] Foreign city data collected and stored');
+    },
+
+    show() {
+        // Only show resource tables for own cities
+        if (tnt.settings.getResourceDisplaySettings().showResources && $("body").attr("id") == "city" && tnt.is.ownCity()) {
+
+            // Show resource tables
+            if ($('#tnt_info_resources').length === 0) {
+                $('body').append(tnt.template.resources);
+            }
+
+            // $('#tnt_info_resources_content').empty();
+            // $('#tnt_info_buildings_content').empty();
+
+            // Build and display the resource table
+            const resourceTable = tnt.tableBuilder.buildTable('resources');
+            $('#tnt_info_resources_content').html(resourceTable);
+
+            // Build and display the buildings table
+            const buildingTable = tnt.tableBuilder.buildTable('buildings');
+            $('#tnt_info_buildings_content').html(buildingTable);
+
+            // Create external controls (buttons) and attach event handlers
+            this.createExternalControls();
+            tnt.tableBuilder.attachEventHandlers(); // Is this needed here?
+        }
+    },
+
+    createExternalControls() {
+        // Only create if they don't exist yet
+        if ($('.tnt_external_controls').length === 0) {
+            const $externalControls = $('<div class="tnt_external_controls"></div>');
+
+            // Left side buttons (Min/Max)
+            const $leftButtons = $('<div class="tnt_left_buttons"></div>');
+            $leftButtons.append('<span class="tnt_panel_minimize_btn tnt_back" title="Minimize/Maximize panel"></span>');
+
+            // Right side buttons (Refresh, Toggle)
+            const $rightButtons = $('<div class="tnt_right_buttons"></div>');
+            $rightButtons.append('<span class="tnt_refresh_btn" title="Refresh all cities"></span>');
+            $rightButtons.append('<span class="tnt_table_toggle_btn" title="Show buildings/resources"></span>');
+
+            $externalControls.append($leftButtons);
+            $externalControls.append($rightButtons);
+            $('#tnt_info_resources').prepend($externalControls);
+
+            // Attach event handlers for the new buttons
+            tnt.events.attachButtonEvents();
+        }
+    },
+
+    // NEW: Calculate totals across all cities
+    calculateTotals() {
+        let total = {
+            population: 0,
+            citizens: 0,
+            wood: 0,
+            wine: 0,
+            marble: 0,
+            crystal: 0,
+            sulfur: 0
+        };
+
+        $.each(tnt.data.storage.city, function (cityID, cityData) {
+            total.population += parseInt(cityData.population) || 0;
+            total.citizens += parseInt(cityData.citizens) || 0;
+            total.wood += cityData.wood || 0;
+            total.wine += cityData.wine || 0;
+            total.marble += cityData.marble || 0;
+            total.crystal += cityData.crystal || 0;
+            total.sulfur += cityData.sulfur || 0;
+        });
+
+        return total;
+    },
+
+    getMergedBuildingColumns(buildingColumns) {
+        // Determine which building columns are used in any city
+        const usedColumns = buildingColumns.filter(function (col) {
+            const cities = Object.values(tnt.data.storage.city);
+            if (col.key === 'palace' || col.key === 'palaceColony') {
+                return cities.some(city =>
+                    (city.buildings?.['palace']?.length > 0) ||
+                    (city.buildings?.['palaceColony']?.length > 0)
+                );
+            }
+            return cities.some(city => city.buildings?.[col.key]?.length > 0);
+        });
+
+        // Merge palace/palaceColony into a single column for display
+        const mergedColumns = [];
+        let seenPalace = false;
+        usedColumns.forEach(function (col) {
+            if ((col.key === 'palace' || col.key === 'palaceColony') && !seenPalace) {
+                mergedColumns.push({
+                    key: 'palaceOrColony',
+                    name: 'Palace / Governor\'s Residence',
+                    icon: '/cdn/all/both/img/city/palace_l.png',
+                    icon2: '/cdn/all/both/img/city/palaceColony_l.png',
+                    buildingId: 11,
+                    helpId: 1
+                });
+                seenPalace = true;
+            } else if (col.key !== 'palace' && col.key !== 'palaceColony') {
+                mergedColumns.push(col);
+            }
+        });
+
+        return mergedColumns;
+    },
+
+    calculateCategorySpans(mergedColumns) {
+        // Dynamically generate buildingCategories from TNT_BUILDING_DEFINITIONS
+        const buildingCategories = TNT_BUILDING_DEFINITIONS.reduce((acc, b) => {
+            if (!acc[b.category]) acc[b.category] = [];
+            acc[b.category].push(b.key);
+            return acc;
+        }, {});
+
+        const categorySpans = {};
+        mergedColumns.forEach(col => {
+            for (let [category, buildings] of Object.entries(buildingCategories)) {
+                if (buildings.includes(col.key) ||
+                    (col.key === 'palaceOrColony' && (buildings.includes('palace') || buildings.includes('palaceColony')))) {
+                    categorySpans[category] = (categorySpans[category] || 0) + 1;
+                }
+            }
+        });
+
+        return categorySpans;
+    },
+
+    // PHASE 1: Add calculateBuildingTotals helper
+    calculateBuildingTotals(mergedColumns) {
+        const totals = {};
+
+        mergedColumns.forEach(col => {
+            let total = 0;
+
+            Object.values(tnt.data.storage.city || {}).forEach(city => {
+                if (!city.buildings) return;
+
+                if (col.key === 'palaceOrColony') {
+                    const palace = city.buildings.palace || [];
+                    const colony = city.buildings.palaceColony || [];
+                    total += palace.reduce((sum, b) => sum + (b.level || 0), 0);
+                    total += colony.reduce((sum, b) => sum + (b.level || 0), 0);
+                } else {
+                    const arr = city.buildings[col.key] || [];
+                    total += arr.reduce((sum, b) => sum + (b.level || 0), 0);
+                }
+            });
+
+            totals[col.key] = total;
+        });
+
+        return totals;
+    },
+
+    sortCities() {
+        var list = {};
+        var cities = tnt.data.storage.city || {};
+        $.each(cities, (cityID, value) => {
+            if (value && typeof value.producedTradegood !== 'undefined') {
+                list[cityID] = value.producedTradegood;
+            }
+        });
+        var order = { 2: 0, 1: 1, 3: 2, 4: 3 };
+        return Object.keys(list).sort((a, b) => order[list[a]] - order[list[b]]);
+    },
+
+    checkMinMax(city, resource) {
+        if (!tnt.settings.getResourceDisplaySettings().showResources || !city || !city.max) return '';
+        var max = city.max, txt = '';
+        switch (resource) {
+            case 0: if (city.wood > max * .8) txt += ' tnt_storage_danger'; if (city.wood < 100000) txt += ' tnt_storage_min'; break;
+            case 1: if (city.wine > max * .8) txt += ' tnt_storage_danger'; if (city.wine < 100000) txt += ' tnt_storage_min'; break;
+            case 2: if (city.marble > max * .8) txt += ' tnt_storage_danger'; if (city.marble < 50000) txt += ' tnt_storage_min'; break;
+            case 3: if (city.crystal > max * .8) txt += ' tnt_storage_danger'; if (city.crystal < 50000) txt += ' tnt_storage_min'; break;
+            case 4: if (city.sulfur > max * .8) txt += ' tnt_storage_danger'; if (city.sulfur < 50000) txt += ' tnt_storage_min'; break;
+        }
+        return txt;
+    },
+
+    getIcon(resource) {
+        switch (resource) {
+            case 0: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_wood.png">';
+            case 1: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_wine.png">';
+            case 2: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_marble.png">';
+            case 3: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_crystal.png">';
+            case 4: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_sulfur.png">';
+            case 'population': return '<img class="tnt_resource_icon tnt_icon_po" src="//gf3.geo.gfsrv.net/cdn2f/6d077d68d9ae22f9095515f282a112.png" style="width: 10px !important;">';
+            case 'citizens': return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_population.png">';
+            default: return '';
+        }
     }
-    #tntInfoWidget .scroll_disabled {
-        background: url(/cdn/all/both/layout/bg_maincontentbox_left.png) repeat-y scroll left center transparent;
-        width: 9px;
+};
+
+
+// --- citySwitcher.js ---
+
+// City switcher module - CLEANER debug version
+tnt.citySwitcher = {
+    isActive: false,
+    startCityId: null,
+    visitedCities: [],
+
+    start() {
+        this.startCityId = tnt.get.city.id();
+
+        if (!this.startCityId) {
+            // console.log('[TNT] Cannot start - no valid city ID detected');
+            return;
+        }
+
+        this.isActive = true;
+        this.visitedCities = [this.startCityId];
+
+        tnt.settings.set("citySwitcherActive", true);
+        tnt.settings.set("citySwitcherStartCity", this.startCityId);
+        tnt.settings.set("citySwitcherVisited", this.visitedCities);
+
+        // console.log(`[TNT] CitySwitcher STARTED from city: ${this.startCityId}`);
+
+        // Update visual immediately for starting city
+        this.updateVisualProgress();
+
+        // Start with 1.5 second delay
+        setTimeout(() => {
+            this.nextCity();
+        }, 1500);
+    },
+
+    nextCity() {
+        const allCities = Object.keys(tnt.get.player.list.cities());
+        // console.log(`[TNT] Looking for next city. Visited: [${this.visitedCities.join(', ')}]`);
+
+        for (const cityId of allCities) {
+            if (!this.visitedCities.includes(cityId)) {
+                // console.log(`[TNT] Next city: ${cityId}`);
+                this.switchToCity(cityId);
+                return;
+            }
+        }
+
+        // console.log('[TNT] All cities visited - ending cycle');
+        this.end();
+    },
+
+    switchToCity(cityId) {
+        // console.log(`[TNT] === SWITCHING TO CITY ${cityId} ===`);
+
+        // Add to visited list BEFORE switching
+        if (!this.visitedCities.includes(cityId)) {
+            this.visitedCities.push(cityId);
+            tnt.settings.set("citySwitcherVisited", this.visitedCities);
+            // console.log(`[TNT] Visited list updated: [${this.visitedCities.join(', ')}]`);
+        }
+
+        return tnt.utils.switchToCity(cityId);
+    },
+
+    // Switch back to the starting city and update the states. Before resuming normal visual state
+    end() {
+        this.switchToCity(this.startCityId);
+        this.isActive = false;
+        tnt.settings.set("citySwitcherActive", false);
+
+        // Restore normal state after final switch
+        // setTimeout(() => {
+        // console.log('[TNT] Restoring normal visual state');
+        this.restoreNormalVisualState();
+        // }, 2000);
+    },
+
+    updateVisualProgress() {
+        // 
+        if ($('#tnt_info_resources').is(':visible') && $("body").attr("id") === "city") {
+            const resourceTable = tnt.tableBuilder.buildTable('resources');
+            $('#tnt_info_resources_content').html(resourceTable);
+
+            const buildingTable = tnt.tableBuilder.buildTable('buildings');
+            $('#tnt_info_buildings_content').html(buildingTable);
+
+            // Shouldn't need to reattach handlers here. We are going to move to a new city anyway.
+            // tnt.tableBuilder.attachEventHandlers();
+        }
+    },
+
+    restoreNormalVisualState() {
+        // Restore normal visual state of the resources/buildings tables
+        this.visitedCities = [];
+
+        if ($('#tnt_info_resources').is(':visible') && $("body").attr("id") === "city") {
+            const resourceTable = tnt.tableBuilder.buildTable('resources');
+            $('#tnt_info_resources_content').html(resourceTable);
+
+            const buildingTable = tnt.tableBuilder.buildTable('buildings');
+            $('#tnt_info_buildings_content').html(buildingTable);
+
+            tnt.tableBuilder.attachEventHandlers();
+        }
+    },
+
+    checkAndContinue() {
+        const isActive = tnt.settings.get("citySwitcherActive", false);
+
+        if (isActive) {
+            const visitedCities = tnt.settings.get("citySwitcherVisited", []);
+
+            if (visitedCities.length > 1) {
+                // console.log('[TNT] Continuing citySwitcher cycle');
+                this.isActive = true;
+                this.startCityId = tnt.settings.get("citySwitcherStartCity");
+                this.visitedCities = visitedCities;
+
+                this.updateVisualProgress();
+
+                // 2 second delay between city switches
+                setTimeout(() => {
+                    this.nextCity();
+                }, 100);
+            } else {
+                // Direct navigation detected - stopping citySwitcher
+                this.isActive = false;
+                tnt.settings.set("citySwitcherActive", false);
+                this.restoreNormalVisualState();
+            }
+        }
     }
-    #tntInfoWidget .scroll_area {
-        background: url(/cdn/all/both/interface/scroll_bg.png) right top repeat-y transparent;
-        display: block;
-        height: 100%;
-        overflow: hidden;
-        position: absolute;
-        right: -3px;
-        width: 24px;
-        z-index: 100000;
-    }
-    .txtCenter{ text-align:center; }
-    .tnt_center{ text-align:center!important; white-space:nowrap; }
-    .tnt_right{ text-align:right!important; white-space:nowrap; }
-    .tnt_left{ text-align:left!important; white-space:nowrap; }
-    #tnt_info_resources{
-        position:fixed;
-        bottom:20px;
-        left:0px;
-        width:auto;
-        height:auto;
-        background-color: #DBBE8C;
-        z-index:100000000;
-    }
-    #tnt_info_resources .tnt_back, #tnt_info_resources .tnt_foreward {
-        cursor: pointer;
-        display: block!important;
-        height: 18px;
-        width: 18px;
-        border: 1px solid #8B4513;
-        background: #D2B48C;
-        border-radius: 2px;
-        text-align: center;
-        line-height: 16px;
-        font-size: 12px;
-        min-width: 18px;
-        min-height: 18px;
-    }
-    #tnt_info_resources .tnt_back {
-        left: 2px;
-        position: absolute;
-        top: 2px;
-    }
-    #tnt_info_resources .tnt_back:before {
-        content: "◀";
-        color: #333;
-        display: inline-block;
-        width: 100%;
-        height: 100%;
-    }
-    #tnt_info_resources .tnt_back:hover {
-        background: #DDD;
-    }
-    #tnt_info_resources .tnt_back:hover:before {
-        color: #000;
-    }
-    #tnt_info_resources .tnt_foreward {
-        left: 2px;
-        position: absolute;
-        top: 3px;
-    }
-    #tnt_info_resources .tnt_foreward:before {
-        content: "▶";
-        color: #333;
-        display: inline-block;
-        width: 100%;
-        height: 100%;
-    }
-    #tnt_info_resources .tnt_foreward:hover {
-        background: #DDD;
-    }
-    #tnt_info_resources .tnt_foreward:hover:before {
-        color: #000;
-    }
-    #tnt_info_updateCities {
-        position:fixed;
-        bottom:20px;
-        right:0px;
-        width:auto;
-        height:auto;
-        background-color: #DBBE8C;
-        z-index:100000000;
-    }
-    .tnt_panel_minimize_btn {
-        cursor: pointer;
-        display: block!important;
-        height: 18px;
-        width: 18px;
-        position: absolute;
-        left: 2px;
-        top: 2px;
-        z-index: 10;
-        border: 1px solid #8B4513;
-        background: #D2B48C;
-        border-radius: 2px;
-        text-align: center;
-        line-height: 16px;
-        font-size: 12px;
-        min-width: 18px;
-        min-height: 18px;
-        box-sizing: border-box;
-        overflow: hidden;
-    }
-    .tnt_panel_minimize_btn.tnt_back:before { 
-        content: "◀";
-        color: #333;
-        display: inline-block;
-        width: 100%;
-        height: 100%;
-        line-height: 16px;
-        text-align: center;
-        font-size: 10px;
-        vertical-align: middle;
-    }
-    .tnt_panel_minimize_btn.tnt_back:hover { 
-        background: #DDD;
-    }
-    .tnt_panel_minimize_btn.tnt_back:hover:before { 
-        color: #000;
-    }
-    .tnt_panel_minimize_btn.tnt_foreward { 
-        top: 3px; 
-    }
-    .tnt_panel_minimize_btn.tnt_foreward:before { 
-        content: "▶";
-        color: #333;
-        display: inline-block;
-        width: 100%;
-        height: 100%;
-        line-height: 16px;
-        text-align: center;
-        font-size: 10px;
-        vertical-align: middle;
-    }
-    .tnt_panel_minimize_btn.tnt_foreward:hover { 
-        background: #DDD;
-    }
-    .tnt_panel_minimize_btn.tnt_foreward:hover:before { 
-        color: #000;
-    }
-    .tnt_table_toggle_btn {
-        cursor: pointer;
-        display: inline-block;
-        height: 18px;
-        width: 18px;
-        vertical-align: middle;
-        float: right;
-        margin-left: 6px;
-        border: 1px solid #8B4513;
-        background: #D2B48C;
-        border-radius: 2px;
-        text-align: center;
-        line-height: 16px;
-        font-size: 12px;
-        min-width: 18px;
-        min-height: 18px;
-        box-sizing: border-box;
-        overflow: hidden;
-    }
-    .tnt_table_toggle_btn:before {
-        content: "⇄";
-        color: #333;
-        display: inline-block;
-        width: 100%;
-        height: 100%;
-        line-height: 16px;
-        text-align: center;
-        font-size: 10px;
-        vertical-align: middle;
-    }
-    .tnt_table_toggle_btn:hover { 
-        background: #DDD;
-    }
-    .tnt_table_toggle_btn:hover:before {
-        color: #000;
-    }
-    .tnt_table_toggle_btn.active:before {
-        content: "⇄";
-        color: #006600;
-        font-weight: bold;
-    }
-    /* Remove duplicate old button styles - keep only this section */
-    .tnt_city .tnt_panel_minimize_btn { 
-        display: none !important;
-    }
-    
-    /* Change the minimized state to show the first cell completely for both tables */
-    #tnt_info_resources.minimized,
-    #tnt_info_buildings.minimized {
-        width: auto !important;
-        min-width: auto !important;
-        max-width: none !important;
-        overflow: hidden !important;
-    }
-    
-    /* Simple minimized state - just hide columns */
-    #tnt_info_resources.minimized table tr td:not(:first-child),
-    #tnt_info_resources.minimized table tr th:not(:first-child),
-    #tnt_info_buildings.minimized table tr td:not(:first-child),
-    #tnt_info_buildings.minimized table tr th:not(:first-child) {
-        display: none !important;
-    }
-    
-    /* Show only the first cell when minimized - keep as table-cell */
-    #tnt_info_resources.minimized table tr th:first-child,
-    #tnt_info_resources.minimized table tr td:first-child,
-    #tnt_info_buildings.minimized table tr th:first-child,
-    #tnt_info_buildings.minimized table tr td:first-child {
-        display: table-cell !important;
-        width: auto !important;
-        min-width: 60px !important;
-    }
-    
-    /* Special handling for the header row when minimized */
-    #tnt_info_resources.minimized table thead tr,
-    #tnt_info_buildings.minimized table thead tr {
-        display: table-row !important;
-    }
-    
-    #tnt_info_resources.minimized table thead tr th:first-child,
-    #tnt_info_buildings.minimized table thead tr th:first-child {
-        display: table-cell !important;
-        width: auto !important;
-    }
-    
-    /* Ensure the tables maintain proper structure when minimized */
-    #tnt_info_resources.minimized table,
-    #tnt_info_buildings.minimized table {
-        width: auto !important;
-    }
-    
-    /* FORCE exact same heights in minimized state - now completely independent */
-    #tnt_info_resources.minimized table tr.tnt_category_header,
-    #tnt_info_buildings.minimized table tr.tnt_category_header {
-        height: 25px !important;
-        max-height: 25px !important;
-        display: table-row !important;
-    }
-    
-    #tnt_info_resources.minimized table tr.tnt_category_header th,
-    #tnt_info_buildings.minimized table tr.tnt_category_header th {
-        height: 25px !important;
-        max-height: 25px !important;
-        padding: 4px !important;
-        vertical-align: middle !important;
-        box-sizing: border-box !important;
-        line-height: 17px !important;
-        overflow: hidden !important;
-    }
-    
-    /* External controls remain visible and positioned in minimized state */
-    #tnt_info_resources.minimized .tnt_external_controls,
-    #tnt_info_buildings.minimized .tnt_external_controls {
-        position: absolute !important;
-        top: 2px !important;
-        left: 2px !important;
-        width: 116px !important;
-        height: 18px !important;
-        z-index: 1000 !important;
-        pointer-events: none !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
-    }
-    
-    /* Remove all conflicting minimized button positioning - buttons are now external */
-    /* 
-    #tnt_info_resources.minimized .tnt_control_buttons,
-    #tnt_info_buildings.minimized .tnt_control_buttons {
-        // REMOVED - buttons are external now
-    }
-    
-    #tnt_info_resources.minimized .tnt_control_buttons span,
-    #tnt_info_buildings.minimized .tnt_control_buttons span {
-        // REMOVED - buttons are external now  
-    }
-    */
-    
-    /* FORCE exact same subcategory header height in minimized state */
-    #tnt_info_resources.minimized table tr.tnt_subcategory_header,
-    #tnt_info_buildings.minimized table tr.tnt_subcategory_header {
-        height: 41px !important;
-        min-height: 41px !important;
-        max-height: 41px !important;
-        display: table-row !important;
-    }
-    
-    #tnt_info_resources.minimized table tr.tnt_subcategory_header th:first-child,
-    #tnt_info_buildings.minimized table tr.tnt_subcategory_header th:first-child {
-        display: table-cell !important;
-        height: 41px !important;
-        min-height: 41px !important;
-        max-height: 41px !important;
-        line-height: 1.2 !important;
-        vertical-align: middle !important;
-        box-sizing: border-box !important;
-        padding: 4px !important;
-    }
-    
-    /* Override any conflicting styles for subcategory header cells in minimized state */
-    #tnt_info_resources.minimized table tr.tnt_subcategory_header th,
-    #tnt_info_buildings.minimized table tr.tnt_subcategory_header th {
-        height: 41px !important;
-        min-height: 41px !important;
-        max-height: 41px !important;
-        line-height: 1.2 !important;
-        vertical-align: middle !important;
-        box-sizing: border-box !important;
-        padding: 4px !important;
-    }
-    #tnt_info_resources .tnt_building_maxed {
-        background-color: #d4edda !important;
-    }
-`);
-// Ensure the styles are applied immediately
+};
