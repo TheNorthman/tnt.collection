@@ -2,6 +2,17 @@
 
 TNT Collection is a user-friendly toolkit for Ikariam players who want better city management, faster planning, and fewer manual clicks.
 
+## 🖼️ Screenshots
+
+<a href="screenshots/ResourceOverview.png" target="_blank">
+  <img src="screenshots/ResourceOverview.png" width="25%" alt="Resource overview screenshot">
+</a>
+<a href="screenshots/BuildingOverview.png" target="_blank">
+  <img src="screenshots/BuildingOverview.png" width="25%" alt="Building overview screenshot">
+</a>
+
+*Click an image to view full size.*
+
 ## 🎯 What it does for you
 
 - Global city snapshot (resources, populations, income, and active buildings)
