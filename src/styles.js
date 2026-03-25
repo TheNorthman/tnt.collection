@@ -462,8 +462,8 @@ GM_addStyle(`
     body #tnt_info_buildings_content .tnt_building_level{ text-align:center !important; }
     
     /* Override Ikariam's container table styles specifically for our TNT tables */
-    #container body #tnt_info_resources #tnt_resources_table.table01,
-    #container body #tnt_info_buildings_content #tnt_buildings_table.table01 {
+    #container body #tnt_info_resources #tnt_resources_table,
+    #container body #tnt_info_buildings_content #tnt_buildings_table {
         border: none !important;
         margin: 0px !important;
         background-color: #fdf7dd !important;
@@ -471,15 +471,15 @@ GM_addStyle(`
         text-align: center !important;
         width: auto !important;
     }
-    #container body #tnt_info_resources #tnt_resources_table.table01 td,
-    #container body #tnt_info_buildings_content #tnt_buildings_table.table01 td {
+    #container body #tnt_info_resources #tnt_resources_table td,
+    #container body #tnt_info_buildings_content #tnt_buildings_table td {
         text-align: center !important;
         vertical-align: middle !important;
         padding: 4px !important;
         border: 1px #8B4513 solid !important;
     }
-    #container body #tnt_info_resources #tnt_resources_table.table01 th,
-    #container body #tnt_info_buildings_content #tnt_buildings_table.table01 th {
+    #container body #tnt_info_resources #tnt_resources_table th,
+    #container body #tnt_info_buildings_content #tnt_buildings_table th {
         background-color: #faeac6 !important;
         text-align: center !important;
         height: auto !important;
