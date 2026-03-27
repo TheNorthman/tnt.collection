@@ -2,11 +2,11 @@
 // @name         TNT Collection
 // @version      2.1.0
 // @namespace    tnt.collection
-// @author       Kingfisher
-// @description  TNT Collection for Ikariam enhancements
+// @author       TheNorthman
+// @description  TNT Collection Tools for Ikariam
 // @license      MIT
-// @include      http*s*.ikariam.*/*
-// @exclude      http*support*.ikariam.*/*
+// @include      *://s*.ikariam.gameforge.com/*
+// @exclude      *://support*.ikariam.gameforge.com/*
 // @require      https://code.jquery.com/jquery-1.12.4.min.js
 // @grant        GM_addStyle
 // @grant        GM_getValue
