@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.57
+// @version      2.1.1-dev.58
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -1862,11 +1862,7 @@ $(document).ready(() => tnt.core.init());
 
         return `
             <span class="tnt_debug_summary">${tnt.debug.escapeHtml(truncated)}</span>
-            <span class="tnt_debug_counts">(${state.entries.length}) ❌:${state.counts.error} ⚠️:${state.counts.warn} ℹ️:${state.counts.info}</span>
-            <span class="tnt_debug_actions">
-                <button id="tntDebugCopyBar" class="tnt_debug_icon tnt_debug_copy" title="Copy log">📋</button>
-                <button id="tntDebugExpandBar" class="tnt_debug_icon" title="Expand log">⬆️</button>
-            </span>`;
+            <span class="tnt_debug_counts">(${state.entries.length}) ❌:${state.counts.error} ⚠️:${state.counts.warn} ℹ️:${state.counts.info}</span>`;
     }
 
     function buildFilterButtons(state) {
