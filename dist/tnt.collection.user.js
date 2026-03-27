@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.37
+// @version      2.1.1-dev.38
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -19,24 +19,6 @@
 // @supportURL   https://github.com/TheNorthman/tnt.collection/issues
 // ==/UserScript==
 // --- core.js ---
-
-// Ikariam scaling fix
-//ikariam.worldview_scale_city = 1;
-//ikariam.worldview_scale_island = 1;
-//ikariam.worldview_scale_max = 1;
-//ikariam.worldview_scale_min = 0.90;
-//ikariam.worldview_scale_worldmap = 1;
-ikariam.worldview_scroll_left_city = 240;
-//ikariam.worldview_scroll_left_island = 265;
-//ikariam.worldview_scroll_top_city = 120;
-//ikariam.worldview_scroll_top_island = 190;
-Object.defineProperty(ikariam, "worldview_scale_min", {
-  set: v => Reflect.set(ikariam, "_worldview_scale_min", Math.max(0.94, v)),
-  get: () => ikariam._worldview_scale_min ?? 0.94,
-  configurable: true
-});
-
-ikariam.worldview_scale_city = 0.94;
 
 // Initialize the tntConsole
 const tntConsole = Object.assign({}, window.console);
@@ -536,6 +518,11 @@ const tnt = {
     // Initialize the core module
     core: {
         init() {
+            // Initialize our debug system first so any debug logs from storage initialization are captured
+            if (tnt.debug && typeof tnt.debug.init === 'function') {
+                tnt.debug.init();
+            }
+
             // We need to init the storage before anything else, so tnt.core.debug has its settings available
             tnt.core.storage.init();
 
@@ -590,38 +577,34 @@ const tnt = {
         },
 
         debug: {
-            enable: 1,
-            level: 5,
-
-            // Log messages with level control
-            log(val, level = 2) {
-                const debug = tnt.settings.get('debug', { enable: true, level: 2 });
-                if (debug.enable && level <= debug.level) {
-                    tntConsole.log(val);
+            log(...args) {
+                if (tnt.debug && typeof tnt.debug.log === 'function') {
+                    return tnt.debug.log(...args);
                 }
             },
-
-            // Log objects with level control
-            dir(val, level = 2) {
-                const debug = tnt.settings.get('debug', { enable: true, level: 1 });
-                if (debug.enable && level <= debug.level) {
-                    tntConsole.dir(val);
+            info(...args) {
+                if (tnt.debug && typeof tnt.debug.info === 'function') {
+                    return tnt.debug.info(...args);
                 }
             },
-
-            // Log warnings with level control
-            warn(val, level = 3) {
-                const debug = tnt.settings.get('debug', { enable: true, level: 1 });
-                if (debug.enable && level <= debug.level) {
-                    tntConsole.warn(val);
+            warn(...args) {
+                if (tnt.debug && typeof tnt.debug.warn === 'function') {
+                    return tnt.debug.warn(...args);
                 }
             },
-
-            // Log errors with level control
-            error(val, level = 1) {
-                const debug = tnt.settings.get('debug', { enable: true, level: 1 });
-                if (debug.enable && level <= debug.level) {
-                    tntConsole.error(val);
+            error(...args) {
+                if (tnt.debug && typeof tnt.debug.error === 'function') {
+                    return tnt.debug.error(...args);
+                }
+            },
+            dir(...args) {
+                if (tnt.debug && typeof tnt.debug.dir === 'function') {
+                    return tnt.debug.dir(...args);
+                }
+            },
+            clear() {
+                if (tnt.debug && typeof tnt.debug.clear === 'function') {
+                    return tnt.debug.clear();
                 }
             }
         },
@@ -1806,6 +1789,7 @@ tnt.events = {
             const debug = tnt.settings.get('debug', { enable: true, level: 3 });
             debug.enable = $('#tntDebugEnable').is(':checked');
             tnt.settings.set('debug', debug);
+            if (tnt.debug) tnt.debug.setEnabled(debug.enable);
         });
 
         // Debug level change
@@ -1813,6 +1797,7 @@ tnt.events = {
             const debug = tnt.settings.get('debug', { enable: true, level: 3 });
             debug.level = parseInt($('#tntDebugLevel').val(), 10);
             tnt.settings.set('debug', debug);
+            if (tnt.debug) tnt.debug.setLevel(debug.level);
         });
     },
 };
@@ -1822,6 +1807,300 @@ tnt.events = {
 // Initialize the TNT core
 $(document).ready(() => tnt.core.init());
 
+
+// --- debug.js ---
+
+// TNT debug system - separate module, no console output by default
+(function () {
+    const LEVELS = {
+        error: 1,
+        warn: 2,
+        info: 3
+    };
+
+    const LEVEL_META = {
+        error: { label: 'ERROR', emoji: '❌', color: '#ff8a8a' },
+        warn: { label: 'WARN', emoji: '⚠️', color: '#ffe080' },
+        info: { label: 'INFO', emoji: 'ℹ️', color: '#8ec5ff' }
+    };
+
+    function formatTime(ts = Date.now()) {
+        const date = new Date(ts);
+        const pad = (n) => `${n}`.padStart(2, '0');
+        return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    }
+
+    function normalizeLevel(level) {
+        if (typeof level === 'string') {
+            const key = level.toLowerCase();
+            if (LEVELS[key]) return key;
+            const parsed = parseInt(level, 10);
+            if (!isNaN(parsed)) {
+                if (parsed <= 1) return 'error';
+                if (parsed === 2) return 'warn';
+                return 'info';
+            }
+        }
+
+        if (typeof level === 'number') {
+            if (level <= 1) return 'error';
+            if (level === 2) return 'warn';
+            return 'info';
+        }
+
+        return 'info';
+    }
+
+    function levelToPriority(level) {
+        return LEVELS[normalizeLevel(level)] || LEVELS.info;
+    }
+
+    function buildCollapsedHtml(state) {
+        const lastEntry = state.entries[state.entries.length - 1];
+        const lastMessage = lastEntry ? `${lastEntry.emoji} ${lastEntry.message}` : 'No logs yet';
+        const truncated = lastMessage.length > 40 ? `${lastMessage.slice(0, 37)}...` : lastMessage;
+        return `
+            <div id="tntDebugBar" class="tnt_debug_bar" title="Click to expand">
+                <span class="tnt_debug_summary">${tnt.debug.escapeHtml(truncated)}</span>
+                <span class="tnt_debug_counts">(${state.entries.length}) ❌:${state.counts.error} ⚠️:${state.counts.warn} ℹ️:${state.counts.info}</span>
+                <span class="tnt_debug_actions">
+                    <button id="tntDebugCopy" class="tnt_debug_icon" title="Copy log">📋</button>
+                    <button id="tntDebugExpand" class="tnt_debug_icon" title="Expand log">⬆️</button>
+                </span>
+            </div>`;
+    }
+
+    function buildPanelHtml(state) {
+        const total = state.entries.length;
+        const items = [...state.entries]
+            .filter((entry) => state.filter === 'all' || entry.level === state.filter)
+            .map((entry) => {
+                const cls = `tnt_debug_entry tnt_debug_entry_${entry.level}`;
+                return `
+                    <div class="${cls}" title="${tnt.debug.escapeHtml(entry.message)}">
+                        <span class="tnt_debug_entry_ts">${entry.ts}</span>
+                        <span class="tnt_debug_entry_lvl" style="color:${LEVEL_META[entry.level].color};">${LEVEL_META[entry.level].emoji}</span>
+                        <span class="tnt_debug_entry_msg">${tnt.debug.escapeHtml(entry.message)}</span>
+                    </div>`;
+            })
+            .join('');
+
+        const buttons = ['all', 'error', 'warn', 'info'].map((filterKey) => {
+            const active = state.filter === filterKey ? ' active' : '';
+            const count = filterKey === 'all' ? total : state.counts[filterKey];
+            return `<button class="tnt_debug_filter_btn${active}" data-filter="${filterKey}">${filterKey.toUpperCase()} (${count})</button>`;
+        }).join('');
+
+        return `
+            <div id="tntDebugPanel" class="tnt_debug_panel">
+                <div class="tnt_debug_title">
+                    <div>TNT Debug Log</div>
+                    <div class="tnt_debug_buttons">
+                        <button id="tntDebugClear">Clear</button>
+                        <button id="tntDebugCopy">Copy</button>
+                        <button id="tntDebugCollapse">Collapse</button>
+                    </div>
+                </div>
+                <div class="tnt_debug_filters">${buttons}</div>
+                <div id="tntDebugList" class="tnt_debug_list">${items}</div>
+            </div>`;
+    }
+
+    function ensureContainer() {
+        if ($('#tntDebugContainer').length === 0) {
+            $('body').append('<div id="tntDebugContainer"></div>');
+        }
+    }
+
+    tnt.debug = {
+        state: {
+            entries: [],
+            counts: { error: 0, warn: 0, info: 0 },
+            enabled: true,
+            level: 3,
+            expanded: false,
+            filter: 'all',
+            maxEntries: 500,
+            autoScrollLocked: false
+        },
+
+        escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/[&"'<>]/g, (tag) => ({
+                '&': '&amp;',
+                '"': '&quot;',
+                "'": '&#39;',
+                '<': '&lt;',
+                '>': '&gt;'
+            })[tag]);
+        },
+
+        init() {
+            const raw = tnt.settings.get('debug', { enable: true, level: 3 });
+            this.state.enabled = !!raw.enable;
+            this.state.level = Number(raw.level || 3);
+            this.state.filter = 'all';
+            this.state.autoScrollLocked = false;
+
+            ensureContainer();
+            this.render();
+
+            this.attachEvents();
+            return this;
+        },
+
+        isLevelEnabled(level) {
+            if (!this.state.enabled) return false;
+            return levelToPriority(level) <= this.state.level;
+        },
+
+        log(level, message, levelOverride = null) {
+            // Legacy call signature: log(message, level)
+            if (typeof level === 'string' && (level === 'error' || level === 'warn' || level === 'info')) {
+                // ok
+            } else if (typeof level !== 'string' && typeof level !== 'number') {
+                // Called as (message, level)
+                message = level;
+                level = levelOverride || 'info';
+            }
+
+            const norm = normalizeLevel(level);
+            if (!this.isLevelEnabled(norm)) return;
+
+            const entry = {
+                ts: formatTime(),
+                level: norm,
+                emoji: LEVEL_META[norm].emoji,
+                message: typeof message === 'object' ? JSON.stringify(message) : String(message),
+                raw: message
+            };
+
+            this.state.entries.push(entry);
+            this.state.counts[norm] += 1;
+
+            if (this.state.entries.length > this.state.maxEntries) {
+                const overflow = this.state.entries.length - this.state.maxEntries;
+                const removed = this.state.entries.splice(0, overflow);
+                removed.forEach((item) => {
+                    this.state.counts[item.level] = Math.max(0, this.state.counts[item.level] - 1);
+                });
+            }
+
+            this.render();
+        },
+
+        info(msg) { this.log('info', msg); },
+        warn(msg) { this.log('warn', msg); },
+        error(msg) { this.log('error', msg); },
+
+        dir(obj) { this.log('info', obj); },
+
+        clear() {
+            this.state.entries = [];
+            this.state.counts = { error: 0, warn: 0, info: 0 };
+            this.state.autoScrollLocked = false;
+            this.render();
+        },
+
+        copy() {
+            const text = this.state.entries.map((entry) => `${entry.ts} ${entry.emoji} ${entry.message}`).join('\n');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(() => {});
+            } else {
+                const el = $('<textarea style="position:absolute;left:-9999px;top:0;"></textarea>');
+                $('body').append(el);
+                el.val(text).select();
+                document.execCommand('copy');
+                el.remove();
+            }
+        },
+
+        setFilter(filter) {
+            if (![ 'all', 'error', 'warn', 'info' ].includes(filter)) return;
+            this.state.filter = filter;
+            this.render();
+        },
+
+        setLevel(level) {
+            this.state.level = Number(level);
+            tnt.settings.set('debug', { enable: this.state.enabled, level: this.state.level });
+            this.render();
+        },
+
+        setEnabled(enabled) {
+            this.state.enabled = Boolean(enabled);
+            tnt.settings.set('debug', { enable: this.state.enabled, level: this.state.level });
+            this.render();
+        },
+
+        toggleExpand() {
+            this.state.expanded = !this.state.expanded;
+            this.render();
+        },
+
+        renderCollapsed() {
+            ensureContainer();
+            $('#tntDebugContainer').html(buildCollapsedHtml(this.state));
+        },
+
+        renderExpanded() {
+            ensureContainer();
+            $('#tntDebugContainer').html(buildPanelHtml(this.state));
+
+            const $list = $('#tntDebugList');
+            if (!this.state.autoScrollLocked) {
+                $list.scrollTop($list.prop('scrollHeight'));
+            }
+
+            $list.off('scroll').on('scroll', () => {
+                const atBottom = $list.prop('scrollHeight') - $list.scrollTop() - $list.outerHeight() < 4;
+                this.state.autoScrollLocked = !atBottom;
+            });
+        },
+
+        render() {
+            if (!this.state.enabled) {
+                $('#tntDebugContainer').remove();
+                return;
+            }
+
+            if (this.state.expanded) {
+                this.renderExpanded();
+            } else {
+                this.renderCollapsed();
+            }
+        },
+
+        attachEvents() {
+            ensureContainer();
+
+            $(document).off('click', '#tntDebugBar, #tntDebugExpand').on('click', '#tntDebugBar, #tntDebugExpand', () => {
+                this.state.expanded = true;
+                this.render();
+            });
+
+            $(document).off('click', '#tntDebugCollapse').on('click', '#tntDebugCollapse', () => {
+                this.state.expanded = false;
+                this.render();
+            });
+
+            $(document).off('click', '#tntDebugCopy').on('click', '#tntDebugCopy', (e) => {
+                e.stopPropagation();
+                this.copy();
+            });
+
+            $(document).off('click', '#tntDebugClear').on('click', '#tntDebugClear', (e) => {
+                e.stopPropagation();
+                this.clear();
+            });
+
+            $(document).off('click', '.tnt_debug_filter_btn').on('click', '.tnt_debug_filter_btn', (e) => {
+                const filter = $(e.currentTarget).data('filter');
+                this.setFilter(filter);
+            });
+        }
+    };
+})();
 
 // --- styles.js ---
 
@@ -2045,6 +2324,147 @@ GM_addStyle(`
     .tnt_right_buttons .tnt_refresh_btn:hover:before {
         color: #000;
         font-weight: 900;
+    }
+
+    /* TNT debug panel (bottom-right) */
+    #tntDebugContainer {
+        position: fixed !important;
+        bottom: 8px !important;
+        right: 8px !important;
+        z-index: 1100 !important;
+        font-size: 11px !important;
+        pointer-events: auto !important;
+        color: #fff !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    .tnt_debug_bar {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        background: rgba(0,0,0,0.55) !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
+        border-radius: 6px !important;
+        padding: 4px 8px !important;
+        max-width: 480px !important;
+        cursor: pointer !important;
+        box-shadow: 0 0 8px rgba(0,0,0,0.5) !important;
+    }
+
+    .tnt_debug_bar:hover {
+        background: rgba(0,0,0,0.75) !important;
+    }
+
+    .tnt_debug_summary {
+        font-weight: bold !important;
+        max-width: 220px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .tnt_debug_counts {
+        opacity: 0.9 !important;
+        margin-left: 8px !important;
+    }
+
+    .tnt_debug_actions .tnt_debug_icon {
+        border: none !important;
+        background: transparent !important;
+        color: #fff !important;
+        cursor: pointer !important;
+        padding: 0 4px !important;
+        font-size: 11px !important;
+    }
+
+    .tnt_debug_panel {
+        width: 360px !important;
+        max-height: 320px !important;
+        background: rgba(0,0,0,0.85) !important;
+        border: 1px solid rgba(255,255,255,0.25) !important;
+        border-radius: 8px !important;
+        padding: 8px !important;
+        box-shadow: 0 0 12px rgba(0,0,0,0.7) !important;
+    }
+
+    .tnt_debug_title {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 6px !important;
+        font-weight: bold !important;
+    }
+
+    .tnt_debug_buttons {
+        display: flex !important;
+        gap: 4px !important;
+    }
+
+    .tnt_debug_buttons button {
+        border: 1px solid #888 !important;
+        background: #333 !important;
+        color: #fff !important;
+        border-radius: 3px !important;
+        padding: 2px 6px !important;
+        font-size: 10px !important;
+        cursor: pointer !important;
+    }
+
+    .tnt_debug_filters {
+        margin-bottom: 6px !important;
+        display: flex !important;
+        gap: 4px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .tnt_debug_filter_btn {
+        border: 1px solid #888 !important;
+        background: #333 !important;
+        color: #fff !important;
+        border-radius: 3px !important;
+        padding: 2px 5px !important;
+        font-size: 10px !important;
+        cursor: pointer !important;
+    }
+
+    .tnt_debug_filter_btn.active {
+        background: #007acc !important;
+        border-color: #3ea5ff !important;
+    }
+
+    .tnt_debug_list {
+        max-height: 230px !important;
+        overflow-y: auto !important;
+        background: rgba(15,15,15,0.9) !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        border-radius: 4px !important;
+        padding: 4px !important;
+    }
+
+    .tnt_debug_entry {
+        display: flex !important;
+        gap: 4px !important;
+        padding: 1px 2px !important;
+        font-size: 10px !important;
+        color: #eee !important;
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+    }
+
+    .tnt_debug_entry_ts {
+        min-width: 48px !important;
+        opacity: 0.8 !important;
+        font-family: monospace !important;
+    }
+
+    .tnt_debug_entry_lvl {
+        width: 20px !important;
+    }
+
+    .tnt_debug_entry_msg {
+        flex: 1 !important;
+    }
+
         text-shadow: 0 1px 3px rgba(255,255,255,0.9) !important;
     }
     
