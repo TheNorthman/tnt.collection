@@ -326,7 +326,29 @@ GM_addStyle(`
         margin-top: 6px !important;
         width: 100% !important;
         box-sizing: border-box !important;
-        padding-right: 4px !important;
+        padding: 4px 6px 4px 6px !important;
+        min-height: 28px !important;
+    }
+
+    .tnt_debug_filters {
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+        justify-content: flex-start !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .tnt_debug_filter_btn,
+    .tnt_debug_panel_actions button {
+        margin: 0 !important;
+        padding: 2px 6px !important;
+        min-height: 20px !important;
+        line-height: 1.2 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     .tnt_debug_panel_actions {
@@ -334,10 +356,11 @@ GM_addStyle(`
         justify-content: flex-end !important;
         gap: 6px !important;
         margin: 0 !important;
+        align-items: center !important;
     }
 
     .tnt_debug_panel_actions button {
-        min-width: 48px !important;
+        min-width: 60px !important;
     }
     .tnt_debug_filters {
         display: flex !important;
