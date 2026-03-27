@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.49
+// @version      2.1.1-dev.50
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -2358,7 +2358,7 @@ GM_addStyle(`
         right: 8px !important;
         z-index: 1100 !important;
         font-size: 11px !important;
-        pointer-events: auto !important;
+        pointer-events: none !important; /* allow underlying city clicks outside active debug elements */
         color: #fff !important;
         font-family: Arial, Helvetica, sans-serif !important;
         width: min(50vw, 100%) !important;
@@ -2386,6 +2386,7 @@ GM_addStyle(`
         box-sizing: border-box !important;
         overflow: hidden !important;
         flex: 1 1 auto !important;
+        pointer-events: auto !important; /* enable clicking inside debug UI */
     }
 
     .tnt_debug_bar {
@@ -2401,6 +2402,7 @@ GM_addStyle(`
         cursor: pointer !important;
         box-shadow: 0 0 8px rgba(0,0,0,0.5) !important;
         box-sizing: border-box !important;
+        pointer-events: auto !important;
     }
 
     .tnt_debug_bar:hover {
