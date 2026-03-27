@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.54
+// @version      2.1.1-dev.55
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -1916,7 +1916,7 @@ $(document).ready(() => tnt.core.init());
         return div;
     }
 
-    const DEFAULT_DEBUG_SETTINGS = { enable: false, level: 3 };
+    const DEFAULT_DEBUG_SETTINGS = { enable: true, level: 3 };
 
     function ensureContainer() {
         if ($('#tntDebugContainer').length === 0) {
