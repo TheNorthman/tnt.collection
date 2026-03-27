@@ -1,21 +1,3 @@
-// Ikariam scaling fix
-//ikariam.worldview_scale_city = 1;
-//ikariam.worldview_scale_island = 1;
-//ikariam.worldview_scale_max = 1;
-//ikariam.worldview_scale_min = 0.90;
-//ikariam.worldview_scale_worldmap = 1;
-ikariam.worldview_scroll_left_city = 240;
-//ikariam.worldview_scroll_left_island = 265;
-//ikariam.worldview_scroll_top_city = 120;
-//ikariam.worldview_scroll_top_island = 190;
-Object.defineProperty(ikariam, "worldview_scale_min", {
-  set: v => Reflect.set(ikariam, "_worldview_scale_min", Math.max(0.94, v)),
-  get: () => ikariam._worldview_scale_min ?? 0.94,
-  configurable: true
-});
-
-ikariam.worldview_scale_city = 0.94;
-
 // Initialize the tntConsole
 const tntConsole = Object.assign({}, window.console);
 
@@ -514,6 +496,11 @@ const tnt = {
     // Initialize the core module
     core: {
         init() {
+            // Initialize our debug system first so any debug logs from storage initialization are captured
+            if (tnt.debug && typeof tnt.debug.init === 'function') {
+                tnt.debug.init();
+            }
+
             // We need to init the storage before anything else, so tnt.core.debug has its settings available
             tnt.core.storage.init();
 
@@ -568,38 +555,34 @@ const tnt = {
         },
 
         debug: {
-            enable: 1,
-            level: 5,
-
-            // Log messages with level control
-            log(val, level = 2) {
-                const debug = tnt.settings.get('debug', { enable: true, level: 2 });
-                if (debug.enable && level <= debug.level) {
-                    tntConsole.log(val);
+            log(...args) {
+                if (tnt.debug && typeof tnt.debug.log === 'function') {
+                    return tnt.debug.log(...args);
                 }
             },
-
-            // Log objects with level control
-            dir(val, level = 2) {
-                const debug = tnt.settings.get('debug', { enable: true, level: 1 });
-                if (debug.enable && level <= debug.level) {
-                    tntConsole.dir(val);
+            info(...args) {
+                if (tnt.debug && typeof tnt.debug.info === 'function') {
+                    return tnt.debug.info(...args);
                 }
             },
-
-            // Log warnings with level control
-            warn(val, level = 3) {
-                const debug = tnt.settings.get('debug', { enable: true, level: 1 });
-                if (debug.enable && level <= debug.level) {
-                    tntConsole.warn(val);
+            warn(...args) {
+                if (tnt.debug && typeof tnt.debug.warn === 'function') {
+                    return tnt.debug.warn(...args);
                 }
             },
-
-            // Log errors with level control
-            error(val, level = 1) {
-                const debug = tnt.settings.get('debug', { enable: true, level: 1 });
-                if (debug.enable && level <= debug.level) {
-                    tntConsole.error(val);
+            error(...args) {
+                if (tnt.debug && typeof tnt.debug.error === 'function') {
+                    return tnt.debug.error(...args);
+                }
+            },
+            dir(...args) {
+                if (tnt.debug && typeof tnt.debug.dir === 'function') {
+                    return tnt.debug.dir(...args);
+                }
+            },
+            clear() {
+                if (tnt.debug && typeof tnt.debug.clear === 'function') {
+                    return tnt.debug.clear();
                 }
             }
         },
@@ -1784,6 +1767,7 @@ tnt.events = {
             const debug = tnt.settings.get('debug', { enable: true, level: 3 });
             debug.enable = $('#tntDebugEnable').is(':checked');
             tnt.settings.set('debug', debug);
+            if (tnt.debug) tnt.debug.setEnabled(debug.enable);
         });
 
         // Debug level change
@@ -1791,6 +1775,7 @@ tnt.events = {
             const debug = tnt.settings.get('debug', { enable: true, level: 3 });
             debug.level = parseInt($('#tntDebugLevel').val(), 10);
             tnt.settings.set('debug', debug);
+            if (tnt.debug) tnt.debug.setLevel(debug.level);
         });
     },
 };

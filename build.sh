@@ -11,6 +11,7 @@ set -euo pipefail
 MODE="${1:-dev}"                # dev or prod
 SRC_DIR="src"
 CORE="${SRC_DIR}/core.js"
+DEBUG="${SRC_DIR}/debug.js"
 STYLES="${SRC_DIR}/styles.js"
 DATA_COLLECTOR="${SRC_DIR}/dataCollector.js"
 CITY_SWITCHER="${SRC_DIR}/citySwitcher.js"
@@ -115,6 +116,10 @@ if [ ! -f "${CORE}" ]; then
   echo "ERROR: missing ${CORE}. Copy your script into ${CORE} first." >&2
   exit 1
 fi
+if [ ! -f "${DEBUG}" ]; then
+  echo "ERROR: missing ${DEBUG}. Copy your script into ${DEBUG} first." >&2
+  exit 1
+fi
 if [ ! -f "${STYLES}" ]; then
   echo "ERROR: missing ${STYLES}. Copy your styles into ${STYLES} first." >&2
   exit 1
@@ -169,6 +174,8 @@ EOF
   printf "%s\n" "${METADATA}"
   printf "// --- core.js ---\n\n"
   cat "${CORE}"
+  printf "\n\n// --- debug.js ---\n\n"
+  cat "${DEBUG}"
   printf "\n\n// --- styles.js ---\n\n"
   cat "${STYLES}"
   printf "\n\n// --- tableBuilder.js ---\n\n"

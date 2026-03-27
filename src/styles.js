@@ -218,6 +218,172 @@ GM_addStyle(`
     .tnt_right_buttons .tnt_refresh_btn:hover:before {
         color: #000;
         font-weight: 900;
+    }
+
+    /* TNT debug panel (bottom-right) */
+    #tntDebugContainer {
+        position: fixed !important;
+        bottom: 8px !important;
+        right: 8px !important;
+        z-index: 1100 !important;
+        font-size: 11px !important;
+        pointer-events: auto !important;
+        color: #fff !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        width: 50vw !important;
+        max-width: 50vw !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+    }
+
+    .tnt_debug_bar {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        background: rgba(0,0,0,0.55) !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
+        border-radius: 6px !important;
+        padding: 4px 8px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        cursor: pointer !important;
+        box-shadow: 0 0 8px rgba(0,0,0,0.5) !important;
+    }
+
+    .tnt_debug_bar:hover {
+        background: rgba(0,0,0,0.75) !important;
+    }
+
+    .tnt_debug_summary {
+        font-weight: bold !important;
+        max-width: 220px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    .tnt_debug_counts {
+        opacity: 0.9 !important;
+        margin-left: 8px !important;
+    }
+
+    .tnt_debug_actions .tnt_debug_icon {
+        border: none !important;
+        background: transparent !important;
+        color: #fff !important;
+        cursor: pointer !important;
+        padding: 0 4px !important;
+        font-size: 11px !important;
+    }
+
+    .tnt_debug_panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 320px !important;
+        background: rgba(0,0,0,0.85) !important;
+        border: 1px solid rgba(255,255,255,0.25) !important;
+        border-radius: 8px !important;
+        padding: 8px !important;
+        box-shadow: 0 0 12px rgba(0,0,0,0.7) !important;
+    }
+
+    .tnt_debug_list {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 230px !important;
+        overflow-y: auto !important;
+        background: rgba(15,15,15,0.9) !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        border-radius: 4px !important;
+        padding: 4px !important;
+    }
+
+    .tnt_debug_title {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 6px !important;
+        font-weight: bold !important;
+    }
+
+    .tnt_debug_buttons {
+        display: flex !important;
+        gap: 4px !important;
+    }
+
+    .tnt_debug_panel_actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+        margin-top: 6px !important;
+    }
+
+    .tnt_debug_buttons button,
+    .tnt_debug_panel_actions button {
+        border: 1px solid #888 !important;
+        background: #333 !important;
+        color: #fff !important;
+        border-radius: 3px !important;
+        padding: 2px 6px !important;
+        font-size: 10px !important;
+        cursor: pointer !important;
+    }
+
+    .tnt_debug_filters {
+        margin-bottom: 6px !important;
+        display: flex !important;
+        gap: 4px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .tnt_debug_filter_btn {
+        border: 1px solid #888 !important;
+        background: #333 !important;
+        color: #fff !important;
+        border-radius: 3px !important;
+        padding: 2px 5px !important;
+        font-size: 10px !important;
+        cursor: pointer !important;
+    }
+
+    .tnt_debug_filter_btn.active {
+        background: #007acc !important;
+        border-color: #3ea5ff !important;
+    }
+
+    .tnt_debug_list {
+        max-height: 230px !important;
+        overflow-y: auto !important;
+        background: rgba(15,15,15,0.9) !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        border-radius: 4px !important;
+        padding: 4px !important;
+    }
+
+    .tnt_debug_entry {
+        display: flex !important;
+        gap: 4px !important;
+        padding: 1px 2px !important;
+        font-size: 10px !important;
+        color: #eee !important;
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
+    }
+
+    .tnt_debug_entry_ts {
+        min-width: 48px !important;
+        opacity: 0.8 !important;
+        font-family: monospace !important;
+    }
+
+    .tnt_debug_entry_lvl {
+        width: 20px !important;
+    }
+
+    .tnt_debug_entry_msg {
+        flex: 1 !important;
+    }
+
         text-shadow: 0 1px 3px rgba(255,255,255,0.9) !important;
     }
     
