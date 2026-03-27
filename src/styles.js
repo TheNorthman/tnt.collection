@@ -276,6 +276,7 @@ GM_addStyle(`
         padding: 4px 8px !important;
         width: 100% !important;
         max-width: 100% !important;
+        min-width: 500px !important;
         cursor: pointer !important;
         box-shadow: 0 0 8px rgba(0,0,0,0.5) !important;
         box-sizing: border-box !important;
