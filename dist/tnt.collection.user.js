@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.58
+// @version      2.1.1-dev.59
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -2233,6 +2233,13 @@ $(document).ready(() => tnt.core.init());
                     if (target.closest('.tnt_debug_copy')) {
                         e.stopPropagation();
                         self.copy();
+                        const button = target.closest('.tnt_debug_copy');
+                        if (button) {
+                            button.classList.add('tnt_debug_copy_flash');
+                            setTimeout(() => {
+                                button.classList.remove('tnt_debug_copy_flash');
+                            }, 150);
+                        }
                         return;
                     }
 
@@ -2563,6 +2570,11 @@ GM_addStyle(`
         cursor: pointer !important;
         padding: 0 4px !important;
         font-size: 11px !important;
+    }
+
+    .tnt_debug_copy_flash {
+        box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid #fff !important;
     }
 
     /* Ensure list floats inside panel while footer stays visible */

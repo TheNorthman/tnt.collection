@@ -421,6 +421,13 @@
                     if (target.closest('.tnt_debug_copy')) {
                         e.stopPropagation();
                         self.copy();
+                        const button = target.closest('.tnt_debug_copy');
+                        if (button) {
+                            button.classList.add('tnt_debug_copy_flash');
+                            setTimeout(() => {
+                                button.classList.remove('tnt_debug_copy_flash');
+                            }, 150);
+                        }
                         return;
                     }
 

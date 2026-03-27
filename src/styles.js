@@ -307,6 +307,11 @@ GM_addStyle(`
         font-size: 11px !important;
     }
 
+    .tnt_debug_copy_flash {
+        box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid #fff !important;
+    }
+
     /* Ensure list floats inside panel while footer stays visible */
     .tnt_debug_list {
         display: flex !important;
