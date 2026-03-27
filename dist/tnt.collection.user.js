@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.39
+// @version      2.1.1-dev.40
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -1893,16 +1893,13 @@ $(document).ready(() => tnt.core.init());
 
         return `
             <div id="tntDebugPanel" class="tnt_debug_panel">
-                <div class="tnt_debug_title">
-                    <div>TNT Debug Log</div>
-                    <div class="tnt_debug_buttons">
-                        <button id="tntDebugClear">Clear</button>
-                        <button id="tntDebugCopy">Copy</button>
-                        <button id="tntDebugCollapse">Collapse</button>
-                    </div>
-                </div>
+                <div class="tnt_debug_title">TNT Debug Log</div>
                 <div class="tnt_debug_filters">${buttons}</div>
                 <div id="tntDebugList" class="tnt_debug_list">${items}</div>
+                <div class="tnt_debug_panel_actions">
+                    <button id="tntDebugClear">Clear</button>
+                    <button id="tntDebugCopy">Copy</button>
+                </div>
             </div>`;
     }
 
@@ -2106,12 +2103,7 @@ $(document).ready(() => tnt.core.init());
             ensureContainer();
 
             $(document).off('click', '#tntDebugBar, #tntDebugExpand').on('click', '#tntDebugBar, #tntDebugExpand', () => {
-                this.state.expanded = true;
-                this.render();
-            });
-
-            $(document).off('click', '#tntDebugCollapse').on('click', '#tntDebugCollapse', () => {
-                this.state.expanded = false;
+                this.state.expanded = !this.state.expanded;
                 this.render();
             });
 
@@ -2409,7 +2401,8 @@ GM_addStyle(`
     }
 
     .tnt_debug_panel {
-        width: 360px !important;
+        width: 80vw !important;
+        max-width: 80vw !important;
         max-height: 320px !important;
         background: rgba(0,0,0,0.85) !important;
         border: 1px solid rgba(255,255,255,0.25) !important;
@@ -2431,7 +2424,15 @@ GM_addStyle(`
         gap: 4px !important;
     }
 
-    .tnt_debug_buttons button {
+    .tnt_debug_panel_actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+        margin-top: 6px !important;
+    }
+
+    .tnt_debug_buttons button,
+    .tnt_debug_panel_actions button {
         border: 1px solid #888 !important;
         background: #333 !important;
         color: #fff !important;
