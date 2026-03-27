@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.50
+// @version      2.1.1-dev.51
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -1905,6 +1905,8 @@ $(document).ready(() => tnt.core.init());
             </div>`;
     }
 
+    const DEFAULT_DEBUG_SETTINGS = { enable: false, level: 3 };
+
     function ensureContainer() {
         if ($('#tntDebugContainer').length === 0) {
             $('body').append('<div id="tntDebugContainer"></div>');
@@ -1915,8 +1917,8 @@ $(document).ready(() => tnt.core.init());
         state: {
             entries: [],
             counts: { error: 0, warn: 0, info: 0 },
-            enabled: true,
-            level: 3,
+            enabled: DEFAULT_DEBUG_SETTINGS.enable,
+            level: DEFAULT_DEBUG_SETTINGS.level,
             expanded: false,
             filter: 'all',
             maxEntries: 500,
@@ -1935,9 +1937,9 @@ $(document).ready(() => tnt.core.init());
         },
 
         init() {
-            const raw = tnt.settings.get('debug', { enable: true, level: 3 });
+            const raw = tnt.settings.get('debug', DEFAULT_DEBUG_SETTINGS);
             this.state.enabled = !!raw.enable;
-            this.state.level = Number(raw.level || 3);
+            this.state.level = Number(raw.level || DEFAULT_DEBUG_SETTINGS.level);
             this.state.filter = 'all';
             this.state.autoScrollLocked = false;
 
