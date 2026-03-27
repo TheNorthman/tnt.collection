@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.48
+// @version      2.1.1-dev.49
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -2361,10 +2361,31 @@ GM_addStyle(`
         pointer-events: auto !important;
         color: #fff !important;
         font-family: Arial, Helvetica, sans-serif !important;
-        width: 50vw !important;
+        width: min(50vw, 100%) !important;
         max-width: 50vw !important;
+        max-height: 50vh !important;
         box-sizing: border-box !important;
-        overflow-x: hidden !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-end !important;
+        background: transparent !important;
+    }
+
+    .tnt_debug_panel {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        background: rgba(0,0,0,0.85) !important;
+        border: 1px solid rgba(255,255,255,0.25) !important;
+        border-radius: 8px !important;
+        padding: 8px !important;
+        box-shadow: 0 0 12px rgba(0,0,0,0.7) !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        flex: 1 1 auto !important;
     }
 
     .tnt_debug_bar {
@@ -2379,6 +2400,7 @@ GM_addStyle(`
         max-width: 100% !important;
         cursor: pointer !important;
         box-shadow: 0 0 8px rgba(0,0,0,0.5) !important;
+        box-sizing: border-box !important;
     }
 
     .tnt_debug_bar:hover {
@@ -2407,31 +2429,27 @@ GM_addStyle(`
         font-size: 11px !important;
     }
 
-    .tnt_debug_panel {
-        width: 100% !important;
-        max-width: 100% !important;
-        max-height: 320px !important;
-        background: rgba(0,0,0,0.85) !important;
-        border: 1px solid rgba(255,255,255,0.25) !important;
-        border-radius: 8px !important;
-        padding: 8px !important;
-        box-shadow: 0 0 12px rgba(0,0,0,0.7) !important;
-    }
-
+    /* Ensure list floats inside panel while footer stays visible */
     .tnt_debug_list {
+        display: flex !important;
+        flex-direction: column !important;
         width: 100% !important;
-        max-height: 230px !important;
+        flex: 1 1 auto !important;
+        min-height: 120px !important;
+        max-height: calc(100% - 118px) !important;
         overflow-y: auto !important;
         background: rgba(15,15,15,0.9) !important;
         border: 1px solid rgba(255,255,255,0.15) !important;
         border-radius: 4px !important;
         padding: 4px !important;
+        box-sizing: border-box !important;
     }
 
     .tnt_debug_title {
         margin-bottom: 6px !important;
         font-weight: bold !important;
     }
+
 
     .tnt_debug_footer {
         display: flex !important;
@@ -2453,10 +2471,19 @@ GM_addStyle(`
         gap: 4px !important;
         margin: 0 !important;
         padding: 0 !important;
+        min-width: 0 !important;
+    }
+
+    .tnt_debug_filters {
+        flex: 1 1 0 !important;
+        overflow: hidden !important;
+        min-width: 0 !important;
     }
 
     .tnt_debug_panel_actions {
+        flex: 0 0 auto !important;
         margin-left: auto !important;
+        min-width: 0 !important;
     }
 
     .tnt_debug_filter_btn,
@@ -2471,21 +2498,12 @@ GM_addStyle(`
         border-radius: 3px !important;
         font-size: 10px !important;
         cursor: pointer !important;
+        white-space: nowrap !important;
     }
 
     .tnt_debug_filter_btn.active {
         background: #007acc !important;
         border-color: #3ea5ff !important;
-    }
-
-    .tnt_debug_list {
-        width: 100% !important;
-        max-height: 230px !important;
-        overflow-y: auto !important;
-        background: rgba(15,15,15,0.9) !important;
-        border: 1px solid rgba(255,255,255,0.15) !important;
-        border-radius: 4px !important;
-        padding: 4px !important;
     }
 
     .tnt_debug_entry {
@@ -2496,6 +2514,7 @@ GM_addStyle(`
         color: #eee !important;
         white-space: pre-wrap !important;
         word-break: break-word !important;
+        text-shadow: 0 1px 3px rgba(255,255,255,0.9) !important;
     }
 
     .tnt_debug_entry_ts {
@@ -2510,9 +2529,6 @@ GM_addStyle(`
 
     .tnt_debug_entry_msg {
         flex: 1 !important;
-    }
-
-        text-shadow: 0 1px 3px rgba(255,255,255,0.9) !important;
     }
     
     /* Remove old control button styles that are no longer needed */
