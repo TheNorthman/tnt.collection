@@ -231,10 +231,9 @@ GM_addStyle(`
         color: #fff !important;
         font-family: Arial, Helvetica, sans-serif !important;
         width: auto !important;
-        max-width: 50vw !important;
-        max-height: 50vh !important;
+        height: auto !important;
         box-sizing: border-box !important;
-        overflow: hidden !important;
+        overflow: visible !important;
         display: block !important;
         background: transparent !important;
     }
@@ -250,7 +249,7 @@ GM_addStyle(`
     }
 
     .tnt_debug_panel {
-        display: flex !important;
+        display: none;
         flex-direction: column !important;
         width: 100% !important;
         max-width: 100% !important;

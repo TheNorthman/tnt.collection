@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.55
+// @version      2.1.1-dev.56
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -1962,6 +1962,18 @@ $(document).ready(() => tnt.core.init());
             this.state.autoScrollLocked = false;
 
             ensureContainer();
+
+            // fix blank panel / black line: keep panel hidden until expanded
+            if (this.$panel) {
+                this.$panel.style.display = 'none';
+            }
+            if (this.$bar) {
+                this.$bar.style.display = 'flex';
+            }
+            if (this.$container) {
+                this.$container.style.display = 'block';
+            }
+
             this.render();
 
             this.attachEvents();
@@ -2209,26 +2221,39 @@ $(document).ready(() => tnt.core.init());
             ensureContainer();
             const self = this;
 
-            $(this.$bar).off('click').on('click', (e) => {
-                e.stopPropagation();
-                self.toggleExpand();
-            });
+            if (this.$bar) {
+                this.$bar.removeEventListener('click', this._barClickHandler);
+                this._barClickHandler = (e) => {
+                    e.stopPropagation();
+                    self.toggleExpand();
+                };
+                this.$bar.addEventListener('click', this._barClickHandler);
+            }
 
-            $(this.$container).off('click', '.tnt_debug_copy').on('click', '.tnt_debug_copy', (e) => {
-                e.stopPropagation();
-                self.copy();
-            });
+            if (this.$container) {
+                this.$container.addEventListener('click', (e) => {
+                    const target = e.target;
 
-            $(this.$container).off('click', '.tnt_debug_clear').on('click', '.tnt_debug_clear', (e) => {
-                e.stopPropagation();
-                self.clear();
-            });
+                    if (target.closest('.tnt_debug_copy')) {
+                        e.stopPropagation();
+                        self.copy();
+                        return;
+                    }
 
-            $(this.$container).off('click', '.tnt_debug_filter_btn').on('click', '.tnt_debug_filter_btn', (e) => {
-                e.stopPropagation();
-                const filter = $(e.currentTarget).data('filter');
-                self.setFilter(filter);
-            });
+                    if (target.closest('.tnt_debug_clear')) {
+                        e.stopPropagation();
+                        self.clear();
+                        return;
+                    }
+
+                    if (target.closest('.tnt_debug_filter_btn')) {
+                        e.stopPropagation();
+                        const filter = target.closest('.tnt_debug_filter_btn').dataset.filter;
+                        self.setFilter(filter);
+                        return;
+                    }
+                });
+            }
         }
     };
 })();
@@ -2468,12 +2493,10 @@ GM_addStyle(`
         color: #fff !important;
         font-family: Arial, Helvetica, sans-serif !important;
         width: auto !important;
-        max-width: 50vw !important;
-        max-height: 50vh !important;
+        height: auto !important;
         box-sizing: border-box !important;
-        overflow: hidden !important;
-        display: flex !important;
-        flex-direction: column-reverse !important;
+        overflow: visible !important;
+        display: block !important;
         background: transparent !important;
     }
 
@@ -2488,7 +2511,7 @@ GM_addStyle(`
     }
 
     .tnt_debug_panel {
-        display: flex !important;
+        display: none;
         flex-direction: column !important;
         width: 100% !important;
         max-width: 100% !important;
