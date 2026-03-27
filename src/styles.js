@@ -252,7 +252,8 @@ GM_addStyle(`
         display: none;
         flex-direction: column !important;
         width: 100% !important;
-        max-width: 100% !important;
+        min-width: 350px !important;
+        max-width: 70vw !important;
         max-height: 100% !important;
         background: rgba(0,0,0,0.85) !important;
         border: 1px solid rgba(255,255,255,0.25) !important;
@@ -317,6 +318,7 @@ GM_addStyle(`
         display: flex !important;
         flex-direction: column !important;
         width: 100% !important;
+        min-width: inherit !important;
         flex: 1 1 auto !important;
         min-height: 120px !important;
         max-height: calc(100% - 118px) !important;
