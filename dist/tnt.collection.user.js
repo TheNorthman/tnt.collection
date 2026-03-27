@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.40
+// @version      2.1.1-dev.41
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -2359,6 +2359,8 @@ GM_addStyle(`
         pointer-events: auto !important;
         color: #fff !important;
         font-family: Arial, Helvetica, sans-serif !important;
+        width: 80vw !important;
+        max-width: 80vw !important;
     }
 
     .tnt_debug_bar {
@@ -2369,7 +2371,8 @@ GM_addStyle(`
         border: 1px solid rgba(255,255,255,0.3) !important;
         border-radius: 6px !important;
         padding: 4px 8px !important;
-        max-width: 480px !important;
+        width: 100% !important;
+        max-width: 100% !important;
         cursor: pointer !important;
         box-shadow: 0 0 8px rgba(0,0,0,0.5) !important;
     }
@@ -2401,14 +2404,25 @@ GM_addStyle(`
     }
 
     .tnt_debug_panel {
-        width: 80vw !important;
-        max-width: 80vw !important;
+        width: 100% !important;
+        max-width: 100% !important;
         max-height: 320px !important;
         background: rgba(0,0,0,0.85) !important;
         border: 1px solid rgba(255,255,255,0.25) !important;
         border-radius: 8px !important;
         padding: 8px !important;
         box-shadow: 0 0 12px rgba(0,0,0,0.7) !important;
+    }
+
+    .tnt_debug_list {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 230px !important;
+        overflow-y: auto !important;
+        background: rgba(15,15,15,0.9) !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        border-radius: 4px !important;
+        padding: 4px !important;
     }
 
     .tnt_debug_title {
