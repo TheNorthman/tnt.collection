@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.38
+// @version      2.1.1-dev.39
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -1954,14 +1954,38 @@ $(document).ready(() => tnt.core.init());
             return levelToPriority(level) <= this.state.level;
         },
 
-        log(level, message, levelOverride = null) {
-            // Legacy call signature: log(message, level)
-            if (typeof level === 'string' && (level === 'error' || level === 'warn' || level === 'info')) {
-                // ok
-            } else if (typeof level !== 'string' && typeof level !== 'number') {
-                // Called as (message, level)
-                message = level;
-                level = levelOverride || 'info';
+        log(firstArg, secondArg, thirdArg = null) {
+            let level;
+            let message;
+
+            if ((typeof firstArg === 'string' || typeof firstArg === 'number') && secondArg !== undefined) {
+                // Common signature: log(message, level) OR log(level, message)
+                if (typeof secondArg === 'string' || typeof secondArg === 'object') {
+                    message = firstArg;
+                    level = secondArg;
+                } else {
+                    // secondArg is number-type level
+                    message = firstArg;
+                    level = secondArg;
+                }
+            } else if ((typeof firstArg === 'number' || typeof firstArg === 'string') && secondArg === undefined) {
+                // log(message) or log(level) rare case
+                if (typeof firstArg === 'string' && /^(error|warn|info)$/i.test(firstArg)) {
+                    message = '';
+                    level = firstArg;
+                } else {
+                    message = firstArg;
+                    level = 'info';
+                }
+            } else {
+                message = firstArg;
+                level = secondArg || thirdArg || 'info';
+            }
+
+            // If called with mixed ordering like log(1, 'msg')
+            if ((typeof firstArg === 'number' || /^(error|warn|info)$/i.test(String(firstArg))) && typeof secondArg === 'string') {
+                level = firstArg;
+                message = secondArg;
             }
 
             const norm = normalizeLevel(level);
@@ -2040,12 +2064,19 @@ $(document).ready(() => tnt.core.init());
 
         renderCollapsed() {
             ensureContainer();
-            $('#tntDebugContainer').html(buildCollapsedHtml(this.state));
+            // Keep panel hidden while collapsed
+            $('#tntDebugContainer').html(`
+                <div id="tntDebugCollapsed">${buildCollapsedHtml(this.state)}</div>
+            `);
         },
 
         renderExpanded() {
             ensureContainer();
-            $('#tntDebugContainer').html(buildPanelHtml(this.state));
+            // Show panel and always keep debug bar visible below it
+            $('#tntDebugContainer').html(`
+                <div id="tntDebugExpanded">${buildPanelHtml(this.state)}</div>
+                <div id="tntDebugCollapsed">${buildCollapsedHtml(this.state)}</div>
+            `);
 
             const $list = $('#tntDebugList');
             if (!this.state.autoScrollLocked) {
