@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.42
+// @version      2.1.1-dev.43
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -1894,11 +1894,13 @@ $(document).ready(() => tnt.core.init());
         return `
             <div id="tntDebugPanel" class="tnt_debug_panel">
                 <div class="tnt_debug_title">TNT Debug Log</div>
-                <div class="tnt_debug_filters">${buttons}</div>
                 <div id="tntDebugList" class="tnt_debug_list">${items}</div>
-                <div class="tnt_debug_panel_actions">
-                    <button id="tntDebugClear">Clear</button>
-                    <button id="tntDebugCopy">Copy</button>
+                <div class="tnt_debug_footer">
+                    <div class="tnt_debug_filters">${buttons}</div>
+                    <div class="tnt_debug_panel_actions">
+                        <button id="tntDebugClear">Clear</button>
+                        <button id="tntDebugCopy">Copy</button>
+                    </div>
                 </div>
             </div>`;
     }
@@ -2447,13 +2449,46 @@ GM_addStyle(`
         margin-top: 6px !important;
     }
 
-    .tnt_debug_buttons button,
+    .tnt_debug_footer {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-top: 6px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .tnt_debug_filters {
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+        justify-content: flex-start !important;
+    }
+
+    .tnt_debug_panel_actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+    }
+
     .tnt_debug_panel_actions button {
         border: 1px solid #888 !important;
         background: #333 !important;
         color: #fff !important;
         border-radius: 3px !important;
         padding: 2px 6px !important;
+        font-size: 10px !important;
+        cursor: pointer !important;
+    }
+
+    .tnt_debug_filter_btn {
+        border: 1px solid #888 !important;
+        background: #333 !important;
+        color: #fff !important;
+        border-radius: 3px !important;
+        padding: 2px 5px !important;
         font-size: 10px !important;
         cursor: pointer !important;
     }

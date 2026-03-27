@@ -82,11 +82,13 @@
         return `
             <div id="tntDebugPanel" class="tnt_debug_panel">
                 <div class="tnt_debug_title">TNT Debug Log</div>
-                <div class="tnt_debug_filters">${buttons}</div>
                 <div id="tntDebugList" class="tnt_debug_list">${items}</div>
-                <div class="tnt_debug_panel_actions">
-                    <button id="tntDebugClear">Clear</button>
-                    <button id="tntDebugCopy">Copy</button>
+                <div class="tnt_debug_footer">
+                    <div class="tnt_debug_filters">${buttons}</div>
+                    <div class="tnt_debug_panel_actions">
+                        <button id="tntDebugClear">Clear</button>
+                        <button id="tntDebugCopy">Copy</button>
+                    </div>
                 </div>
             </div>`;
     }
