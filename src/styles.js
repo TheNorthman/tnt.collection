@@ -235,10 +235,13 @@ GM_addStyle(`
         max-height: 50vh !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: flex-end !important;
+        display: block !important;
         background: transparent !important;
+    }
+
+    .tnt_debug_bar,
+    .tnt_debug_panel {
+        pointer-events: auto !important; /* active UI zones only */
     }
 
     .tnt_debug_panel {
