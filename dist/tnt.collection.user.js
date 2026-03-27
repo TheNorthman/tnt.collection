@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.63
+// @version      2.1.1-dev.64
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -2562,7 +2562,8 @@ GM_addStyle(`
 
     .tnt_debug_counts {
         opacity: 0.9 !important;
-        margin-left: 8px !important;
+        margin-left: auto !important;
+        text-align: right !important;
     }
 
     .tnt_debug_actions .tnt_debug_icon {

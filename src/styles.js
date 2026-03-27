@@ -297,7 +297,8 @@ GM_addStyle(`
 
     .tnt_debug_counts {
         opacity: 0.9 !important;
-        margin-left: 8px !important;
+        margin-left: auto !important;
+        text-align: right !important;
     }
 
     .tnt_debug_actions .tnt_debug_icon {
