@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.47
+// @version      2.1.1-dev.48
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -2434,37 +2434,37 @@ GM_addStyle(`
     }
 
     .tnt_debug_footer {
-        position: relative !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        margin-top: 6px !important;
         width: 100% !important;
         min-height: 28px !important;
-        margin-top: 6px !important;
+        box-sizing: border-box !important;
         padding: 4px 6px !important;
     }
 
-    .tnt_debug_footer::after {
-        content: '' !important;
-        display: block !important;
-        clear: both !important;
-    }
-
-    .tnt_debug_filters {
-        float: left !important;
+    .tnt_debug_filters,
+    .tnt_debug_panel_actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
         margin: 0 !important;
         padding: 0 !important;
     }
 
     .tnt_debug_panel_actions {
-        float: right !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        margin-left: auto !important;
     }
 
     .tnt_debug_filter_btn,
     .tnt_debug_panel_actions button {
-        margin: 1px !important;
-        padding: 2px 7px !important;
-        line-height: 1.2 !important;
+        margin: 0 !important;
+        padding: 2px 6px !important;
         min-height: 24px !important;
+        line-height: 1.2 !important;
         border: 1px solid #888 !important;
         background: #333 !important;
         color: #fff !important;
@@ -2477,14 +2477,9 @@ GM_addStyle(`
         background: #007acc !important;
         border-color: #3ea5ff !important;
     }
-    }
-
-    .tnt_debug_filter_btn.active {
-        background: #007acc !important;
-        border-color: #3ea5ff !important;
-    }
 
     .tnt_debug_list {
+        width: 100% !important;
         max-height: 230px !important;
         overflow-y: auto !important;
         background: rgba(15,15,15,0.9) !important;
