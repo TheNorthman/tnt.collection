@@ -315,7 +315,7 @@ GM_addStyle(`
         display: flex !important;
         justify-content: flex-end !important;
         gap: 6px !important;
-        margin-top: 6px !important;
+        // margin-top: 6px !important;
     }
 
     .tnt_debug_footer {
@@ -326,7 +326,7 @@ GM_addStyle(`
         margin-top: 6px !important;
         width: 100% !important;
         box-sizing: border-box !important;
-        padding: 4px 6px 4px 6px !important;
+        // padding: 4px 6px 4px 6px !important;
         min-height: 28px !important;
     }
 
