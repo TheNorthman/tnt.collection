@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.56
+// @version      2.1.1-dev.57
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -1920,7 +1920,7 @@ $(document).ready(() => tnt.core.init());
 
     function ensureContainer() {
         if ($('#tntDebugContainer').length === 0) {
-            $('body').append('<div id="tntDebugContainer"><div id="tntDebugBar" class="tnt_debug_bar"></div><div id="tntDebugPanel" class="tnt_debug_panel"></div></div>');
+            $('body').append('<div id="tntDebugContainer"><div id="tntDebugPanel" class="tnt_debug_panel"></div><div id="tntDebugBar" class="tnt_debug_bar"></div></div>');
         }
 
         tnt.debug.$container = document.getElementById('tntDebugContainer');

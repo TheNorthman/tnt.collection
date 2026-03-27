@@ -108,7 +108,7 @@
 
     function ensureContainer() {
         if ($('#tntDebugContainer').length === 0) {
-            $('body').append('<div id="tntDebugContainer"><div id="tntDebugBar" class="tnt_debug_bar"></div><div id="tntDebugPanel" class="tnt_debug_panel"></div></div>');
+            $('body').append('<div id="tntDebugContainer"><div id="tntDebugPanel" class="tnt_debug_panel"></div><div id="tntDebugBar" class="tnt_debug_bar"></div></div>');
         }
 
         tnt.debug.$container = document.getElementById('tntDebugContainer');
