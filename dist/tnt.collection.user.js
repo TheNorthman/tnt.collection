@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.60
+// @version      2.1.1-dev.61
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -2517,7 +2517,7 @@ GM_addStyle(`
         display: none;
         flex-direction: column !important;
         width: 100% !important;
-        min-width: 350px !important;
+        min-width: 500px !important;
         max-width: 70vw !important;
         max-height: 100% !important;
         background: rgba(0,0,0,0.85) !important;
