@@ -220,7 +220,7 @@ GM_addStyle(`
         font-weight: 900;
     }
 
-    /* TNT debug panel (bottom-right) */
+/* TNT debug panel (bottom-right) */
     #tntDebugContainer {
         position: fixed !important;
         bottom: 8px !important;
@@ -418,7 +418,7 @@ GM_addStyle(`
         flex: 1 !important;
     }
     
-    /* Remove old control button styles that are no longer needed */
+/* Remove old control button styles that are no longer needed */
     .tnt_control_buttons {
         display: none !important;
     }
