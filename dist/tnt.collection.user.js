@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.69
+// @version      2.1.1-dev.70
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools

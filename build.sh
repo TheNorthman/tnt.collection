@@ -10,6 +10,11 @@ VERSION_FILE="VERSION"
 
 mkdir -p "${OUT_DIR}"
 
+# --- Escape CSS for safe GM_addStyle injection ---
+escape_css() {
+  sed 's/\\/\\\\/g; s/`/\\`/g'
+}
+
 # --- Read version ---
 if [ -f "${VERSION_FILE}" ]; then
   BASE_VERSION="$(tr -d ' \t\n\r' < "${VERSION_FILE}")"
@@ -110,10 +115,13 @@ for module in ${SORTED_MODULES}; do
   done
 done
 
+# --- Escape CSS safely ---
+ESCAPED_CSS="$(printf "%s" "${CSS_OUTPUT}" | escape_css)"
+
 # --- Write output ---
 {
   printf "%s\n" "${METADATA}"
-  printf "GM_addStyle(`%s`);\n" "${CSS_OUTPUT}"
+  printf "GM_addStyle(`%s`);\n" "${ESCAPED_CSS}"
   printf "%b\n" "${JS_OUTPUT}"
 } > "${OUT_FILE}"
 
