@@ -1,7 +1,7 @@
 {
   "name": "tnt.collection",
   "version": "2.1.1",
-  "devCounter": 70,
+  "devCounter": 86,
   "description": "TNT Collection Tools for Ikariam",
   "private": true,
   "author": "Ronny Jespersen",
@@ -26,81 +26,114 @@
     "ikariam",
     "tnt.collection"
   ],
-
+  "userscript": {
+    "namespace": "https://github.com/TheNorthman/tnt.collection",
+    "include": [
+      "http*s*.ikariam.*/*"
+    ],
+    "exclude": [
+      "http*support*.ikariam.*/*"
+    ],
+    "require": [
+      "https://code.jquery.com/jquery-1.12.4.min.js"
+    ],
+    "grant": [
+      "GM_addStyle",
+      "GM_getValue",
+      "GM_setValue",
+      "GM_log",
+      "GM_xmlhttpRequest"
+    ]
+  },
   "modules": {
     "core": {
       "order": 100,
       "dev": {
-        "enabled": true,
-        "js": ["core.js", "metadata.js"],
-        "css": ["styles.css"]
+        "enabled": true
       },
       "prod": {
-        "enabled": true,
-        "js": ["core.js", "metadata.js"],
-        "css": ["styles.css"]
+        "enabled": true
       }
     },
-
     "dataCollector": {
       "order": 200,
       "dev": {
         "enabled": true,
-        "js": ["dataCollector.js"]
+        "js": [
+          "dataCollector.js"
+        ]
       },
       "prod": {
         "enabled": true,
-        "js": ["dataCollector.js"]
+        "js": [
+          "dataCollector.js"
+        ]
       }
     },
-
     "citySwitcher": {
       "order": 300,
       "dev": {
         "enabled": true,
-        "js": ["citySwitcher.js"]
+        "js": [
+          "citySwitcher.js"
+        ]
       },
       "prod": {
         "enabled": true,
-        "js": ["citySwitcher.js"]
+        "js": [
+          "citySwitcher.js"
+        ]
       }
     },
-
     "tableBuilder": {
       "order": 400,
       "dev": {
         "enabled": true,
-        "js": ["tableBuilder.js"]
+        "js": [
+          "tableBuilder.js"
+        ]
       },
       "prod": {
         "enabled": true,
-        "js": ["tableBuilder.js"]
+        "js": [
+          "tableBuilder.js"
+        ]
       }
     },
-
     "tooltip": {
       "order": 500,
       "dev": {
         "enabled": true,
-        "js": ["tooltip.js"]
+        "js": [
+          "tooltip.js"
+        ]
       },
       "prod": {
         "enabled": true,
-        "js": ["tooltip.js"]
+        "js": [
+          "tooltip.js"
+        ]
       }
     },
-
     "debug": {
       "order": 900,
       "dev": {
         "enabled": true,
-        "js": ["debug.js"],
-        "css": ["debug.css"]
+        "js": [
+          "debug.js"
+        ],
+        "css": [
+          "debug.css"
+        ]
       },
       "prod": {
         "enabled": false,
-        "js": ["debug.js"],
-        "css": ["debug.css"]
+        "js": [
+          "debug.js"
+        ],
+        "css": [
+          "debug.css"
+        ]
       }
     }
   }

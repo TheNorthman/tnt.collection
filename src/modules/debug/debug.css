@@ -2,7 +2,7 @@
 #tntDebugContainer {
     position: fixed !important;
     bottom: 8px !important;
-    right: 8px !important;
+    /* right: 8px !important; */
     z-index: 1100 !important;
     font-size: 11px !important;
     pointer-events: none !important;
