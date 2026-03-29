@@ -11,7 +11,7 @@ set -euo pipefail
 MODE="${1:-dev}"                # dev or prod
 SRC_DIR="src"
 CORE="${SRC_DIR}/core.js"
-DEBUG="${SRC_DIR}/debug.js"
+DEBUG="${SRC_DIR}/modules/debug/debug.js"
 STYLES="${SRC_DIR}/styles.js"
 DATA_COLLECTOR="${SRC_DIR}/dataCollector.js"
 CITY_SWITCHER="${SRC_DIR}/citySwitcher.js"

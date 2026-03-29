@@ -1122,10 +1122,10 @@ tnt.ui = {
                 </div>
                 <div class="tnt_left" style="float:left;width:50%;">
                     <legend>Layout:</legend>
-                    ${this.createCheckbox('tntLayoutMaintain', 'Maintain layout from URL', layoutPrefs.maintainLayout)}
-                    <div id="tntLayoutUrlSection" style="padding-left:20px;${layoutPrefs.maintainLayout ? '' : 'display:none;'}">
-                        <label for="tntLayoutUrl" style="display:block;margin-top:5px;font-size:11px;">Paste Ikariam layout URL:</label>
-                        <input id="tntLayoutUrl" type="text" style="width:90%;margin-top:2px;font-size:11px;" placeholder="https://s##-us.ikariam.gameforge.com/?view=city&..." />
+                    ${this.createCheckbox('tntLayoutMaintain', 'Auto-save and restore layout', layoutPrefs.maintainLayout)}
+                    <div id="tntLayoutControls" style="padding-left:20px;${layoutPrefs.maintainLayout ? '' : 'display:none;'}">
+                        <button id="tntLayoutCapture" class="button" style="margin:2px 0;font-size:11px;">Capture current layout</button><br/>
+                        <button id="tntLayoutReset" class="button" style="margin:2px 0;font-size:11px;">Reset saved layout</button>
                         ${layoutDataHtml}
                     </div>
                 </div>
@@ -1211,6 +1211,75 @@ tnt.utils = {
     // Creates a DOM element to visually display the city level.
     createLevelIndicator(level) {
         return $('<div class="tntLvl">' + level + '</div>');
+    },
+
+    // Gets the current layout from Ikariam model + DOM.
+    getCurrentLayout() {
+        const safeNum = (value) => {
+            if (typeof value === 'string' && value.endsWith('px')) {
+                value = value.slice(0, -2);
+            }
+            const parsed = Number.parseFloat(value);
+            return Number.isFinite(parsed) ? parsed : null;
+        };
+
+        const layout = {
+            citymap: {
+                top: safeNum($('#worldmap').css('top')), 
+                left: safeNum($('#worldmap').css('left')),
+                zoom: Number.isFinite(ikariam?.worldview_scale_city) ? ikariam.worldview_scale_city : null
+            },
+            mainbox: {
+                x: Number.isFinite(ikariam?.mainbox_x) ? ikariam.mainbox_x : null,
+                y: Number.isFinite(ikariam?.mainbox_y) ? ikariam.mainbox_y : null,
+                z: Number.isFinite(ikariam?.mainbox_z) ? ikariam.mainbox_z : null
+            },
+            sidebar: {
+                x: Number.isFinite(ikariam?.sidebar_x) ? ikariam.sidebar_x : null,
+                y: Number.isFinite(ikariam?.sidebar_y) ? ikariam.sidebar_y : null,
+                z: Number.isFinite(ikariam?.sidebar_z) ? ikariam.sidebar_z : null
+            }
+        };
+
+        // Prefer templateView if available and values are not auto.
+        if (ikariam?.templateView?.mainbox?.boxRoot) {
+            const mainRoot = ikariam.templateView.mainbox.boxRoot[0] || ikariam.templateView.mainbox.boxRoot;
+            if (mainRoot?.style) {
+                layout.mainbox.x = safeNum(mainRoot.style.left) ?? layout.mainbox.x;
+                layout.mainbox.y = safeNum(mainRoot.style.right) ?? layout.mainbox.y;
+                layout.mainbox.z = safeNum(mainRoot.style.top) ?? layout.mainbox.z;
+            }
+        }
+
+        if (ikariam?.templateView?.sidebar?.boxRoot) {
+            const sidebarRoot = (ikariam.templateView.sidebar.boxRoot[0] || ikariam.templateView.sidebar.boxRoot);
+            if (sidebarRoot?.style) {
+                layout.sidebar.x = safeNum(sidebarRoot.style.left) ?? layout.sidebar.x;
+                layout.sidebar.y = safeNum(sidebarRoot.style.right) ?? layout.sidebar.y;
+                layout.sidebar.z = safeNum(sidebarRoot.style.top) ?? layout.sidebar.z;
+            }
+        }
+
+        // Ensure x/y/z are numeric or null
+        const coerce = (obj) => ({
+            x: Number.isFinite(obj.x) ? obj.x : null,
+            y: Number.isFinite(obj.y) ? obj.y : null,
+            z: Number.isFinite(obj.z) ? obj.z : null
+        });
+        layout.mainbox = coerce(layout.mainbox);
+        layout.sidebar = coerce(layout.sidebar);
+
+        return layout;
+    },
+
+    persistCurrentLayout() {
+        const layoutPrefs = tnt.settings.getLayoutPrefs();
+        if (!layoutPrefs || !layoutPrefs.maintainLayout) return;
+
+        const layout = this.getCurrentLayout();
+        layoutPrefs.layout = layout;
+        layoutPrefs.url = window.location.href;
+        tnt.settings.setLayoutPrefs(layoutPrefs);
     },
 
     // Check if current page is island view
@@ -1563,48 +1632,57 @@ tnt.utils = {
         const layoutPrefs = tnt.settings.getLayoutPrefs();
         const layout = layoutPrefs.layout;
 
-        // If the maintainLayout is not enabled or we don't have a layout, we can't apply it
         if (!layoutPrefs || !layoutPrefs.maintainLayout || !layout) return;
 
-        // IMPORTANT: Enforce citymap position if enabled in settings. Do NOT modify or remove this! IT WORKS!
+        // City map coordinates + transform
         if (layout.citymap) {
-            const citymap = layout.citymap;
-            if (citymap) {
-                $('#worldmap').css({
-                    top: citymap.top + 'px',
-                    left: citymap.left + 'px',
-                    transform: `scale(${citymap.zoom || 1})` // Apply zoom if available
-                });
-            }
+            const { top, left, zoom } = layout.citymap;
+            $('#worldmap').css({
+                top: Number.isFinite(top) ? `${top}px` : $('#worldmap').css('top'),
+                left: Number.isFinite(left) ? `${left}px` : $('#worldmap').css('left'),
+                transform: `scale(${Number.isFinite(zoom) ? zoom : (ikariam.worldview_scale_city || 1)})`
+            });
+
+            if (Number.isFinite(layout.citymap.top)) ikariam.worldview_scroll_top_city = layout.citymap.top;
+            if (Number.isFinite(layout.citymap.left)) ikariam.worldview_scroll_left_city = layout.citymap.left;
+            if (Number.isFinite(layout.citymap.zoom)) ikariam.worldview_scale_city = layout.citymap.zoom;
         }
 
-        // IMPORTANT: Enforce mainbox position if enabled in settings. Do NOT modify or remove this! IT WORKS!
+        // Mainbox layout
         if (layout.mainbox) {
-            const mainbox = layout.mainbox;
-            if (ikariam && layout.maintainLayout && mainbox) {
-                // Apply specific adjustments for Ikariam
-                if (ikariam.mainbox_x !== mainbox.x) {
-                    ikariam.mainbox_x = mainbox.x;
-                }
-                if (ikariam.mainbox_z !== mainbox.z) {
-                    ikariam.mainbox_z = mainbox.z;
+            const m = layout.mainbox;
+            if (Number.isFinite(m.x)) ikariam.mainbox_x = m.x;
+            if (Number.isFinite(m.y)) ikariam.mainbox_y = m.y;
+            if (Number.isFinite(m.z)) ikariam.mainbox_z = m.z;
+
+            if (ikariam.templateView?.mainbox?.boxRoot) {
+                const root = ikariam.templateView.mainbox.boxRoot[0] || ikariam.templateView.mainbox.boxRoot;
+                if (root && root.style) {
+                    if (Number.isFinite(m.x)) root.style.left = `${m.x}px`;
+                    root.style.right = Number.isFinite(m.y) ? `${m.y}px` : 'auto';
+                    if (Number.isFinite(m.z)) root.style.top = `${m.z}px`;
                 }
             }
         }
 
-        // IMPORTANT: Enforce sidebar position if enabled in settings. Do NOT modify or remove this! IT WORKS!
+        // Sidebar layout
         if (layout.sidebar) {
-            const sidebar = layout.sidebar;
-            if (layout.maintainLayout && sidebar) {
-                // Apply specific adjustments for Ikariam
-                if (ikariam.sidebar_x !== sidebar.x) {
-                    ikariam.sidebar_x = sidebar.x;
-                }
-                if (ikariam.sidebar_z !== sidebar.z) {
-                    ikariam.sidebar_z = sidebar.z;
+            const s = layout.sidebar;
+            if (Number.isFinite(s.x)) ikariam.sidebar_x = s.x;
+            if (Number.isFinite(s.y)) ikariam.sidebar_y = s.y;
+            if (Number.isFinite(s.z)) ikariam.sidebar_z = s.z;
+
+            if (ikariam.templateView?.sidebar?.boxRoot) {
+                const root = ikariam.templateView.sidebar.boxRoot[0] || ikariam.templateView.sidebar.boxRoot;
+                if (root && root.style) {
+                    if (Number.isFinite(s.x)) root.style.left = `${s.x}px`;
+                    root.style.right = Number.isFinite(s.y) ? `${s.y}px` : 'auto';
+                    if (Number.isFinite(s.z)) root.style.top = `${s.z}px`;
                 }
             }
         }
+
+        tnt.utils.persistCurrentLayout();
     },
 
     buildingExistsInAnyCity(buildingKey, cities) {
@@ -1693,73 +1771,37 @@ tnt.events = {
         $("#tntLayoutMaintain").on("change", () => {
             const isChecked = $("#tntLayoutMaintain").is(':checked');
             const layoutPrefs = tnt.settings.getLayoutPrefs();
+            layoutPrefs.maintainLayout = isChecked;
 
             if (isChecked) {
-                layoutPrefs.maintainLayout = true;
-                $("#tntLayoutUrlSection").show();
+                $("#tntLayoutControls").show();
+                tnt.utils.persistCurrentLayout();
+                tnt.utils.applyLayoutDirectly();
             } else {
-                // Clear layout preferences when unchecked
                 tnt.settings.clearLayoutPrefs();
-                $("#tntLayoutUrlSection").hide();
+                $("#tntLayoutControls").hide();
             }
 
-            if (isChecked) {
-                tnt.settings.setLayoutPrefs(layoutPrefs);
-            }
+            tnt.settings.setLayoutPrefs(layoutPrefs);
         });
 
-        // Layout URL input handler
-        $("#tntLayoutUrl").on("paste blur keypress", function (e) {
-            // Handle paste, blur, or Enter key
-            if (e.type === 'keypress' && e.which !== 13) return;
+        // Capture and reset buttons
+        $("#tntLayoutCapture").on("click", () => {
+            const layoutPrefs = tnt.settings.getLayoutPrefs();
+            layoutPrefs.maintainLayout = true;
+            tnt.utils.persistCurrentLayout();
+            tnt.utils.applyLayoutDirectly();
+            tnt.settings.setLayoutPrefs(layoutPrefs);
+            tnt.core.debug.log('[TNT] Layout captured', 2);
+            tnt.ui.showOptionsDialog();
+        });
 
-            setTimeout(() => {
-                const url = $(this).val().trim();
-
-                if (url && tnt.settings.isValidIkariamUrl(url)) {
-                    const layout = tnt.settings.parseLayoutFromUrl(url);
-
-                    if (layout) {
-                        const layoutPrefs = {
-                            maintainLayout: true,
-                            url: url,
-                            layout: layout
-                        };
-
-                        tnt.settings.setLayoutPrefs(layoutPrefs);
-
-                        // Show extracted layout data in compact format
-                        function fmt(obj) {
-                            if (!obj || typeof obj !== 'object') return '';
-                            return Object.entries(obj)
-                                .map(([k, v]) => `${k}:${v}`)
-                                .join(', ');
-                        }
-                        const citymap = fmt(layout.citymap);
-                        const mainbox = fmt(layout.mainbox);
-                        const sidebar = fmt(layout.sidebar);
-                        const layoutDataHtml = `<div id="tntLayoutCurrentData" style="margin-top:5px;font-size:10px;color:#666;word-break:break-all;line-height:1.4;">
-                            <span><b>citymap</b>: ${citymap || '-'}</span><br/>
-                            <span><b>mainbox</b>: ${mainbox || '-'}</span><br/>
-                            <span><b>sidebar</b>: ${sidebar || '-'}</span>
-                        </div>`;
-                        if ($("#tntLayoutCurrentData").length) {
-                            $("#tntLayoutCurrentData").replaceWith(layoutDataHtml);
-                        } else {
-                            $("#tntLayoutUrlSection").append(layoutDataHtml);
-                        }
-
-                        // Clear the input after successful processing
-                        $(this).val('');
-
-                        tnt.core.debug.log(`[TNT] Layout preferences saved: ${JSON.stringify(layoutPrefs)}`, 2);
-                    } else {
-                        alert('Failed to parse layout parameters from URL');
-                    }
-                } else if (url) {
-                    alert('Please enter a valid Ikariam URL');
-                }
-            }, 10);
+        $("#tntLayoutReset").on("click", () => {
+            tnt.settings.clearLayoutPrefs();
+            $("#tntLayoutMaintain").prop('checked', false);
+            $("#tntLayoutControls").hide();
+            tnt.core.debug.log('[TNT] Layout reset', 2);
+            tnt.ui.showOptionsDialog();
         });
 
         // Debug toggle
