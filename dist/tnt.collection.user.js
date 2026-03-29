@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.86
+// @version      2.1.1-dev.88
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -967,7 +967,7 @@ body #tnt_info_buildings_content .tnt_building_level {
 #tntDebugContainer {
     position: fixed !important;
     bottom: 8px !important;
-    /* right: 8px !important; */
+    right: 8px !important;
     z-index: 1100 !important;
     font-size: 11px !important;
     pointer-events: none !important;
