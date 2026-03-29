@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.1-dev.65
+// @version      2.1.1-dev.68
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  Ikariam TNT Collection Tools
@@ -1144,10 +1144,10 @@ tnt.ui = {
                 </div>
                 <div class="tnt_left" style="float:left;width:50%;">
                     <legend>Layout:</legend>
-                    ${this.createCheckbox('tntLayoutMaintain', 'Maintain layout from URL', layoutPrefs.maintainLayout)}
-                    <div id="tntLayoutUrlSection" style="padding-left:20px;${layoutPrefs.maintainLayout ? '' : 'display:none;'}">
-                        <label for="tntLayoutUrl" style="display:block;margin-top:5px;font-size:11px;">Paste Ikariam layout URL:</label>
-                        <input id="tntLayoutUrl" type="text" style="width:90%;margin-top:2px;font-size:11px;" placeholder="https://s##-us.ikariam.gameforge.com/?view=city&..." />
+                    ${this.createCheckbox('tntLayoutMaintain', 'Auto-save and restore layout', layoutPrefs.maintainLayout)}
+                    <div id="tntLayoutControls" style="padding-left:20px;${layoutPrefs.maintainLayout ? '' : 'display:none;'}">
+                        <button id="tntLayoutCapture" class="button" style="margin:2px 0;font-size:11px;">Capture current layout</button><br/>
+                        <button id="tntLayoutReset" class="button" style="margin:2px 0;font-size:11px;">Reset saved layout</button>
                         ${layoutDataHtml}
                     </div>
                 </div>
@@ -1233,6 +1233,75 @@ tnt.utils = {
     // Creates a DOM element to visually display the city level.
     createLevelIndicator(level) {
         return $('<div class="tntLvl">' + level + '</div>');
+    },
+
+    // Gets the current layout from Ikariam model + DOM.
+    getCurrentLayout() {
+        const safeNum = (value) => {
+            if (typeof value === 'string' && value.endsWith('px')) {
+                value = value.slice(0, -2);
+            }
+            const parsed = Number.parseFloat(value);
+            return Number.isFinite(parsed) ? parsed : null;
+        };
+
+        const layout = {
+            citymap: {
+                top: safeNum($('#worldmap').css('top')), 
+                left: safeNum($('#worldmap').css('left')),
+                zoom: Number.isFinite(ikariam?.worldview_scale_city) ? ikariam.worldview_scale_city : null
+            },
+            mainbox: {
+                x: Number.isFinite(ikariam?.mainbox_x) ? ikariam.mainbox_x : null,
+                y: Number.isFinite(ikariam?.mainbox_y) ? ikariam.mainbox_y : null,
+                z: Number.isFinite(ikariam?.mainbox_z) ? ikariam.mainbox_z : null
+            },
+            sidebar: {
+                x: Number.isFinite(ikariam?.sidebar_x) ? ikariam.sidebar_x : null,
+                y: Number.isFinite(ikariam?.sidebar_y) ? ikariam.sidebar_y : null,
+                z: Number.isFinite(ikariam?.sidebar_z) ? ikariam.sidebar_z : null
+            }
+        };
+
+        // Prefer templateView if available and values are not auto.
+        if (ikariam?.templateView?.mainbox?.boxRoot) {
+            const mainRoot = ikariam.templateView.mainbox.boxRoot[0] || ikariam.templateView.mainbox.boxRoot;
+            if (mainRoot?.style) {
+                layout.mainbox.x = safeNum(mainRoot.style.left) ?? layout.mainbox.x;
+                layout.mainbox.y = safeNum(mainRoot.style.right) ?? layout.mainbox.y;
+                layout.mainbox.z = safeNum(mainRoot.style.top) ?? layout.mainbox.z;
+            }
+        }
+
+        if (ikariam?.templateView?.sidebar?.boxRoot) {
+            const sidebarRoot = (ikariam.templateView.sidebar.boxRoot[0] || ikariam.templateView.sidebar.boxRoot);
+            if (sidebarRoot?.style) {
+                layout.sidebar.x = safeNum(sidebarRoot.style.left) ?? layout.sidebar.x;
+                layout.sidebar.y = safeNum(sidebarRoot.style.right) ?? layout.sidebar.y;
+                layout.sidebar.z = safeNum(sidebarRoot.style.top) ?? layout.sidebar.z;
+            }
+        }
+
+        // Ensure x/y/z are numeric or null
+        const coerce = (obj) => ({
+            x: Number.isFinite(obj.x) ? obj.x : null,
+            y: Number.isFinite(obj.y) ? obj.y : null,
+            z: Number.isFinite(obj.z) ? obj.z : null
+        });
+        layout.mainbox = coerce(layout.mainbox);
+        layout.sidebar = coerce(layout.sidebar);
+
+        return layout;
+    },
+
+    persistCurrentLayout() {
+        const layoutPrefs = tnt.settings.getLayoutPrefs();
+        if (!layoutPrefs || !layoutPrefs.maintainLayout) return;
+
+        const layout = this.getCurrentLayout();
+        layoutPrefs.layout = layout;
+        layoutPrefs.url = window.location.href;
+        tnt.settings.setLayoutPrefs(layoutPrefs);
     },
 
     // Check if current page is island view
@@ -1585,48 +1654,57 @@ tnt.utils = {
         const layoutPrefs = tnt.settings.getLayoutPrefs();
         const layout = layoutPrefs.layout;
 
-        // If the maintainLayout is not enabled or we don't have a layout, we can't apply it
         if (!layoutPrefs || !layoutPrefs.maintainLayout || !layout) return;
 
-        // IMPORTANT: Enforce citymap position if enabled in settings. Do NOT modify or remove this! IT WORKS!
+        // City map coordinates + transform
         if (layout.citymap) {
-            const citymap = layout.citymap;
-            if (citymap) {
-                $('#worldmap').css({
-                    top: citymap.top + 'px',
-                    left: citymap.left + 'px',
-                    transform: `scale(${citymap.zoom || 1})` // Apply zoom if available
-                });
-            }
+            const { top, left, zoom } = layout.citymap;
+            $('#worldmap').css({
+                top: Number.isFinite(top) ? `${top}px` : $('#worldmap').css('top'),
+                left: Number.isFinite(left) ? `${left}px` : $('#worldmap').css('left'),
+                transform: `scale(${Number.isFinite(zoom) ? zoom : (ikariam.worldview_scale_city || 1)})`
+            });
+
+            if (Number.isFinite(layout.citymap.top)) ikariam.worldview_scroll_top_city = layout.citymap.top;
+            if (Number.isFinite(layout.citymap.left)) ikariam.worldview_scroll_left_city = layout.citymap.left;
+            if (Number.isFinite(layout.citymap.zoom)) ikariam.worldview_scale_city = layout.citymap.zoom;
         }
 
-        // IMPORTANT: Enforce mainbox position if enabled in settings. Do NOT modify or remove this! IT WORKS!
+        // Mainbox layout
         if (layout.mainbox) {
-            const mainbox = layout.mainbox;
-            if (ikariam && layout.maintainLayout && mainbox) {
-                // Apply specific adjustments for Ikariam
-                if (ikariam.mainbox_x !== mainbox.x) {
-                    ikariam.mainbox_x = mainbox.x;
-                }
-                if (ikariam.mainbox_z !== mainbox.z) {
-                    ikariam.mainbox_z = mainbox.z;
+            const m = layout.mainbox;
+            if (Number.isFinite(m.x)) ikariam.mainbox_x = m.x;
+            if (Number.isFinite(m.y)) ikariam.mainbox_y = m.y;
+            if (Number.isFinite(m.z)) ikariam.mainbox_z = m.z;
+
+            if (ikariam.templateView?.mainbox?.boxRoot) {
+                const root = ikariam.templateView.mainbox.boxRoot[0] || ikariam.templateView.mainbox.boxRoot;
+                if (root && root.style) {
+                    if (Number.isFinite(m.x)) root.style.left = `${m.x}px`;
+                    root.style.right = Number.isFinite(m.y) ? `${m.y}px` : 'auto';
+                    if (Number.isFinite(m.z)) root.style.top = `${m.z}px`;
                 }
             }
         }
 
-        // IMPORTANT: Enforce sidebar position if enabled in settings. Do NOT modify or remove this! IT WORKS!
+        // Sidebar layout
         if (layout.sidebar) {
-            const sidebar = layout.sidebar;
-            if (layout.maintainLayout && sidebar) {
-                // Apply specific adjustments for Ikariam
-                if (ikariam.sidebar_x !== sidebar.x) {
-                    ikariam.sidebar_x = sidebar.x;
-                }
-                if (ikariam.sidebar_z !== sidebar.z) {
-                    ikariam.sidebar_z = sidebar.z;
+            const s = layout.sidebar;
+            if (Number.isFinite(s.x)) ikariam.sidebar_x = s.x;
+            if (Number.isFinite(s.y)) ikariam.sidebar_y = s.y;
+            if (Number.isFinite(s.z)) ikariam.sidebar_z = s.z;
+
+            if (ikariam.templateView?.sidebar?.boxRoot) {
+                const root = ikariam.templateView.sidebar.boxRoot[0] || ikariam.templateView.sidebar.boxRoot;
+                if (root && root.style) {
+                    if (Number.isFinite(s.x)) root.style.left = `${s.x}px`;
+                    root.style.right = Number.isFinite(s.y) ? `${s.y}px` : 'auto';
+                    if (Number.isFinite(s.z)) root.style.top = `${s.z}px`;
                 }
             }
         }
+
+        tnt.utils.persistCurrentLayout();
     },
 
     buildingExistsInAnyCity(buildingKey, cities) {
@@ -1715,73 +1793,37 @@ tnt.events = {
         $("#tntLayoutMaintain").on("change", () => {
             const isChecked = $("#tntLayoutMaintain").is(':checked');
             const layoutPrefs = tnt.settings.getLayoutPrefs();
+            layoutPrefs.maintainLayout = isChecked;
 
             if (isChecked) {
-                layoutPrefs.maintainLayout = true;
-                $("#tntLayoutUrlSection").show();
+                $("#tntLayoutControls").show();
+                tnt.utils.persistCurrentLayout();
+                tnt.utils.applyLayoutDirectly();
             } else {
-                // Clear layout preferences when unchecked
                 tnt.settings.clearLayoutPrefs();
-                $("#tntLayoutUrlSection").hide();
+                $("#tntLayoutControls").hide();
             }
 
-            if (isChecked) {
-                tnt.settings.setLayoutPrefs(layoutPrefs);
-            }
+            tnt.settings.setLayoutPrefs(layoutPrefs);
         });
 
-        // Layout URL input handler
-        $("#tntLayoutUrl").on("paste blur keypress", function (e) {
-            // Handle paste, blur, or Enter key
-            if (e.type === 'keypress' && e.which !== 13) return;
+        // Capture and reset buttons
+        $("#tntLayoutCapture").on("click", () => {
+            const layoutPrefs = tnt.settings.getLayoutPrefs();
+            layoutPrefs.maintainLayout = true;
+            tnt.utils.persistCurrentLayout();
+            tnt.utils.applyLayoutDirectly();
+            tnt.settings.setLayoutPrefs(layoutPrefs);
+            tnt.core.debug.log('[TNT] Layout captured', 2);
+            tnt.ui.showOptionsDialog();
+        });
 
-            setTimeout(() => {
-                const url = $(this).val().trim();
-
-                if (url && tnt.settings.isValidIkariamUrl(url)) {
-                    const layout = tnt.settings.parseLayoutFromUrl(url);
-
-                    if (layout) {
-                        const layoutPrefs = {
-                            maintainLayout: true,
-                            url: url,
-                            layout: layout
-                        };
-
-                        tnt.settings.setLayoutPrefs(layoutPrefs);
-
-                        // Show extracted layout data in compact format
-                        function fmt(obj) {
-                            if (!obj || typeof obj !== 'object') return '';
-                            return Object.entries(obj)
-                                .map(([k, v]) => `${k}:${v}`)
-                                .join(', ');
-                        }
-                        const citymap = fmt(layout.citymap);
-                        const mainbox = fmt(layout.mainbox);
-                        const sidebar = fmt(layout.sidebar);
-                        const layoutDataHtml = `<div id="tntLayoutCurrentData" style="margin-top:5px;font-size:10px;color:#666;word-break:break-all;line-height:1.4;">
-                            <span><b>citymap</b>: ${citymap || '-'}</span><br/>
-                            <span><b>mainbox</b>: ${mainbox || '-'}</span><br/>
-                            <span><b>sidebar</b>: ${sidebar || '-'}</span>
-                        </div>`;
-                        if ($("#tntLayoutCurrentData").length) {
-                            $("#tntLayoutCurrentData").replaceWith(layoutDataHtml);
-                        } else {
-                            $("#tntLayoutUrlSection").append(layoutDataHtml);
-                        }
-
-                        // Clear the input after successful processing
-                        $(this).val('');
-
-                        tnt.core.debug.log(`[TNT] Layout preferences saved: ${JSON.stringify(layoutPrefs)}`, 2);
-                    } else {
-                        alert('Failed to parse layout parameters from URL');
-                    }
-                } else if (url) {
-                    alert('Please enter a valid Ikariam URL');
-                }
-            }, 10);
+        $("#tntLayoutReset").on("click", () => {
+            tnt.settings.clearLayoutPrefs();
+            $("#tntLayoutMaintain").prop('checked', false);
+            $("#tntLayoutControls").hide();
+            tnt.core.debug.log('[TNT] Layout reset', 2);
+            tnt.ui.showOptionsDialog();
         });
 
         // Debug toggle
@@ -2485,204 +2527,6 @@ GM_addStyle(`
         font-weight: 900;
     }
 
-/* TNT debug panel (bottom-right) */
-    #tntDebugContainer {
-        position: fixed !important;
-        bottom: 8px !important;
-        right: 8px !important;
-        z-index: 1100 !important;
-        font-size: 11px !important;
-        pointer-events: none !important; /* allow underlying city clicks outside active debug elements */
-        color: #fff !important;
-        font-family: Arial, Helvetica, sans-serif !important;
-        width: auto !important;
-        height: auto !important;
-        box-sizing: border-box !important;
-        overflow: visible !important;
-        display: block !important;
-        background: transparent !important;
-    }
-
-    .tnt_debug_panel {
-        width: 100% !important;
-        max-width: 50vw !important;
-    }
-
-    .tnt_debug_bar,
-    .tnt_debug_panel {
-        pointer-events: auto !important; /* active UI zones only */
-    }
-
-    .tnt_debug_panel {
-        display: none;
-        flex-direction: column !important;
-        width: 100% !important;
-        min-width: 500px !important;
-        max-width: 70vw !important;
-        max-height: 100% !important;
-        background: rgba(0,0,0,0.85) !important;
-        border: 1px solid rgba(255,255,255,0.25) !important;
-        border-radius: 8px !important;
-        padding: 8px !important;
-        box-shadow: 0 0 12px rgba(0,0,0,0.7) !important;
-        box-sizing: border-box !important;
-        overflow: hidden !important;
-        flex: 1 1 auto !important;
-        pointer-events: auto !important; /* enable clicking inside debug UI */
-    }
-
-    .tnt_debug_bar {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        background: rgba(0,0,0,0.55) !important;
-        border: 1px solid rgba(255,255,255,0.3) !important;
-        border-radius: 6px !important;
-        padding: 4px 8px !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 500px !important;
-        cursor: pointer !important;
-        box-shadow: 0 0 8px rgba(0,0,0,0.5) !important;
-        box-sizing: border-box !important;
-        pointer-events: auto !important;
-    }
-
-    .tnt_debug_bar:hover {
-        background: rgba(0,0,0,0.75) !important;
-    }
-
-    .tnt_debug_summary {
-        font-weight: bold !important;
-        max-width: 220px !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-    }
-
-    .tnt_debug_counts {
-        opacity: 0.9 !important;
-        margin-left: auto !important;
-        text-align: right !important;
-    }
-
-    .tnt_debug_actions .tnt_debug_icon {
-        border: none !important;
-        background: transparent !important;
-        color: #fff !important;
-        cursor: pointer !important;
-        padding: 0 4px !important;
-        font-size: 11px !important;
-    }
-
-    .tnt_debug_copy_flash {
-        box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.9) !important;
-        border: 1px solid #fff !important;
-    }
-
-    /* Ensure list floats inside panel while footer stays visible */
-    .tnt_debug_list {
-        display: flex !important;
-        flex-direction: column !important;
-        width: 100% !important;
-        min-width: inherit !important;
-        flex: 1 1 auto !important;
-        min-height: 120px !important;
-        max-height: calc(100% - 118px) !important;
-        overflow-y: auto !important;
-        background: rgba(15,15,15,0.9) !important;
-        border: 1px solid rgba(255,255,255,0.15) !important;
-        border-radius: 4px !important;
-        padding: 4px !important;
-        box-sizing: border-box !important;
-    }
-
-    .tnt_debug_title {
-        margin-bottom: 6px !important;
-        font-weight: bold !important;
-    }
-
-
-    .tnt_debug_footer {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        flex-wrap: wrap !important;
-        gap: 8px !important;
-        margin-top: 6px !important;
-        width: 100% !important;
-        min-height: 28px !important;
-        box-sizing: border-box !important;
-        padding: 4px 6px !important;
-    }
-
-    .tnt_debug_filters,
-    .tnt_debug_panel_actions {
-        display: flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        min-width: 0 !important;
-    }
-
-    .tnt_debug_filters {
-        flex: 1 1 0 !important;
-        overflow: hidden !important;
-        min-width: 0 !important;
-    }
-
-    .tnt_debug_panel_actions {
-        flex: 0 0 auto !important;
-        margin-left: auto !important;
-        min-width: 0 !important;
-    }
-
-    .tnt_debug_filter_btn,
-    .tnt_debug_panel_actions button {
-        margin: 0 !important;
-        padding: 2px 6px !important;
-        min-height: 24px !important;
-        line-height: 1.2 !important;
-        border: 1px solid #888 !important;
-        background: #333 !important;
-        color: #fff !important;
-        border-radius: 3px !important;
-        font-size: 10px !important;
-        cursor: pointer !important;
-        white-space: nowrap !important;
-    }
-
-    .tnt_debug_filter_btn.active {
-        background: #007acc !important;
-        border-color: #3ea5ff !important;
-    }
-
-    .tnt_debug_entry {
-        display: flex !important;
-        gap: 4px !important;
-        padding: 1px 2px !important;
-        font-size: 10px !important;
-        color: #eee !important;
-        white-space: pre-wrap !important;
-        word-break: break-word !important;
-        text-shadow: 0 1px 3px rgba(255,255,255,0.9) !important;
-    }
-
-    .tnt_debug_entry_ts {
-        min-width: 48px !important;
-        opacity: 0.8 !important;
-        font-family: monospace !important;
-    }
-
-    .tnt_debug_entry_lvl {
-        width: 20px !important;
-    }
-
-    .tnt_debug_entry_msg {
-        flex: 1 !important;
-    }
-    
 /* Remove old control button styles that are no longer needed */
     .tnt_control_buttons {
         display: none !important;
