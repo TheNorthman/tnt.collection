@@ -1,7 +1,7 @@
 {
   "name": "tnt.collection",
   "version": "2.1.1",
-  "devCounter": 88,
+  "devCounter": 91,
   "description": "TNT Collection Tools for Ikariam",
   "private": true,
   "author": "Ronny Jespersen",
@@ -58,61 +58,37 @@
     "dataCollector": {
       "order": 200,
       "dev": {
-        "enabled": true,
-        "js": [
-          "dataCollector.js"
-        ]
+        "enabled": true
       },
       "prod": {
-        "enabled": true,
-        "js": [
-          "dataCollector.js"
-        ]
+        "enabled": true
       }
     },
     "citySwitcher": {
       "order": 300,
       "dev": {
-        "enabled": true,
-        "js": [
-          "citySwitcher.js"
-        ]
+        "enabled": true
       },
       "prod": {
-        "enabled": true,
-        "js": [
-          "citySwitcher.js"
-        ]
+        "enabled": true
       }
     },
     "tableBuilder": {
       "order": 400,
       "dev": {
-        "enabled": true,
-        "js": [
-          "tableBuilder.js"
-        ]
+        "enabled": true
       },
       "prod": {
-        "enabled": true,
-        "js": [
-          "tableBuilder.js"
-        ]
+        "enabled": true
       }
     },
     "tooltip": {
       "order": 500,
       "dev": {
-        "enabled": true,
-        "js": [
-          "tooltip.js"
-        ]
+        "enabled": true
       },
       "prod": {
-        "enabled": true,
-        "js": [
-          "tooltip.js"
-        ]
+        "enabled": true
       }
     },
     "debug": {

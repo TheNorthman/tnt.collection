@@ -1676,11 +1676,10 @@ tnt.utils = {
                 const root = ikariam.templateView.sidebar.boxRoot[0] || ikariam.templateView.sidebar.boxRoot;
                 if (root && root.style) {
                     if (Number.isFinite(s.x)) root.style.left = `${s.x}px`;
-                    root.style.right = Number.isFinite(s.y) ? `${s.y}px` : 'auto';
+                    root.style.right = 'auto';
                     if (Number.isFinite(s.z)) root.style.top = `${s.z}px`;
                 }
-            }
-        }
+            }        }
 
         tnt.utils.persistCurrentLayout();
     },
