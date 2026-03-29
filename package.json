@@ -1,7 +1,7 @@
 {
   "name": "tnt.collection",
   "version": "2.1.1",
-  "devCounter": 68,
+  "devCounter": 69,
   "description": "TNT Collection Tools for Ikariam",
   "private": true,
   "author": "Ronny Jespersen",
@@ -25,5 +25,83 @@
     "userscript",
     "ikariam",
     "tnt.collection"
-  ]
+  ],
+
+  "modules": {
+    "core": {
+      "order": 100,
+      "dev": {
+        "enabled": true,
+        "js": ["core.js", "metadata.js"],
+        "css": ["styles.css"]
+      },
+      "prod": {
+        "enabled": true,
+        "js": ["core.js", "metadata.js"],
+        "css": ["styles.css"]
+      }
+    },
+
+    "dataCollector": {
+      "order": 200,
+      "dev": {
+        "enabled": true,
+        "js": ["dataCollector.js"]
+      },
+      "prod": {
+        "enabled": true,
+        "js": ["dataCollector.js"]
+      }
+    },
+
+    "citySwitcher": {
+      "order": 300,
+      "dev": {
+        "enabled": true,
+        "js": ["citySwitcher.js"]
+      },
+      "prod": {
+        "enabled": true,
+        "js": ["citySwitcher.js"]
+      }
+    },
+
+    "tableBuilder": {
+      "order": 400,
+      "dev": {
+        "enabled": true,
+        "js": ["tableBuilder.js"]
+      },
+      "prod": {
+        "enabled": true,
+        "js": ["tableBuilder.js"]
+      }
+    },
+
+    "tooltip": {
+      "order": 500,
+      "dev": {
+        "enabled": true,
+        "js": ["tooltip.js"]
+      },
+      "prod": {
+        "enabled": true,
+        "js": ["tooltip.js"]
+      }
+    },
+
+    "debug": {
+      "order": 900,
+      "dev": {
+        "enabled": true,
+        "js": ["debug.js"],
+        "css": ["debug.css"]
+      },
+      "prod": {
+        "enabled": false,
+        "js": ["debug.js"],
+        "css": ["debug.css"]
+      }
+    }
+  }
 }
