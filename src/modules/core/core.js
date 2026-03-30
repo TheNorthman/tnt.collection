@@ -496,6 +496,9 @@ const tnt = {
     // Initialize the core module
     core: {
         init() {
+            // Set a data attribute on the body to indicate TNT is active, which can be used for CSS styling or other purposes
+            document.body.dataset.tnt = "1";
+
             // Initialize our debug system first so any debug logs from storage initialization are captured
             if (tnt.debug && typeof tnt.debug.init === 'function') {
                 tnt.debug.init();
