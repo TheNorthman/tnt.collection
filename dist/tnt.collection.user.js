@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         TNT Collection
-// @version      2.1.2
+// @name         TNT Collection (dev)
+// @version      2.1.2-dev.1
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -13,8 +13,8 @@
 // @grant        GM_setValue
 // @grant        GM_log
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/TheNorthman/tnt.collection/main/dist/tnt.collection.user.js
-// @updateURL    https://raw.githubusercontent.com/TheNorthman/tnt.collection/main/dist/tnt.collection.user.js
+// @downloadURL  https://raw.githubusercontent.com/TheNorthman/tnt.collection/dev/dist/tnt.collection.user.js
+// @updateURL    https://raw.githubusercontent.com/TheNorthman/tnt.collection/dev/dist/tnt.collection.user.js
 // @homepageURL  https://github.com/TheNorthman/tnt.collection
 // @supportURL   https://github.com/TheNorthman/tnt.collection/issues
 // ==/UserScript==
@@ -3252,7 +3252,7 @@ tnt.tooltip = {
         return div;
     }
 
-    const DEFAULT_DEBUG_SETTINGS = { enable: false, level: 3 };
+    const DEFAULT_DEBUG_SETTINGS = { enable: true, level: 3 };
 
     function ensureContainer() {
         if ($('#tntDebugContainer').length === 0) {
@@ -4071,8 +4071,8 @@ body[data-tnt] #tnt_info_buildings_content .tnt_building_level {
 }
 
 /* Override Ikariam's container table styles specifically for our TNT tables */
-body[data-tnt] #container body #tnt_info_resources #tnt_resources_table,
-body[data-tnt] #container body #tnt_info_buildings_content #tnt_buildings_table {
+/* body[data-tnt] #container #tnt_info_resources #tnt_resources_table,
+body[data-tnt] #container #tnt_info_buildings_content #tnt_buildings_table {
     border: none !important;
     margin: 0px !important;
     background-color: #fdf7dd !important;
@@ -4081,47 +4081,26 @@ body[data-tnt] #container body #tnt_info_buildings_content #tnt_buildings_table 
     width: auto !important;
 }
 
-body[data-tnt] #container body #tnt_info_resources #tnt_resources_table td,
-body[data-tnt] #container body #tnt_info_buildings_content #tnt_buildings_table td {
+body[data-tnt] #container #tnt_info_resources #tnt_resources_table td,
+body[data-tnt] #container #tnt_info_buildings_content #tnt_buildings_table td {
     text-align: center !important;
     vertical-align: middle !important;
     padding: 4px !important;
     border: 1px #8B4513 solid !important;
 }
 
-body[data-tnt] #container body #tnt_info_resources #tnt_resources_table th,
-body[data-tnt] #container body #tnt_info_buildings_content #tnt_buildings_table th {
+body[data-tnt] #container #tnt_info_resources #tnt_resources_table th,
+body[data-tnt] #container #tnt_info_buildings_content #tnt_buildings_table th {
     background-color: #faeac6 !important;
     text-align: center !important;
     height: auto !important;
     padding: 4px !important;
     font-weight: bold !important;
     border: 1px #8B4513 solid !important;
-}
+} */
 
 #mainview a:hover {
     text-decoration: none;
-}
-
-body[data-tnt] #tntOptions {
-    position: absolute;
-    top: 40px;
-    left: 380px;
-    width: 620px;
-    border: 1px #755931 solid;
-    border-top: none;
-    background-color: #FEE8C3;
-    padding: 10px 10px 0px 10px;
-}
-
-body[data-tnt] #tntOptions legend {
-    font-weight: bold;
-}
-
-body[data-tnt] .tntHide,
-body[data-tnt] #infocontainer .tntLvl,
-body[data-tnt] #actioncontainer .tntLvl {
-    display: none;
 }
 
 body[data-tnt] #tntInfoWidget {
@@ -4504,6 +4483,26 @@ body[data-tnt] #tnt_info_buildings.minimized table tr.tnt_subcategory_header th 
 
 body[data-tnt] #tnt_info_resources .tnt_building_maxed {
     background-color: #d4edda !important;
+}
+body[data-tnt] #tntOptions {
+    position: absolute;
+    top: 40px;
+    left: 380px;
+    width: 620px;
+    border: 1px #755931 solid;
+    border-top: none;
+    background-color: #FEE8C3;
+    padding: 10px 10px 0px 10px;
+}
+
+body[data-tnt] #tntOptions legend {
+    font-weight: bold;
+}
+
+body[data-tnt] .tntHide,
+body[data-tnt] #infocontainer .tntLvl,
+body[data-tnt] #actioncontainer .tntLvl {
+    display: none;
 }
 /* TNT debug panel (bottom-right) */
 body[data-tnt] #tntDebugContainer {
