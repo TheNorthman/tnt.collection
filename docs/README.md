@@ -6,8 +6,8 @@ TNT Collection is a user-friendly toolkit for Ikariam players who want better ci
 
 ## 🖼️ Screenshots
 
-![Building overview screenshot](https://raw.githubusercontent.com/TheNorthman/tnt.collection/dev/docs/screenshots/ResourceOverview.png)
-![Building overview screenshot](https://raw.githubusercontent.com/TheNorthman/tnt.collection/dev/docs/screenshots/BuildingOverview.png)
+![Building overview screenshot](https://raw.githubusercontent.com/TheNorthman/tnt.collection/main/docs/screenshots/ResourceOverview.png)
+![Building overview screenshot](https://raw.githubusercontent.com/TheNorthman/tnt.collection/main/docs/screenshots/BuildingOverview.png)
 
 ## 🎯 What it does for you
 
