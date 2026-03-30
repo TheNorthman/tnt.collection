@@ -9,13 +9,10 @@ body[data-tnt] #tntDebugContainer {
     /* allow underlying city clicks outside active debug elements */
     color: #fff;
     font-family: Arial, Helvetica, sans-serif;
-    width: auto;
-    height: auto;
     box-sizing: border-box;
     overflow: visible;
-    display: block;
-    background: transparent;
 }
+
 
 body[data-tnt] .tnt_debug_panel {
     width: 100% !important;
