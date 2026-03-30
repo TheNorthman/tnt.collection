@@ -1,10 +1,6 @@
 {
   "name": "tnt.collection",
-<<<<<<< HEAD
-  "version": "2.1.1",
-=======
   "version": "2.1.2",
->>>>>>> dev
   "devCounter": 0,
   "description": "TNT Collection Tools for Ikariam",
   "private": true,

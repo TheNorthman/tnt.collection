@@ -1,11 +1,6 @@
 // ==UserScript==
-<<<<<<< HEAD
 // @name         TNT Collection
-// @version      2.1.1
-=======
-// @name         TNT Collection (dev)
-// @version      2.1.1-dev.94
->>>>>>> dev
+// @version      2.1.2
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -1834,6 +1829,7 @@ tnt.events = {
         });
     },
 };
+
 
 
 // Initialize the TNT core
