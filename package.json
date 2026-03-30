@@ -1,6 +1,10 @@
 {
   "name": "tnt.collection",
+<<<<<<< HEAD
   "version": "2.1.1",
+=======
+  "version": "2.1.2",
+>>>>>>> dev
   "devCounter": 0,
   "description": "TNT Collection Tools for Ikariam",
   "private": true,
@@ -19,12 +23,86 @@
   ],
   "scripts": {
     "build:dev": "bash ./build.sh dev",
-    "build:prod": "bash ./build.sh prod",
-    "clean": "rm -rf dist"
+    "build:prod": "bash ./build.sh prod"
   },
   "keywords": [
     "userscript",
     "ikariam",
     "tnt.collection"
-  ]
+  ],
+  "userscript": {
+    "namespace": "https://github.com/TheNorthman/tnt.collection",
+    "include": [
+      "http*s*.ikariam.*/*"
+    ],
+    "exclude": [
+      "http*support*.ikariam.*/*"
+    ],
+    "require": [
+      "https://code.jquery.com/jquery-1.12.4.min.js"
+    ],
+    "grant": [
+      "GM_addStyle",
+      "GM_getValue",
+      "GM_setValue",
+      "GM_log",
+      "GM_xmlhttpRequest"
+    ]
+  },
+  "modules": {
+    "core": {
+      "order": 100,
+      "dev": {
+        "enabled": true
+      },
+      "prod": {
+        "enabled": true
+      }
+    },
+    "dataCollector": {
+      "order": 200,
+      "dev": {
+        "enabled": true
+      },
+      "prod": {
+        "enabled": true
+      }
+    },
+    "citySwitcher": {
+      "order": 300,
+      "dev": {
+        "enabled": true
+      },
+      "prod": {
+        "enabled": true
+      }
+    },
+    "tableBuilder": {
+      "order": 400,
+      "dev": {
+        "enabled": true
+      },
+      "prod": {
+        "enabled": true
+      }
+    },
+    "tooltip": {
+      "order": 500,
+      "dev": {
+        "enabled": true
+      },
+      "prod": {
+        "enabled": true
+      }
+    },
+    "debug": {
+      "order": 900,
+      "dev": {
+        "enabled": false
+      },
+      "prod": {
+        "enabled": false
+      }
+    }
+  }
 }

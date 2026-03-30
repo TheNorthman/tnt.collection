@@ -1,193 +1,164 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# build.sh - simple userscript concatenator with configurable download/update URLs
-# Usage:
-#   ./build.sh dev            # dev build (appends -dev.<sha>), uses dev raw URL by default
-#   ./build.sh prod           # prod build (uses base version), uses main raw URL by default
-#   DOWNLOAD_URL="..." UPDATE_URL="..." ./build.sh dev   # override URLs
-#   BRANCH=release/1.2 ./build.sh prod                  # override branch used for default raw URL
+MODE="${1:-dev}"   # dev or prod
 
-MODE="${1:-dev}"                # dev or prod
-SRC_DIR="src"
-CORE="${SRC_DIR}/core.js"
-STYLES="${SRC_DIR}/styles.js"
-DATA_COLLECTOR="${SRC_DIR}/dataCollector.js"
-CITY_SWITCHER="${SRC_DIR}/citySwitcher.js"
-TOOLTIP="${SRC_DIR}/tooltip.js"
-TABLE_BUILDER="${SRC_DIR}/tableBuilder.js"
-OUT_DIR="dist"
+# Resolve paths relative to this script
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SRC_DIR="${ROOT_DIR}/src/modules"
+OUT_DIR="${ROOT_DIR}/dist"
 OUT_FILE="${OUT_DIR}/tnt.collection.user.js"
-VERSION_FILE="VERSION"
-PKG="package.json"
-
-# Try to detect current git branch (used only if BRANCH env var is not set)
-GIT_BRANCH=""
-if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
-fi
-
-# Defaults for raw URLs (can be overridden by env vars DOWNLOAD_URL / UPDATE_URL)
-DEFAULT_USER="TheNorthman"
-DEFAULT_REPO="tnt.collection"
-# Use BRANCH env if provided, else use detected git branch, else fallback to main/dev
-DEFAULT_PROD_BRANCH="${BRANCH:-${GIT_BRANCH:-main}}"
-DEFAULT_DEV_BRANCH="${BRANCH:-${GIT_BRANCH:-dev}}"
-
-DEFAULT_PROD_RAW="https://raw.githubusercontent.com/${DEFAULT_USER}/${DEFAULT_REPO}/${DEFAULT_PROD_BRANCH}/dist/tnt.collection.user.js"
-DEFAULT_DEV_RAW="https://raw.githubusercontent.com/${DEFAULT_USER}/${DEFAULT_REPO}/${DEFAULT_DEV_BRANCH}/dist/tnt.collection.user.js"
-
-# Allow explicit overrides via env
-DOWNLOAD_URL="${DOWNLOAD_URL:-}"
-UPDATE_URL="${UPDATE_URL:-}"
-
-# Determine base version (VERSION file preferred, else package.json, else 0.0.0)
-if [ -f "${VERSION_FILE}" ]; then
-  BASE_VERSION="$(tr -d ' \t\n\r' < "${VERSION_FILE}")"
-elif [ -f "${PKG}" ]; then
-  BASE_VERSION="$(grep -m1 '"version"' "${PKG}" 2>/dev/null | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"(.*)".*/\1/' || true)"
-  BASE_VERSION="${BASE_VERSION:-0.0.0}"
-else
-  BASE_VERSION="0.0.0"
-fi
-
-# Helper to read a numeric devCounter from package.json (falls back to 0)
-get_dev_counter() {
-  [ ! -f "${PKG}" ] && echo 0 && return
-
-  local candidate
-  candidate=$(grep -oE '"devCounter"[[:space:]]*:[[:space:]]*[0-9]+' "${PKG}" | head -n1 | grep -oE '[0-9]+')
-  if ! [[ "${candidate}" =~ ^[0-9]+$ ]]; then
-    echo 0
-  else
-    echo "${candidate}"
-  fi
-}
-
-# Helper to write devCounter to package.json
-set_dev_counter() {
-  local value="${1:-0}"
-  if ! [[ "${value}" =~ ^[0-9]+$ ]]; then
-    value=0
-  fi
-
-  if [ ! -f "${PKG}" ]; then
-    cat > "${PKG}" <<EOF
-{
-  "name": "tnt.collection",
-  "version": "0.0.0",
-  "devCounter": ${value}
-}
-EOF
-    return
-  fi
-
-  if grep -qE '"devCounter"[[:space:]]*:' "${PKG}"; then
-    sed -i -E 's/("devCounter"[[:space:]]*:[[:space:]]*)[0-9]+/\1'"${value}"'/' "${PKG}"
-  else
-    sed -i -E '/"version"[[:space:]]*:/a \  "devCounter": '"${value}"',' "${PKG}"
-  fi
-}
-
-# Decide version, name, and default URLs based on mode
-if [ "${MODE}" = "dev" ]; then
-  DEV_COUNTER="$(get_dev_counter)"
-  DEV_COUNTER=$((DEV_COUNTER + 1))
-  set_dev_counter "${DEV_COUNTER}"
-
-  VERSION="${BASE_VERSION}-dev.${DEV_COUNTER}"
-  SCRIPT_NAME="TNT Collection (dev)"
-  # default dev URLs if not overridden
-  DOWNLOAD_URL="${DOWNLOAD_URL:-${DEFAULT_DEV_RAW}}"
-  UPDATE_URL="${UPDATE_URL:-${DEFAULT_DEV_RAW}}"
-else
-  VERSION="${BASE_VERSION}"
-  SCRIPT_NAME="TNT Collection"
-  # reset dev counter when prod builds are created
-  set_dev_counter 0
-  # default prod URLs if not overridden
-  DOWNLOAD_URL="${DOWNLOAD_URL:-${DEFAULT_PROD_RAW}}"
-  UPDATE_URL="${UPDATE_URL:-${DEFAULT_PROD_RAW}}"
-fi
-
-# Ensure source files exist
-if [ ! -f "${CORE}" ]; then
-  echo "ERROR: missing ${CORE}. Copy your script into ${CORE} first." >&2
-  exit 1
-fi
-if [ ! -f "${STYLES}" ]; then
-  echo "ERROR: missing ${STYLES}. Copy your styles into ${STYLES} first." >&2
-  exit 1
-fi
-if [ ! -f "${DATA_COLLECTOR}" ]; then
-  echo "ERROR: missing ${DATA_COLLECTOR}. Copy your data collector into ${DATA_COLLECTOR} first." >&2
-  exit 1
-fi
-if [ ! -f "${CITY_SWITCHER}" ]; then
-  echo "ERROR: missing ${CITY_SWITCHER}. Copy your city switcher into ${CITY_SWITCHER} first." >&2
-  exit 1
-fi
-if [ ! -f "${TABLE_BUILDER}" ]; then
-  echo "ERROR: missing ${TABLE_BUILDER}. Copy your table builder into ${TABLE_BUILDER} first." >&2
-  exit 1
-fi
-if [ ! -f "${TOOLTIP}" ]; then
-  echo "ERROR: missing ${TOOLTIP}. Copy your tooltip into ${TOOLTIP} first." >&2
-  exit 1
-fi
+PKG="${ROOT_DIR}/package.json"
+VERSION_FILE="${ROOT_DIR}/VERSION"
 
 mkdir -p "${OUT_DIR}"
 
-# Metadata header (edit fields as needed)
-METADATA=$(cat <<EOF
-// ==UserScript==
-// @name         ${SCRIPT_NAME}
-// @version      ${VERSION}
-// @namespace    https://github.com/${DEFAULT_USER}/${DEFAULT_REPO}
-// @author       Ronny
-// @description  Ikariam TNT Collection Tools
-// @license      MIT
-// @include      http*s*.ikariam.*/*
-// @exclude      http*support*.ikariam.*/*
-// @require      https://code.jquery.com/jquery-1.12.4.min.js
-// @grant        GM_addStyle
-// @grant        GM_getValue
-// @grant        GM_setValue
-// @grant        GM_log
-// @grant        GM_xmlhttpRequest
-// @downloadURL  ${DOWNLOAD_URL}
-// @updateURL    ${UPDATE_URL}
-// @homepageURL  https://github.com/${DEFAULT_USER}/${DEFAULT_REPO}
-// @supportURL   https://github.com/${DEFAULT_USER}/${DEFAULT_REPO}/issues
-// ==/UserScript==
+# Escape CSS for safe GM_addStyle injection
+escape_css() {
+  sed 's/\\/\\\\/g; s/`/\\`/g'
+}
 
-EOF
-)
-
-# Build: metadata + core + styles + table builder + tooltip + city switcher + data collector
-{
-  printf "%s\n" "${METADATA}"
-  printf "// --- core.js ---\n\n"
-  cat "${CORE}"
-  printf "\n\n// --- styles.js ---\n\n"
-  cat "${STYLES}"
-  printf "\n\n// --- tableBuilder.js ---\n\n"
-  cat "${TABLE_BUILDER}"
-  printf "\n\n// --- tooltip.js ---\n\n"
-  cat "${TOOLTIP}"
-  printf "\n\n// --- dataCollector.js ---\n\n"
-  cat "${DATA_COLLECTOR}"
-  printf "\n\n// --- citySwitcher.js ---\n\n"
-  cat "${CITY_SWITCHER}"
-} > "${OUT_FILE}"
-
-# For prod: collapse excessive blank lines (tiny cleanup)
-if [ "${MODE}" = "prod" ]; then
-  TMP="$(mktemp)"
-  awk 'BEGIN{blank=0} { if ($0 ~ /^[[:space:]]*$/) { blank++; if (blank<=2) print $0 } else { blank=0; print $0 } }' "${OUT_FILE}" > "${TMP}"
-  mv "${TMP}" "${OUT_FILE}"
+# Read base version
+if [ -f "${VERSION_FILE}" ]; then
+  BASE_VERSION="$(tr -d ' \t\n\r' < "${VERSION_FILE}")"
+else
+  BASE_VERSION="$(jq -r '.version' "${PKG}")"
 fi
 
-echo "Built ${OUT_FILE} (${MODE}) — version ${VERSION}"
-echo "  downloadURL: ${DOWNLOAD_URL}"
-echo "  updateURL:   ${UPDATE_URL}"
+# Dev counter helpers
+get_dev_counter() {
+  jq -r '.devCounter // 0' "${PKG}"
+}
+
+set_dev_counter() {
+  jq ".devCounter = $1" "${PKG}" > "${PKG}.tmp" && mv "${PKG}.tmp" "${PKG}"
+}
+
+# Mode-specific version and name
+if [ "${MODE}" = "dev" ]; then
+  DEV_COUNTER=$(get_dev_counter)
+  DEV_COUNTER=$((DEV_COUNTER + 1))
+  set_dev_counter "${DEV_COUNTER}"
+  VERSION="${BASE_VERSION}-dev.${DEV_COUNTER}"
+  SCRIPT_NAME="TNT Collection (dev)"
+else
+  VERSION="${BASE_VERSION}"
+  SCRIPT_NAME="TNT Collection"
+  set_dev_counter 0
+fi
+
+# Build URLs
+DEFAULT_USER="TheNorthman"
+DEFAULT_REPO="tnt.collection"
+
+BRANCH="${BRANCH:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo dev)}"
+RAW_URL="https://raw.githubusercontent.com/${DEFAULT_USER}/${DEFAULT_REPO}/${BRANCH}/dist/tnt.collection.user.js"
+
+DOWNLOAD_URL="${DOWNLOAD_URL:-${RAW_URL}}"
+UPDATE_URL="${UPDATE_URL:-${RAW_URL}}"
+
+# Userscript metadata from package.json
+US_NAMESPACE=$(jq -r '.userscript.namespace' "${PKG}")
+US_DESCRIPTION=$(jq -r '.description' "${PKG}")
+US_HOMEPAGE=$(jq -r '.homepage' "${PKG}")
+US_SUPPORT=$(jq -r '.bugs.url' "${PKG}")
+
+US_INCLUDE=$(jq -r '.userscript.include[]?' "${PKG}")
+US_EXCLUDE=$(jq -r '.userscript.exclude[]?' "${PKG}")
+US_REQUIRE=$(jq -r '.userscript.require[]?' "${PKG}")
+US_GRANT=$(jq -r '.userscript.grant[]?' "${PKG}")
+
+# Write metadata header
+{
+  printf "// ==UserScript==\n"
+  printf "// @name         %s\n" "${SCRIPT_NAME}"
+  printf "// @version      %s\n" "${VERSION}"
+  printf "// @namespace    %s\n" "${US_NAMESPACE}"
+  printf "// @author       Ronny\n"
+  printf "// @description  %s\n" "${US_DESCRIPTION}"
+  printf "// @license      MIT\n"
+
+  for inc in ${US_INCLUDE}; do
+    printf "// @include      %s\n" "${inc}"
+  done
+
+  for exc in ${US_EXCLUDE}; do
+    printf "// @exclude      %s\n" "${exc}"
+  done
+
+  for req in ${US_REQUIRE}; do
+    printf "// @require      %s\n" "${req}"
+  done
+
+  for gr in ${US_GRANT}; do
+    printf "// @grant        %s\n" "${gr}"
+  done
+
+  printf "// @downloadURL  %s\n" "${DOWNLOAD_URL}"
+  printf "// @updateURL    %s\n" "${UPDATE_URL}"
+  printf "// @homepageURL  %s\n" "${US_HOMEPAGE}"
+  printf "// @supportURL   %s\n" "${US_SUPPORT}"
+  printf "// ==/UserScript==\n\n"
+} > "${OUT_FILE}"
+
+###############################################
+#  JS COLLECTION
+###############################################
+
+SORTED_MODULES=$(jq -r '
+  .modules
+  | to_entries
+  | map({name: .key, order: (.value.order // 5000)})
+  | sort_by(.order)
+  | .[].name
+' "${PKG}")
+
+for module in ${SORTED_MODULES}; do
+  ENABLED=$(jq -r ".modules.\"${module}\".${MODE}.enabled // true" "${PKG}")
+  [ "${ENABLED}" != "true" ] && continue
+
+  MODULE_PATH="${SRC_DIR}/${module}"
+
+  # Explicit JS list?
+  if jq -e ".modules.\"${module}\".${MODE}.js" "${PKG}" >/dev/null 2>&1; then
+    while IFS= read -r rel; do
+      FILE="${MODULE_PATH}/${rel}"
+      [ -f "${FILE}" ] || continue
+      {
+        printf "\n\n// --- %s/%s ---\n" "${module}" "$(basename "${FILE}")"
+        cat "${FILE}"
+      } >> "${OUT_FILE}"
+    done < <(jq -r ".modules.\"${module}\".${MODE}.js[]?" "${PKG}")
+  else
+    # Auto-discover all *.js in module folder
+    if [ -d "${MODULE_PATH}" ]; then
+      for FILE in "${MODULE_PATH}"/*.js; do
+        [ -f "${FILE}" ] || continue
+        {
+          printf "\n\n// --- %s/%s ---\n" "${module}" "$(basename "${FILE}")"
+          cat "${FILE}"
+        } >> "${OUT_FILE}"
+      done
+    fi
+  fi
+done
+
+###############################################
+#  CSS COLLECTION (bulletproof, null-safe)
+###############################################
+
+# Reuse CSS_OUTPUT from earlier logic but now at end for final write-out
+CSS_OUTPUT=""
+
+# Null-delimited find to avoid whitespace issues
+while IFS= read -r -d '' FILE; do
+  CSS_OUTPUT+=$'\n'
+  CSS_OUTPUT+="$(cat "$FILE")"
+done < <(find "$SRC_DIR" -type f -name '*.css' -print0 | sort -z)
+
+ESCAPED_CSS="$(printf '%s' "$CSS_OUTPUT" | escape_css)"
+
+# IMPORTANT: single quotes so backticks are literal
+printf 'GM_addStyle(`%s`);\n' "$ESCAPED_CSS" >> "$OUT_FILE"
+
+echo "Built ${OUT_FILE} (${MODE}) version ${VERSION}"
