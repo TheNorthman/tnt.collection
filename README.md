@@ -1,5 +1,7 @@
 # TNT Collection
 
+Current workspace version: 2.1.1 (2026-03-30)
+
 TNT Collection is a user-friendly toolkit for Ikariam players who want better city management, faster planning, and fewer manual clicks.
 
 ## 🖼️ Screenshots
