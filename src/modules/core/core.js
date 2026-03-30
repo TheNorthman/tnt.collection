@@ -784,38 +784,20 @@ const tnt = {
                     // changeView = Move this into its own function
                     ajax.Responder.tntChangeView = ajax.Responder.changeView;
                     ajax.Responder.changeView = function (response) {
-                        tnt.core.debug.log("I'm here!");
                         var view = $('body').attr('id');
-
-                        // Set early Ikariam properties before rendering
-                        try {
-                            if (ikariam.templateView && ikariam.templateView.id === "city") {
-                                const layoutPrefs = tnt.data.storage.settings.layoutPrefs;
-                                if (layoutPrefs && layoutPrefs.maintainLayout && layoutPrefs.layout) {
-                                    const layout = layoutPrefs.layout;
-                                    // Defensive null checks
-                                    // if (layout.mainbox) {
-                                    //     if (typeof layout.mainbox.x === 'number') ikariam.mainbox_x = layout.mainbox.x;
-                                    //     if (typeof layout.mainbox.y === 'number') ikariam.mainbox_y = layout.mainbox.y;
-                                    //     if (typeof layout.mainbox.z === 'number') ikariam.mainbox_z = layout.mainbox.z;
-                                    //     tnt.core.debug.log("Setting mainbox position to: " + ikariam.mainbox_x + ", " + ikariam.mainbox_y + ", " + ikariam.mainbox_z, 3);
-                                    // }
-                                    // if (layout.sidebar) {
-                                    //     if (typeof layout.sidebar.x === 'number') ikariam.sidebar_x = layout.sidebar.x;
-                                    //     if (typeof layout.sidebar.y === 'number') ikariam.sidebar_y = layout.sidebar.y;
-                                    //     if (typeof layout.sidebar.z === 'number') ikariam.sidebar_z = layout.sidebar.z;
-                                    //     tnt.core.debug.log("Setting sidebar position to: " + ikariam.sidebar_x + ", " + ikariam.sidebar_y + ", " + ikariam.sidebar_z, 3);
-                                    // }
-                                    // if (layout.citymap && typeof layout.citymap.zoom === 'number') {
-                                    //     localStorage.setItem('cityWorldviewScale', layout.citymap.zoom.toString());
-                                    // }
-                                }
-                            }
-                        } catch (e) {
-                            // Defensive: ignore errors
-                        }
-
                         tnt.core.debug.log("changeView (View: " + view + ")", 3);
+
+                        // // Set early Ikariam properties before rendering
+                        // try {
+                        //     if (ikariam.templateView && ikariam.templateView.id === "city") {
+                        //         const layoutPrefs = tnt.data.storage.settings.layoutPrefs;
+                        //         if (layoutPrefs && layoutPrefs.maintainLayout && layoutPrefs.layout) {
+                        //             const layout = layoutPrefs.layout;
+                        //         }
+                        //     }
+                        // } catch (e) {
+                        //     // Defensive: ignore errors
+                        // }
 
                         // Let Ikariam do its stuff
                         ajax.Responder.tntChangeView(response);

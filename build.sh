@@ -102,23 +102,6 @@ US_GRANT=$(jq -r '.userscript.grant[]?' "${PKG}")
 } > "${OUT_FILE}"
 
 ###############################################
-#  CSS COLLECTION (bulletproof, null-safe)
-###############################################
-
-CSS_OUTPUT=""
-
-# Null-delimited find to avoid whitespace issues
-while IFS= read -r -d '' FILE; do
-  CSS_OUTPUT+=$'\n'
-  CSS_OUTPUT+="$(cat "$FILE")"
-done < <(find "$SRC_DIR" -type f -name '*.css' -print0 | sort -z)
-
-ESCAPED_CSS="$(printf '%s' "$CSS_OUTPUT" | escape_css)"
-
-# IMPORTANT: single quotes so backticks are literal
-printf 'GM_addStyle(`%s`);\n' "$ESCAPED_CSS" >> "$OUT_FILE"
-
-###############################################
 #  JS COLLECTION
 ###############################################
 
@@ -159,5 +142,23 @@ for module in ${SORTED_MODULES}; do
     fi
   fi
 done
+
+###############################################
+#  CSS COLLECTION (bulletproof, null-safe)
+###############################################
+
+# Reuse CSS_OUTPUT from earlier logic but now at end for final write-out
+CSS_OUTPUT=""
+
+# Null-delimited find to avoid whitespace issues
+while IFS= read -r -d '' FILE; do
+  CSS_OUTPUT+=$'\n'
+  CSS_OUTPUT+="$(cat "$FILE")"
+done < <(find "$SRC_DIR" -type f -name '*.css' -print0 | sort -z)
+
+ESCAPED_CSS="$(printf '%s' "$CSS_OUTPUT" | escape_css)"
+
+# IMPORTANT: single quotes so backticks are literal
+printf 'GM_addStyle(`%s`);\n' "$ESCAPED_CSS" >> "$OUT_FILE"
 
 echo "Built ${OUT_FILE} (${MODE}) version ${VERSION}"
