@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.2-dev.3
+// @version      2.1.2-dev.4
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -487,16 +487,6 @@ const tnt = {
 
         // Apply layout after DOM is rendered. This set mainbox to user defined position, if enabled, so it has effect before dialogs are opened
         tnt.utils.applyLayoutDirectly();
-
-        // Sort city list tables in current mainbox if present
-        tnt.core.debug.log('[TNT] cityListSorter starting...', 2);
-        try {
-            if (tnt.cityListSorter && typeof tnt.cityListSorter.sort === 'function') {
-                tnt.cityListSorter.sort('.mainContentBox', { sortBy: 'name', direction: 'asc' });
-            }
-        } catch (e) {
-            tnt.core.debug.log('[TNT] cityListSorter failure in city view: ' + e.message, 2);
-        }
     },
 
     // IMPORTANT: Island-specific functionality
@@ -760,7 +750,9 @@ const tnt = {
                         var view = $('body').attr('id');
                         tnt.core.debug.warn("[TNT] updateGlobalData (View: " + view + ")", 4);
 
-                        // Let Ikariam do its stuff
+                        // ---------------------------------
+                        // |    Let Ikariam do its stuff   |
+                        // ---------------------------------
                         ajax.Responder.tntUpdateGlobalData(response);
 
                         // Check notifications
@@ -780,7 +772,9 @@ const tnt = {
                         var view = $('body').attr('id');
                         tnt.core.debug.log("updateBackgroundData (View: " + view + ")", 3);
 
-                        // Let Ikariam do its stuff
+                        // ---------------------------------
+                        // |    Let Ikariam do its stuff   |
+                        // ---------------------------------
                         ajax.Responder.tntUpdateBackgroundData(response);
 
                         // Check notifications
@@ -789,6 +783,16 @@ const tnt = {
                         // Apply removeFlyingShop/sidebar slots removal, during background updates
                         if (view === "city") {
                             tnt.ui.applyUIModifications();
+
+                            // Sort city list tables in current mainbox if present
+                            tnt.core.debug.log('[TNT] cityListSorter updateBackgroundData', 2);
+                            try {
+                                if (tnt.cityListSorter && typeof tnt.cityListSorter.sort === 'function') {
+                                    tnt.cityListSorter.sort('.mainContentBox', { sortBy: 'name', direction: 'asc' });
+                                }
+                            } catch (e) {
+                                tnt.core.debug.log('[TNT] cityListSorter failure in city view: ' + e.message, 2);
+                            }
                         }
 
                         switch (view) {
@@ -824,19 +828,9 @@ const tnt = {
                         var view = $('body').attr('id');
                         tnt.core.debug.log("changeView (View: " + view + ")", 3);
 
-                        // // Set early Ikariam properties before rendering
-                        // try {
-                        //     if (ikariam.templateView && ikariam.templateView.id === "city") {
-                        //         const layoutPrefs = tnt.data.storage.settings.layoutPrefs;
-                        //         if (layoutPrefs && layoutPrefs.maintainLayout && layoutPrefs.layout) {
-                        //             const layout = layoutPrefs.layout;
-                        //         }
-                        //     }
-                        // } catch (e) {
-                        //     // Defensive: ignore errors
-                        // }
-
-                        // Let Ikariam do its stuff
+                        // ---------------------------------
+                        // |    Let Ikariam do its stuff   |
+                        // ---------------------------------
                         ajax.Responder.tntChangeView(response);
 
                         // Apply layout with inline styles after rendering
@@ -908,6 +902,9 @@ const tnt = {
                         tnt.all();
 
                         // Sort city lists in mainbox/dialog tables if applicable
+
+                            // Sort city list tables in current mainbox if present
+                            tnt.core.debug.log('[TNT] cityListSorter changeView', 2);
                         try {
                             if (tnt.cityListSorter && typeof tnt.cityListSorter.sort === 'function') {
                                 tnt.cityListSorter.sort('.mainContentBox', { sortBy: 'name', direction: 'asc' });
