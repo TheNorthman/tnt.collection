@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.2-dev.6
+// @version      2.1.2-dev.7
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -743,6 +743,18 @@ const tnt = {
             },
             ikariam: {
                 override() {
+
+                    ajax.Responder.tntParseResponse = ajax.Responder.parseResponse;
+                    ajax.Responder.parseResponse = function (response) {
+                        // var view = $('body').attr('id');
+                        tnt.core.debug.dir(response, 2);
+
+                        // ---------------------------------
+                        // |    Let Ikariam do its stuff   |
+                        // ---------------------------------
+                        ajax.Responder.tntParseResponse(response);
+                    }
+
                     // updateGlobalData = Move this into its own function
                     ajax.Responder.tntUpdateGlobalData = ajax.Responder.updateGlobalData;
                     ajax.Responder.updateGlobalData = function (response) {
