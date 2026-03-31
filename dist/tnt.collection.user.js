@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.2-dev.5
+// @version      2.1.2-dev.6
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -764,7 +764,7 @@ const tnt = {
 
                         // Run tnt.all() to handle all common tasks
                         tnt.all();
-                    }
+                    };
 
                     // updateBackgroundData = Move this into its own function
                     ajax.Responder.tntUpdateBackgroundData = ajax.Responder.updateBackgroundData;
@@ -820,7 +820,7 @@ const tnt = {
                                 tnt.core.debug.log("tradeAdvisor", 3);
                                 break;
                         }
-                    }
+                    };
 
                     // changeView = Move this into its own function
                     ajax.Responder.tntChangeView = ajax.Responder.changeView;
@@ -910,7 +910,19 @@ const tnt = {
                         } catch (e) {
                             tnt.core.debug.log('[TNT] cityListSorter failure: ' + e.message, 2);
                         }
-                    }
+                    };
+
+                    // // changeView = Move this into its own function
+                    // ajax.Responder.tntChangeView = ajax.Responder.changeView;
+                    // ajax.Responder.changeView = function (response) {
+                    //     var view = $('body').attr('id');
+                    //     tnt.core.debug.log("changeView (View: " + view + ")", 2);
+
+                    //     // ---------------------------------
+                    //     // |    Let Ikariam do its stuff   |
+                    //     // ---------------------------------
+                    //     ajax.Responder.tntChangeView(response);
+                    // };
                 }
             }
         },
