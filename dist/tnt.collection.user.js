@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.2-dev.10
+// @version      2.1.2-dev.11
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -747,12 +747,22 @@ const tnt = {
                     ajax.Responder.tntParseResponse = ajax.Responder.parseResponse;
                     ajax.Responder.parseResponse = function (response) {
                         // var view = $('body').attr('id');
-                        tnt.core.debug.log("parseReponse: " + response, 2);
+                        tnt.core.debug.log("parseReponse length: " + response.length, 2);
 
                         // ---------------------------------
                         // |    Let Ikariam do its stuff   |
                         // ---------------------------------
                         ajax.Responder.tntParseResponse(response);
+
+                        // Sort city list tables in current mainbox if present
+                        tnt.core.debug.log('[TNT] cityListSorter parseResponse', 2);
+                        try {
+                            if (tnt.cityListSorter && typeof tnt.cityListSorter.sort === 'function') {
+                                tnt.cityListSorter.sort('.mainContentBox', { sortBy: 'name', direction: 'asc' });
+                            }
+                        } catch (e) {
+                            tnt.core.debug.log('[TNT] cityListSorter failure in city view: ' + e.message, 2);
+                        }
                     }
 
                     // updateGlobalData = Move this into its own function
@@ -795,16 +805,6 @@ const tnt = {
                         // Apply removeFlyingShop/sidebar slots removal, during background updates
                         if (view === "city") {
                             tnt.ui.applyUIModifications();
-
-                            // Sort city list tables in current mainbox if present
-                            tnt.core.debug.log('[TNT] cityListSorter updateBackgroundData', 2);
-                            try {
-                                if (tnt.cityListSorter && typeof tnt.cityListSorter.sort === 'function') {
-                                    tnt.cityListSorter.sort('.mainContentBox', { sortBy: 'name', direction: 'asc' });
-                                }
-                            } catch (e) {
-                                tnt.core.debug.log('[TNT] cityListSorter failure in city view: ' + e.message, 2);
-                            }
                         }
 
                         switch (view) {
