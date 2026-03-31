@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.2-dev.4
+// @version      2.1.2-dev.5
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -748,7 +748,7 @@ const tnt = {
                     ajax.Responder.updateGlobalData = function (response) {
 
                         var view = $('body').attr('id');
-                        tnt.core.debug.warn("[TNT] updateGlobalData (View: " + view + ")", 4);
+                        tnt.core.debug.log("[TNT] updateGlobalData (View: " + view + ")", 2);
 
                         // ---------------------------------
                         // |    Let Ikariam do its stuff   |
@@ -770,7 +770,7 @@ const tnt = {
                     ajax.Responder.tntUpdateBackgroundData = ajax.Responder.updateBackgroundData;
                     ajax.Responder.updateBackgroundData = function (response) {
                         var view = $('body').attr('id');
-                        tnt.core.debug.log("updateBackgroundData (View: " + view + ")", 3);
+                        tnt.core.debug.log("updateBackgroundData (View: " + view + ")", 2);
 
                         // ---------------------------------
                         // |    Let Ikariam do its stuff   |
@@ -826,7 +826,7 @@ const tnt = {
                     ajax.Responder.tntChangeView = ajax.Responder.changeView;
                     ajax.Responder.changeView = function (response) {
                         var view = $('body').attr('id');
-                        tnt.core.debug.log("changeView (View: " + view + ")", 3);
+                        tnt.core.debug.log("changeView (View: " + view + ")", 2);
 
                         // ---------------------------------
                         // |    Let Ikariam do its stuff   |
@@ -902,9 +902,7 @@ const tnt = {
                         tnt.all();
 
                         // Sort city lists in mainbox/dialog tables if applicable
-
-                            // Sort city list tables in current mainbox if present
-                            tnt.core.debug.log('[TNT] cityListSorter changeView', 2);
+                        tnt.core.debug.log('[TNT] cityListSorter changeView', 2);
                         try {
                             if (tnt.cityListSorter && typeof tnt.cityListSorter.sort === 'function') {
                                 tnt.cityListSorter.sort('.mainContentBox', { sortBy: 'name', direction: 'asc' });
