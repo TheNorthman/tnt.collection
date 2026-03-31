@@ -1,0 +1,20 @@
+body[data-tnt] #tntOptions {
+    position: absolute;
+    top: 40px;
+    left: 380px;
+    width: 620px;
+    border: 1px #755931 solid;
+    border-top: none;
+    background-color: #FEE8C3;
+    padding: 10px 10px 0px 10px;
+}
+
+body[data-tnt] #tntOptions legend {
+    font-weight: bold;
+}
+
+body[data-tnt] .tntHide,
+body[data-tnt] #infocontainer .tntLvl,
+body[data-tnt] #actioncontainer .tntLvl {
+    display: none;
+}
