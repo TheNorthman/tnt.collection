@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.2-dev.2
+// @version      2.1.2-dev.3
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -489,6 +489,7 @@ const tnt = {
         tnt.utils.applyLayoutDirectly();
 
         // Sort city list tables in current mainbox if present
+        tnt.core.debug.log('[TNT] cityListSorter starting...', 2);
         try {
             if (tnt.cityListSorter && typeof tnt.cityListSorter.sort === 'function') {
                 tnt.cityListSorter.sort('.mainContentBox', { sortBy: 'name', direction: 'asc' });
