@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.2-dev.11
+// @version      2.1.2-dev.12
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -744,15 +744,15 @@ const tnt = {
             ikariam: {
                 override() {
 
-                    ajax.Responder.tntParseResponse = ajax.Responder.parseResponse;
-                    ajax.Responder.parseResponse = function (response) {
+                    ikariam.controller.ajaxResponder.tntParseResponse = ikariam.controller.ajaxResponder.parseResponse;
+                    ikariam.controller.ajaxResponder.parseResponse = function (response) {
                         // var view = $('body').attr('id');
                         tnt.core.debug.log("parseReponse length: " + response.length, 2);
 
                         // ---------------------------------
                         // |    Let Ikariam do its stuff   |
                         // ---------------------------------
-                        ajax.Responder.tntParseResponse(response);
+                        ikariam.controller.ajaxResponder.tntParseResponse(response);
 
                         // Sort city list tables in current mainbox if present
                         tnt.core.debug.log('[TNT] cityListSorter parseResponse', 2);
