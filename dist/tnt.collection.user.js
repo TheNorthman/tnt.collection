@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.2-dev.9
+// @version      2.1.2-dev.10
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -744,21 +744,10 @@ const tnt = {
             ikariam: {
                 override() {
 
-                    // ikariam.controller.ajax.Responder.tntParseResponse = ikariam.controller.ajax.Responder.parseResponse;
-                    // ikariam.controller.ajax.Responder.parseResponse = function (response) {
-                    //     // var view = $('body').attr('id');
-                    //     tnt.core.debug.dir("parseReponse: " + response, 2);
-
-                    //     // ---------------------------------
-                    //     // |    Let Ikariam do its stuff   |
-                    //     // ---------------------------------
-                    //     ikariam.controller.ajax.Responder.tntParseResponse(response);
-                    // }
-
                     ajax.Responder.tntParseResponse = ajax.Responder.parseResponse;
                     ajax.Responder.parseResponse = function (response) {
                         // var view = $('body').attr('id');
-                        tnt.core.debug.dir("parseReponse: " + response, 2);
+                        tnt.core.debug.log("parseReponse: " + response, 2);
 
                         // ---------------------------------
                         // |    Let Ikariam do its stuff   |
@@ -3301,7 +3290,7 @@ tnt.tooltip = {
         return div;
     }
 
-    const DEFAULT_DEBUG_SETTINGS = { enable: true, level: 3 };
+    const DEFAULT_DEBUG_SETTINGS = { enable: true, level: 4 };
 
     function ensureContainer() {
         if ($('#tntDebugContainer').length === 0) {
