@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.2-dev.1
+// @version      2.1.2-dev.2
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -487,6 +487,15 @@ const tnt = {
 
         // Apply layout after DOM is rendered. This set mainbox to user defined position, if enabled, so it has effect before dialogs are opened
         tnt.utils.applyLayoutDirectly();
+
+        // Sort city list tables in current mainbox if present
+        try {
+            if (tnt.cityListSorter && typeof tnt.cityListSorter.sort === 'function') {
+                tnt.cityListSorter.sort('.mainContentBox', { sortBy: 'name', direction: 'asc' });
+            }
+        } catch (e) {
+            tnt.core.debug.log('[TNT] cityListSorter failure in city view: ' + e.message, 2);
+        }
     },
 
     // IMPORTANT: Island-specific functionality
@@ -896,6 +905,15 @@ const tnt = {
 
                         // Run tnt.all() to handle all common tasks
                         tnt.all();
+
+                        // Sort city lists in mainbox/dialog tables if applicable
+                        try {
+                            if (tnt.cityListSorter && typeof tnt.cityListSorter.sort === 'function') {
+                                tnt.cityListSorter.sort('.mainContentBox', { sortBy: 'name', direction: 'asc' });
+                            }
+                        } catch (e) {
+                            tnt.core.debug.log('[TNT] cityListSorter failure: ' + e.message, 2);
+                        }
                     }
                 }
             }
@@ -3600,6 +3618,7 @@ tnt.tooltip = {
         }
     };
 })();GM_addStyle(`
+
 /* Show level styles - using table background color */
 body[data-tnt] .tntLvl {
     position: absolute;
@@ -3937,13 +3956,6 @@ body[data-tnt] .tnt_progress_visited {
     border-left: 2px solid #32CD32 !important;
 }
 
-/* Ensure progress indicators work with selected state */
-/* body[data-tnt] #tnt_info_resources .tnt_selected .tnt_progress_visited,
-body[data-tnt] #tnt_info_buildings_content .tnt_selected .tnt_progress_visited {
-    background-color: #90EE9050 !important;
-    border-left: 2px solid #32CD32 !important;
-} */
-
 /* Progress indicator takes precedence over construction during active switching */
 body[data-tnt] .tnt_progress_visited.tnt_construction {
     background-color: #d4edda !important;
@@ -4070,38 +4082,9 @@ body[data-tnt] #tnt_info_buildings_content .tnt_building_level {
     text-align: center !important;
 }
 
-/* Override Ikariam's container table styles specifically for our TNT tables */
-/* body[data-tnt] #container #tnt_info_resources #tnt_resources_table,
-body[data-tnt] #container #tnt_info_buildings_content #tnt_buildings_table {
-    border: none !important;
-    margin: 0px !important;
-    background-color: #fdf7dd !important;
-    border-bottom: none !important;
-    text-align: center !important;
-    width: auto !important;
-}
-
-body[data-tnt] #container #tnt_info_resources #tnt_resources_table td,
-body[data-tnt] #container #tnt_info_buildings_content #tnt_buildings_table td {
-    text-align: center !important;
-    vertical-align: middle !important;
-    padding: 4px !important;
-    border: 1px #8B4513 solid !important;
-}
-
-body[data-tnt] #container #tnt_info_resources #tnt_resources_table th,
-body[data-tnt] #container #tnt_info_buildings_content #tnt_buildings_table th {
-    background-color: #faeac6 !important;
-    text-align: center !important;
-    height: auto !important;
-    padding: 4px !important;
-    font-weight: bold !important;
-    border: 1px #8B4513 solid !important;
-} */
-
-#mainview a:hover {
+/* #mainview a:hover {
     text-decoration: none;
-}
+} */
 
 body[data-tnt] #tntInfoWidget {
     position: fixed;
@@ -4434,19 +4417,6 @@ body[data-tnt] #tnt_info_buildings.minimized .tnt_external_controls {
     padding: 0 !important;
     box-sizing: border-box !important;
 }
-
-/* Remove all conflicting minimized button positioning - buttons are now external */
-/* 
-body[data-tnt] #tnt_info_resources.minimized .tnt_control_buttons,
-body[data-tnt] #tnt_info_buildings.minimized .tnt_control_buttons {
-    // REMOVED - buttons are external now
-}
-
-body[data-tnt] #tnt_info_resources.minimized .tnt_control_buttons span,
-body[data-tnt] #tnt_info_buildings.minimized .tnt_control_buttons span {
-    // REMOVED - buttons are external now  
-}
-*/
 
 /* FORCE exact same subcategory header height in minimized state */
 body[data-tnt] #tnt_info_resources.minimized table tr.tnt_subcategory_header,
