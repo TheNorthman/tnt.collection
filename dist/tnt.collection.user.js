@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.2-dev.12
+// @version      2.1.2-dev.13
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
 // @license      MIT
-// @include      http*s*.ikariam.*/*
-// @exclude      http*support*.ikariam.*/*
+// @include      https://s*.ikariam.gameforge.com/*
+// @exclude      https://*support*.ikariam.gameforge.com/*
 // @require      https://code.jquery.com/jquery-1.12.4.min.js
 // @grant        GM_addStyle
 // @grant        GM_getValue
@@ -912,16 +912,6 @@ const tnt = {
 
                         // Run tnt.all() to handle all common tasks
                         tnt.all();
-
-                        // Sort city lists in mainbox/dialog tables if applicable
-                        tnt.core.debug.log('[TNT] cityListSorter changeView', 2);
-                        try {
-                            if (tnt.cityListSorter && typeof tnt.cityListSorter.sort === 'function') {
-                                tnt.cityListSorter.sort('.mainContentBox', { sortBy: 'name', direction: 'asc' });
-                            }
-                        } catch (e) {
-                            tnt.core.debug.log('[TNT] cityListSorter failure: ' + e.message, 2);
-                        }
                     };
 
                     // // changeView = Move this into its own function
