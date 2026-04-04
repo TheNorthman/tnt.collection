@@ -100,7 +100,7 @@
         return div;
     }
 
-    const DEFAULT_DEBUG_SETTINGS = { enable: true, level: 3 };
+    const DEFAULT_DEBUG_SETTINGS = { enable: true, level: 4 };
 
     function ensureContainer() {
         if ($('#tntDebugContainer').length === 0) {

@@ -719,14 +719,38 @@ const tnt = {
             },
             ikariam: {
                 override() {
+
+                    ikariam.controller.ajaxResponder.tntParseResponse = ikariam.controller.ajaxResponder.parseResponse;
+                    ikariam.controller.ajaxResponder.parseResponse = function (response) {
+                        // var view = $('body').attr('id');
+                        tnt.core.debug.log("parseReponse length: " + response.length, 2);
+
+                        // ---------------------------------
+                        // |    Let Ikariam do its stuff   |
+                        // ---------------------------------
+                        ikariam.controller.ajaxResponder.tntParseResponse(response);
+
+                        // Sort city list tables in current mainbox if present
+                        tnt.core.debug.log('[TNT] cityListSorter parseResponse', 2);
+                        try {
+                            if (tnt.cityListSorter && typeof tnt.cityListSorter.sort === 'function') {
+                                tnt.cityListSorter.sort('.mainContentBox', { sortBy: 'name', direction: 'asc' });
+                            }
+                        } catch (e) {
+                            tnt.core.debug.log('[TNT] cityListSorter failure in city view: ' + e.message, 2);
+                        }
+                    }
+
                     // updateGlobalData = Move this into its own function
                     ajax.Responder.tntUpdateGlobalData = ajax.Responder.updateGlobalData;
                     ajax.Responder.updateGlobalData = function (response) {
 
                         var view = $('body').attr('id');
-                        tnt.core.debug.warn("[TNT] updateGlobalData (View: " + view + ")", 4);
+                        tnt.core.debug.log("[TNT] updateGlobalData (View: " + view + ")", 2);
 
-                        // Let Ikariam do its stuff
+                        // ---------------------------------
+                        // |    Let Ikariam do its stuff   |
+                        // ---------------------------------
                         ajax.Responder.tntUpdateGlobalData(response);
 
                         // Check notifications
@@ -738,15 +762,17 @@ const tnt = {
 
                         // Run tnt.all() to handle all common tasks
                         tnt.all();
-                    }
+                    };
 
                     // updateBackgroundData = Move this into its own function
                     ajax.Responder.tntUpdateBackgroundData = ajax.Responder.updateBackgroundData;
                     ajax.Responder.updateBackgroundData = function (response) {
                         var view = $('body').attr('id');
-                        tnt.core.debug.log("updateBackgroundData (View: " + view + ")", 3);
+                        tnt.core.debug.log("updateBackgroundData (View: " + view + ")", 2);
 
-                        // Let Ikariam do its stuff
+                        // ---------------------------------
+                        // |    Let Ikariam do its stuff   |
+                        // ---------------------------------
                         ajax.Responder.tntUpdateBackgroundData(response);
 
                         // Check notifications
@@ -782,27 +808,17 @@ const tnt = {
                                 tnt.core.debug.log("tradeAdvisor", 3);
                                 break;
                         }
-                    }
+                    };
 
                     // changeView = Move this into its own function
                     ajax.Responder.tntChangeView = ajax.Responder.changeView;
                     ajax.Responder.changeView = function (response) {
                         var view = $('body').attr('id');
-                        tnt.core.debug.log("changeView (View: " + view + ")", 3);
+                        tnt.core.debug.log("changeView (View: " + view + ")", 2);
 
-                        // // Set early Ikariam properties before rendering
-                        // try {
-                        //     if (ikariam.templateView && ikariam.templateView.id === "city") {
-                        //         const layoutPrefs = tnt.data.storage.settings.layoutPrefs;
-                        //         if (layoutPrefs && layoutPrefs.maintainLayout && layoutPrefs.layout) {
-                        //             const layout = layoutPrefs.layout;
-                        //         }
-                        //     }
-                        // } catch (e) {
-                        //     // Defensive: ignore errors
-                        // }
-
-                        // Let Ikariam do its stuff
+                        // ---------------------------------
+                        // |    Let Ikariam do its stuff   |
+                        // ---------------------------------
                         ajax.Responder.tntChangeView(response);
 
                         // Apply layout with inline styles after rendering
@@ -872,7 +888,19 @@ const tnt = {
 
                         // Run tnt.all() to handle all common tasks
                         tnt.all();
-                    }
+                    };
+
+                    // // changeView = Move this into its own function
+                    // ajax.Responder.tntChangeView = ajax.Responder.changeView;
+                    // ajax.Responder.changeView = function (response) {
+                    //     var view = $('body').attr('id');
+                    //     tnt.core.debug.log("changeView (View: " + view + ")", 2);
+
+                    //     // ---------------------------------
+                    //     // |    Let Ikariam do its stuff   |
+                    //     // ---------------------------------
+                    //     ajax.Responder.tntChangeView(response);
+                    // };
                 }
             }
         },
