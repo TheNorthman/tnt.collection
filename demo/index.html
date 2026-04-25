@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TNT Collection – Demo</title>
+    <style>
+        /* ── Reset & base ── */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 13px;
+            background: #4a6741 url('data:image/png;base64,') center/cover;
+            background-color: #4a6741;
+            color: #333;
+        }
+
+        /* ── Top navigation bar (simulates Ikariam header) ── */
+        #header {
+            background: linear-gradient(to bottom, #c8a870, #a07840);
+            border-bottom: 2px solid #6b4c1e;
+            padding: 4px 8px;
+        }
+        #topMenu {
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            flex-wrap: wrap;
+        }
+        #topMenu li {
+            padding: 3px 8px;
+            border-right: 1px solid #8b6020;
+            font-size: 12px;
+            color: #2a1800;
+            white-space: nowrap;
+        }
+        #topMenu li:last-child { border-right: none; }
+        #topMenu li a {
+            color: #1a0e00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        #topMenu li a:hover { color: #8b0000; text-decoration: underline; }
+        #topMenu li.serverTime {
+            font-size: 11px;
+            color: #5a3800;
+            font-style: italic;
+        }
+
+        /* ── Resource bar ── */
+        #resourceBar {
+            background: linear-gradient(to bottom, #f5e8c0, #e8d098);
+            border-bottom: 1px solid #c8a050;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+        }
+        .res-item { display: flex; align-items: center; gap: 3px; }
+        .res-item img { width: 16px; height: 16px; }
+
+        /* ── Breadcrumb / city selector row ── */
+        #breadcrumb {
+            background: #d4b878;
+            border-bottom: 1px solid #b09040;
+            padding: 3px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+        }
+        #breadcrumb select {
+            font-size: 11px;
+            border: 1px solid #9a6820;
+            background: #fdf7dd;
+            padding: 1px 4px;
+        }
+        #js_islandBreadCoords { font-weight: bold; color: #5a3000; }
+
+        /* ── Main layout: left sidebar + city map ── */
+        #main {
+            display: flex;
+            height: calc(100vh - 115px);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ── Left sidebar (city menu) ── */
+        #leftMenu {
+            width: 60px;
+            background: linear-gradient(to bottom, #c8a050, #a07030);
+            border-right: 2px solid #6b4010;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 8px;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .leftMenuBtn {
+            width: 44px; height: 44px;
+            background: #d4b060;
+            border: 2px solid #8b5c10;
+            border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 9px; text-align: center; color: #2a1800; cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* ── City map area ── */
+        #worldmap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #3a7a30;
+        }
+        #cityBg {
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 50% 60%, #6aab50 0%, #3a7a30 70%);
+        }
+
+        /* ── Building positions (simplified grid) ── */
+        .building-pos {
+            position: absolute;
+            background: rgba(180,140,70,0.85);
+            border: 2px solid #8b5c10;
+            border-radius: 6px;
+            padding: 4px 6px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #1a0e00;
+            text-align: center;
+            cursor: pointer;
+            min-width: 80px;
+        }
+        .building-pos:hover {
+            background: rgba(210,170,90,0.95);
+            border-color: #5a3000;
+        }
+        .building-pos .bname { font-size: 9px; color: #3a2000; }
+        .building-pos .blvl  { font-size: 11px; font-weight: bold; color: #000; }
+
+        /* ── Ikariam-style tnt info panel positioning ── */
+        #tnt_info_resources {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 60px !important;
+            z-index: 9000 !important;
+            max-height: 280px !important;
+            overflow-y: auto !important;
+            background: #fdf7dd !important;
+            border: 2px solid #8b5c10 !important;
+            border-bottom: none !important;
+            box-shadow: 0 -3px 12px rgba(0,0,0,0.4) !important;
+        }
+
+        /* ── Graceful broken-image handling ── */
+        img[src*="cdn"], img[src*="gf3.geo"] {
+            /* Show a placeholder box instead of a broken-image icon */
+            display: inline-block;
+            min-width: 12px; min-height: 12px;
+        }
+        img[src*="cdn"]::before, img[src*="gf3.geo"]::before {
+            content: '?'; font-size: 9px; color: #888;
+        }
+        /* Resource table icons - keep them from breaking layout */
+        .tnt_resource_icon { vertical-align: middle; }
+        .tnt_building_icon { width: 20px !important; height: 20px !important; }
+
+        /* ── Demo banner ── */
+        #demoBanner {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: rgba(0,80,160,0.92);
+            color: #fff;
+            font-size: 12px;
+            padding: 4px 10px;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #demoBanner strong { font-size: 13px; }
+        #demoBanner .hint { opacity: 0.85; font-size: 11px; }
+        #dismissBanner {
+            margin-left: auto;
+            background: none; border: 1px solid rgba(255,255,255,0.5);
+            color: #fff; font-size: 11px; padding: 1px 8px; cursor: pointer;
+            border-radius: 3px;
+        }
+
+        /* ── TNT Options styling helpers ── */
+        .tntBox {
+            background: #fdf7dd;
+            border: 2px solid #8b5c10;
+            padding: 10px;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 10000;
+            min-width: 420px;
+            box-shadow: 3px 3px 8px rgba(0,0,0,0.4);
+        }
+        #tntOptionsLink {
+            font-size: 12px;
+            color: #1a0e00 !important;
+            font-weight: bold;
+            text-decoration: none !important;
+            cursor: pointer;
+        }
+        #tntOptionsLink:hover { color: #8b0000 !important; text-decoration: underline !important; }
+        #tnt_info_resources li { position: relative; }
+    </style>
+
+    <!--
+    ╔═════════════════════════════════════════════════════════╗
+    ║  STEP 1 – Pre-populate demo localStorage data          ║
+    ║  (must run before jQuery and the userscript load)      ║
+    ╚═════════════════════════════════════════════════════════╝
+    -->
+    <script>
+    (function () {
+        'use strict';
+
+        function makeBuildings(opts) {
+            var b = {};
+            var defs = [
+                'townHall','palace','palaceColony','embassy','chronosForge',
+                'warehouse','dump','port','dockyard','marineChartArchive','branchOffice',
+                'academy','museum','tavern','temple','shrineOfOlympus',
+                'carpentering','architect','vineyard','optician','fireworker',
+                'forester','stonemason','winegrower','glassblowing','alchemist',
+                'wall','barracks','safehouse','workshop','shipyard',
+                'pirateFortress','blackMarket'
+            ];
+            defs.forEach(function(key) { b[key] = []; });
+            Object.keys(opts || {}).forEach(function(key) {
+                var lvl = opts[key];
+                if (lvl > 0) {
+                    b[key] = [{position: key === 'townHall' ? 0 : 1, level: lvl, name: key,
+                               underConstruction: false, upgradable: false}];
+                }
+            });
+            return b;
+        }
+
+        var now = Date.now();
+
+        var demoStorage = {
+            version: "2.1.2",
+            city: {
+                "1001": {
+                    name: "Hercules",
+                    cityIslandCoords: "[31:5]",
+                    producedTradegood: 2,
+                    population: 4154,
+                    citizens: 3700,
+                    max: 500000,
+                    wood: 20695,
+                    wine: 10499,
+                    marble: 122034,
+                    crystal: 31072,
+                    sulfur: 14368,
+                    cityLvl: "34",
+                    resourceProduction: 0.05,
+                    tradegoodProduction: 0.12,
+                    hasConstruction: false,
+                    lastUpdate: now,
+                    isOwn: true,
+                    buildings: makeBuildings({
+                        townHall: 34, palaceColony: 12,
+                        warehouse: 32, port: 24,
+                        academy: 24, museum: 15, tavern: 38,
+                        carpentering: 50, architect: 50, vineyard: 50, optician: 50, fireworker: 50,
+                        forester: 30, stonemason: 30, winegrower: 30, glassblowing: 30, alchemist: 30,
+                        wall: 32, barracks: 32, safehouse: 45, workshop: 32, shipyard: 30,
+                        blackMarket: 25
+                    })
+                },
+                "1002": {
+                    name: "Nala",
+                    cityIslandCoords: "[31:5]",
+                    producedTradegood: 2,
+                    population: 4154,
+                    citizens: 3700,
+                    max: 500000,
+                    wood: 20819,
+                    wine: 10499,
+                    marble: 121907,
+                    crystal: 31072,
+                    sulfur: 14368,
+                    cityLvl: "34",
+                    resourceProduction: 0.05,
+                    tradegoodProduction: 0.12,
+                    hasConstruction: false,
+                    lastUpdate: now,
+                    isOwn: true,
+                    buildings: makeBuildings({
+                        townHall: 34, palaceColony: 12,
+                        warehouse: 32, port: 24, marineChartArchive: 20,
+                        academy: 24, museum: 15, tavern: 38,
+                        carpentering: 50, architect: 50, vineyard: 50, optician: 50, fireworker: 50,
+                        forester: 30, stonemason: 30, winegrower: 30, glassblowing: 30, alchemist: 30,
+                        wall: 32, barracks: 32, safehouse: 45, workshop: 32, shipyard: 30
+                    })
+                },
+                "1003": {
+                    name: "Ariel",
+                    cityIslandCoords: "[28:3]",
+                    producedTradegood: 3,
+                    population: 4154,
+                    citizens: 3766,
+                    max: 500000,
+                    wood: 13622,
+                    wine: 5471,
+                    marble: 129506,
+                    crystal: 10866,
+                    sulfur: 8500,
+                    cityLvl: "34",
+                    resourceProduction: 0.045,
+                    tradegoodProduction: 0.09,
+                    hasConstruction: false,
+                    lastUpdate: now,
+                    isOwn: true,
+                    buildings: makeBuildings({
+                        townHall: 34, palaceColony: 12,
+                        warehouse: 32, port: 24,
+                        academy: 24, museum: 15, tavern: 38,
+                        carpentering: 50, architect: 50, vineyard: 50, optician: 50, fireworker: 50,
+                        forester: 30, stonemason: 30, winegrower: 30, glassblowing: 30, alchemist: 30,
+                        wall: 32, barracks: 32, safehouse: 45, workshop: 32, shipyard: 30
+                    })
+                }
+            },
+            foreign: {},
+            spy: {},
+            avatar: { ambrosia: 72, gold: 54960000 },
+            settings: {
+                version: "2.1.2",
+                allRemovePremiumOffers: false,
+                allRemoveFooterNavigation: false,
+                allChangeNavigationCoord: true,
+                islandShowCityLvl: true,
+                cityRemoveFlyingShop: false,
+                cityShowResources: true,
+                cityShowResourcesPorpulation: true,
+                cityShowResourcesCitizens: true,
+                cityShowResourcesWoods: true,
+                cityShowResourcesWine: true,
+                cityShowResourcesMarble: true,
+                cityShowResourcesCrystal: true,
+                cityShowResourcesSulfur: true,
+                notificationAdvisors: true,
+                notificationSound: false,
+                citySwitcherActive: false,
+                citySwitcherStartCity: null,
+                citySwitcherVisited: [],
+                debug: { enable: true, level: 3 },
+                layoutPrefs: { maintainLayout: false, url: "", layout: null },
+                maxedLvl: {}
+            }
+        };
+
+        try {
+            localStorage.setItem("tnt_storage", JSON.stringify(demoStorage));
+        } catch(e) {
+            console.warn("[TNT Demo] Could not set localStorage:", e.message);
+        }
+    })();
+    </script>
+
+    <!--
+    ╔══════════════════════════════════════════════╗
+    ║  STEP 2 – Load jQuery (required by script)  ║
+    ╚══════════════════════════════════════════════╝
+    -->
+    <script src="jquery-1.12.4.min.js"></script>
+
+    <!--
+    ╔══════════════════════════════════════════════════════════════╗
+    ║  STEP 3 – Greasemonkey / Tampermonkey API stubs             ║
+    ║  These replace the browser-extension APIs the script uses.  ║
+    ╚══════════════════════════════════════════════════════════════╝
+    -->
+    <script>
+    /* GM_addStyle – injects CSS into the page */
+    function GM_addStyle(css) {
+        var s = document.createElement('style');
+        s.textContent = css;
+        document.head.appendChild(s);
+    }
+
+    /* GM_getValue / GM_setValue – thin localStorage wrappers */
+    function GM_getValue(key, defaultValue) {
+        try {
+            var raw = localStorage.getItem('__gm__' + key);
+            return raw !== null ? JSON.parse(raw) : defaultValue;
+        } catch(e) { return defaultValue; }
+    }
+    function GM_setValue(key, value) {
+        try { localStorage.setItem('__gm__' + key, JSON.stringify(value)); } catch(e) {}
+    }
+
+    /* GM_log – console wrapper */
+    function GM_log() {
+        console.log.apply(console, ['[GM_log]'].concat(Array.prototype.slice.call(arguments)));
+    }
+
+    /* GM_xmlhttpRequest – XMLHttpRequest wrapper */
+    function GM_xmlhttpRequest(details) {
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.open(details.method || 'GET', details.url, true);
+            if (details.headers) {
+                Object.keys(details.headers).forEach(function(k) {
+                    xhr.setRequestHeader(k, details.headers[k]);
+                });
+            }
+            xhr.onload = function() {
+                if (details.onload) details.onload(xhr);
+            };
+            xhr.onerror = function() {
+                if (details.onerror) details.onerror(new Error('Request failed'));
+            };
+            xhr.send(details.data || null);
+        } catch(e) {
+            if (details.onerror) details.onerror(e);
+        }
+    }
+
+    /* GM_info – script metadata object */
+    var GM_info = {
+        script: {
+            version:   '2.1.2',
+            name:      'TNT Collection',
+            namespace: 'https://github.com/TheNorthman/tnt.collection'
+        }
+    };
+
+    /*
+     * Ikariam global – provides all game-model data the script reads.
+     * City 1001 (Hercules) is the "current" city in this demo.
+     */
+    var ikariam = {
+        /* ── Player / account data ── */
+        model: {
+            avatarId:            12345,
+            avatarAllyId:        0,
+            hasAlly:             false,
+            gold:                54960000,
+            ambrosia:            72,
+            income:              12500,
+            upkeep:              8000,
+            sciencetistsUpkeep:  1500,
+            godGoldResult:       0,
+            isOwnCity:           true,
+            producedTradegood:   2,   /* 2 = marble */
+            freeTransporters:    11,
+            maxTransporters:     11,
+            wineSpending:        0,
+            resourceProduction:  0.05,  /* per second */
+            tradegoodProduction: 0.12,
+
+            /* current city resources */
+            currentResources: {
+                resource:   20695,  /* wood */
+                1:          10499,  /* wine */
+                2:          122034, /* marble */
+                3:          31072,  /* crystal */
+                4:          14368,  /* sulfur */
+                population: 4154,
+                citizens:   3700
+            },
+            maxResources: { resource: 500000 },
+
+            /* city list and selected city */
+            relatedCityData: {
+                selectedCity: 'city_1001',
+                city_1001: { name: 'Hercules', coords: '[31:5]' },
+                city_1002: { name: 'Nala',     coords: '[31:5]' },
+                city_1003: { name: 'Ariel',    coords: '[28:3]' }
+            }
+        },
+
+        /* ── Template / view info ── */
+        templateView: {
+            id: 'city',
+            mainbox: { boxRoot: (function(){ var d = document.createElement('div'); return d; })() },
+            sidebar: { boxRoot: (function(){ var d = document.createElement('div'); return d; })() }
+        },
+        backgroundView: {
+            screen: {
+                data: {
+                    isCapital:  true,
+                    ownerName:  'DemoPlayer',
+                    ownerId:    12345,
+                    name:       'Hercules'
+                }
+            }
+        },
+
+        /* ── Layout / scroll properties ── */
+        worldview_scale_city:     1,
+        worldview_scale_island:   1,
+        worldview_scale_worldmap: 1,
+        worldview_scroll_top_city:   120,
+        worldview_scroll_left_city:  240,
+        mainbox_x: 0, mainbox_y: 200, mainbox_z: 1,
+        sidebar_x: 0, sidebar_y: 0,   sidebar_z: 1
+    };
+
+    /* Stub: ajax object (prevents errors in tnt.core.events.init) */
+    var ajax = undefined;
+
+    /* Stub: ajaxHandlerCall (used by city-link clicks) */
+    function ajaxHandlerCall(url) {
+        console.log('[Demo] ajaxHandlerCall:', url);
+        /* In a real demo we'd navigate; here just log */
+    }
+    </script>
+</head>
+
+<!--
+  body id="city" tells the userscript it is running in the Ikariam city view.
+-->
+<body id="city" data-demo="true">
+
+<!-- Demo info banner -->
+<div id="demoBanner">
+    <strong>🎮 TNT Collection Demo</strong>
+    <span class="hint">The userscript is running below. The TNT panel and "TNT Options" link are injected by the script.</span>
+    <button id="dismissBanner" onclick="this.parentElement.style.display='none'">✕ Dismiss</button>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     Ikariam-style top navigation bar
+     The userscript inserts "TNT Options vX.X.X"
+     before the li.serverTime element.
+     ══════════════════════════════════════════════ -->
+<div id="header" style="margin-top:26px;">
+    <ul id="topMenu">
+        <li><a href="#">Kingfisher</a></li>
+        <li><a href="#">Help</a></li>
+        <li><strong>Ambrosia (72)</strong></li>
+        <li><a href="#">Highscore</a></li>
+        <li><a href="#">Options</a></li>
+        <li><a href="#">Notes</a></li>
+        <li style="color:#888;">v16.0.2</li>
+        <!-- TNT Options will be inserted here by the userscript -->
+        <li class="serverTime" title="Server time">⏰ 14:32:07</li>
+    </ul>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     Resource bar
+     ══════════════════════════════════════════════ -->
+<div id="resourceBar">
+    <div class="res-item">
+        <img src="https://s1.ikariam.gameforge.com/cdn/all/both/resources/icon_population.png"
+             onerror="this.style.display='none'" alt="pop">
+        <span>👥 4,154 (4,154)</span>
+    </div>
+    <div class="res-item" style="color:#5a3800;">→ 11 🚢</div>
+    <div class="res-item">🌿 3,700 (4,154)</div>
+    <div class="res-item">🪵 20,695</div>
+    <div class="res-item">🍷 10,499</div>
+    <div class="res-item" style="font-weight:bold;">🪨 122,034</div>
+    <div class="res-item">💎 31,072</div>
+    <div class="res-item">💛 14,368</div>
+    <div class="res-item" style="margin-left:auto;">💰 54.96M</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     Breadcrumb / city selector
+     ══════════════════════════════════════════════ -->
+<div id="breadcrumb">
+    <span>🌍 World &gt;</span>
+    <span id="js_islandBreadCoords">[31:5]</span>
+    <span>&gt;</span>
+    <select id="js_GlobalMenu_citySelect" name="1001">
+        <option value="1001" selected>[31:5] Hercules</option>
+        <option value="1002">[31:5] Nala</option>
+        <option value="1003">[28:3] Ariel</option>
+    </select>
+    <span id="js_GlobalMenu_freeTransporters" style="margin-left:12px; color:#5a3000;">⚓ 11 transporters free</span>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     Main area: left menu + city map + buildings
+     ══════════════════════════════════════════════ -->
+<div id="main">
+
+    <!-- Left sidebar -->
+    <div id="leftMenu">
+        <div class="leftMenuBtn">🏘<br>Towns</div>
+        <div class="leftMenuBtn">⚔️<br>Mil</div>
+        <div class="leftMenuBtn">🔬<br>Res</div>
+        <div class="leftMenuBtn">🤝<br>Dip</div>
+    </div>
+
+    <!-- City map -->
+    <div id="worldmap">
+        <div id="cityBg"></div>
+
+        <!--
+          Building position elements.
+          Each div must have:
+            • id="js_CityPositionN" (N = position index)
+            • class="building <buildingKey>"   ← used by detectBuildingType()
+          For position 0 (Town Hall), the level is read from
+          #js_CityPosition0Level, not from CSS classes.
+        -->
+
+        <!-- ── Government ── -->
+        <div id="js_CityPosition0" class="building" style="top:48%; left:48%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Town Hall</div>
+                <div class="blvl">
+                    (<span id="js_CityPosition0Level">34</span>)
+                </div>
+            </div>
+            <a id="js_CityPosition0Link"  href="?view=townHall"   style="display:none;"></a>
+            <span id="js_CityPosition0ScrollName" style="display:none;">Town Hall</span>
+        </div>
+
+        <div id="js_CityPosition1" class="building palaceColony" style="top:10%; left:72%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Governor's Residence</div>
+                <div class="blvl">(<span id="js_CityPosition1Level">12</span>)</div>
+            </div>
+        </div>
+
+        <!-- ── Trade ── -->
+        <div id="js_CityPosition2" class="building warehouse" style="top:55%; left:27%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Warehouse</div>
+                <div class="blvl">(<span id="js_CityPosition2Level">32</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition3" class="building port" style="top:70%; left:38%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Trading Port</div>
+                <div class="blvl">(<span id="js_CityPosition3Level">24</span>)</div>
+            </div>
+        </div>
+
+        <!-- ── Culture ── -->
+        <div id="js_CityPosition4" class="building academy" style="top:68%; left:55%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Academy</div>
+                <div class="blvl">(<span id="js_CityPosition4Level">24</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition5" class="building museum" style="top:40%; left:35%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Museum</div>
+                <div class="blvl">(<span id="js_CityPosition5Level">15</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition6" class="building tavern" style="top:30%; left:30%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Tavern</div>
+                <div class="blvl">(<span id="js_CityPosition6Level">38</span>)</div>
+            </div>
+        </div>
+
+        <!-- ── Resource Reducers ── -->
+        <div id="js_CityPosition7" class="building carpentering" style="top:60%; left:68%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Carpenter</div>
+                <div class="blvl">(<span id="js_CityPosition7Level">50</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition8" class="building architect" style="top:72%; left:75%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Architect's Office</div>
+                <div class="blvl">(<span id="js_CityPosition8Level">50</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition9" class="building vineyard" style="top:24%; left:55%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Wine Press</div>
+                <div class="blvl">(<span id="js_CityPosition9Level">50</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition10" class="building optician" style="top:20%; left:40%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Optician</div>
+                <div class="blvl">(<span id="js_CityPosition10Level">50</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition11" class="building fireworker" style="top:78%; left:60%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Firework Test Area</div>
+                <div class="blvl">(<span id="js_CityPosition11Level">50</span>)</div>
+            </div>
+        </div>
+
+        <!-- ── Resource Enhancers ── -->
+        <div id="js_CityPosition12" class="building forester" style="top:15%; left:20%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Forester's House</div>
+                <div class="blvl">(<span id="js_CityPosition12Level">30</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition13" class="building stonemason" style="top:35%; left:75%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Stonemason</div>
+                <div class="blvl">(<span id="js_CityPosition13Level">30</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition14" class="building winegrower" style="top:18%; left:62%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Winegrower</div>
+                <div class="blvl">(<span id="js_CityPosition14Level">30</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition15" class="building glassblowing" style="top:25%; left:80%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Glassblower</div>
+                <div class="blvl">(<span id="js_CityPosition15Level">30</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition16" class="building alchemist" style="top:45%; left:82%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Alchemist's Tower</div>
+                <div class="blvl">(<span id="js_CityPosition16Level">30</span>)</div>
+            </div>
+        </div>
+
+        <!-- ── Military ── -->
+        <div id="js_CityPosition17" class="building wall" style="top:82%; left:30%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Town Wall</div>
+                <div class="blvl">(<span id="js_CityPosition17Level">32</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition18" class="building barracks" style="top:82%; left:50%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Barracks</div>
+                <div class="blvl">(<span id="js_CityPosition18Level">32</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition19" class="building safehouse" style="top:58%; left:20%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Hideout</div>
+                <div class="blvl">(<span id="js_CityPosition19Level">45</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition20" class="building workshop" style="top:42%; left:60%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Workshop</div>
+                <div class="blvl">(<span id="js_CityPosition20Level">32</span>)</div>
+            </div>
+        </div>
+
+        <div id="js_CityPosition21" class="building shipyard" style="top:80%; left:18%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Shipyard</div>
+                <div class="blvl">(<span id="js_CityPosition21Level">30</span>)</div>
+            </div>
+        </div>
+
+        <!-- ── Special ── -->
+        <div id="js_CityPosition22" class="building blackMarket" style="top:38%; left:50%; position:absolute;">
+            <div class="building-pos">
+                <div class="bname">Black Market</div>
+                <div class="blvl">(<span id="js_CityPosition22Level">25</span>)</div>
+            </div>
+        </div>
+
+    </div><!-- end #worldmap -->
+</div><!-- end #main -->
+
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  STEP 4 – Load the TNT Collection userscript                ║
+  ║  (jQuery, GM_* stubs and ikariam mock are all ready above)  ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+<script src="../dist/tnt.collection.user.js"></script>
+
+<!--
+  ╔════════════════════════════════════════════════════════╗
+  ║  STEP 5 – Light post-load tweaks for demo UX          ║
+  ╚════════════════════════════════════════════════════════╝
+-->
+<script>
+$(document).ready(function () {
+
+    /* ── Make TNT Options link toggle the dropdown ── */
+    $(document).on('click', '#tntOptionsLink', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#tntOptions').toggle();
+    });
+
+    /* ── Close dropdown when clicking outside ── */
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('#tntOptions, #tntOptionsLink').length) {
+            $('#tntOptions').hide();
+        }
+    });
+
+    /* ── City select change: update ikariam mock + reload data ── */
+    $('#js_GlobalMenu_citySelect').on('change', function () {
+        var cityId = $(this).val();
+        var cityMap = {
+            '1001': { name: 'Hercules', coords: '[31:5]', tradegood: 2,
+                      pop: 4154, cit: 3700, wood: 20695, wine: 10499, marble: 122034, crystal: 31072, sulfur: 14368 },
+            '1002': { name: 'Nala',     coords: '[31:5]', tradegood: 2,
+                      pop: 4154, cit: 3700, wood: 20819, wine: 10499, marble: 121907, crystal: 31072, sulfur: 14368 },
+            '1003': { name: 'Ariel',    coords: '[28:3]', tradegood: 3,
+                      pop: 4154, cit: 3766, wood: 13622, wine: 5471,  marble: 129506, crystal: 10866, sulfur: 8500 }
+        };
+        var c = cityMap[cityId];
+        if (!c) return;
+
+        /* Update ikariam mock */
+        ikariam.model.relatedCityData.selectedCity = 'city_' + cityId;
+        ikariam.model.producedTradegood   = c.tradegood;
+        ikariam.model.currentResources.resource    = c.wood;
+        ikariam.model.currentResources[1]          = c.wine;
+        ikariam.model.currentResources[2]          = c.marble;
+        ikariam.model.currentResources[3]          = c.crystal;
+        ikariam.model.currentResources[4]          = c.sulfur;
+        ikariam.model.currentResources.population  = c.pop;
+        ikariam.model.currentResources.citizens    = c.cit;
+        $(this).attr('name', cityId);
+        $('#js_islandBreadCoords').text(c.coords);
+
+        /* Re-collect and re-render TNT tables */
+        if (typeof tnt !== 'undefined') {
+            tnt.dataCollector.update();
+            tnt.dataCollector.show();
+        }
+    });
+
+    /* ── Refresh button re-renders tables ── */
+    $(document).on('click', '.tnt_refresh_btn', function () {
+        if (typeof tnt !== 'undefined') {
+            tnt.dataCollector.update();
+            tnt.dataCollector.show();
+        }
+    });
+
+    console.log('[TNT Demo] Page ready. tnt object:', typeof tnt !== 'undefined' ? 'loaded ✓' : 'NOT loaded ✗');
+});
+</script>
+
+</body>
+</html>
