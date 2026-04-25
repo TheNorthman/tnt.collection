@@ -27,7 +27,7 @@
     "tnt.collection"
   ],
   "userscript": {
-    "namespace": "https://github.com/TheNorthman/tnt.collection",
+    "namespace": "https://github.com/TheNorthman/tnt.collection/copilot",
     "include": [
       "http*s*.ikariam.*/*"
     ],

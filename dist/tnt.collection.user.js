@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         TNT Collection
 // @version      2.1.3
-// @namespace    https://github.com/TheNorthman/tnt.collection
+// @namespace    https://github.com/TheNorthman/tnt.collection/copilot
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
 // @license      MIT
