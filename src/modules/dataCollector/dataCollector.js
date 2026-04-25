@@ -28,6 +28,9 @@ tnt.dataCollector = {
     collectOwnCityData(currentCityId) {
         const prev = $.extend(true, {}, tnt.data.storage.city[currentCityId] || {});
 
+        const militaryUnits = tnt.get.military.units.total();
+        const navy = tnt.get.military.navy.total();
+
         const cityData = {
             ...prev,
             name: tnt.get.city.name(currentCityId),
@@ -46,6 +49,8 @@ tnt.dataCollector = {
             cityLvl: tnt.get.city.level(),
             resourceProduction: tnt.get.city.production.resource(),
             tradegoodProduction: tnt.get.city.production.tradegood(),
+            militaryUnits: militaryUnits !== null ? militaryUnits : (prev.militaryUnits ?? null),
+            navy: navy !== null ? navy : (prev.navy ?? null),
             lastUpdate: Date.now(),
             isOwn: true
         };
@@ -164,7 +169,9 @@ tnt.dataCollector = {
             wine: 0,
             marble: 0,
             crystal: 0,
-            sulfur: 0
+            sulfur: 0,
+            militaryUnits: null,
+            navy: null
         };
 
         $.each(tnt.data.storage.city, function (cityID, cityData) {
@@ -175,6 +182,14 @@ tnt.dataCollector = {
             total.marble += cityData.marble || 0;
             total.crystal += cityData.crystal || 0;
             total.sulfur += cityData.sulfur || 0;
+            if (cityData.militaryUnits !== null && cityData.militaryUnits !== undefined) {
+                if (total.militaryUnits === null) total.militaryUnits = 0;
+                total.militaryUnits += cityData.militaryUnits || 0;
+            }
+            if (cityData.navy !== null && cityData.navy !== undefined) {
+                if (total.navy === null) total.navy = 0;
+                total.navy += cityData.navy || 0;
+            }
         });
 
         return total;
@@ -297,6 +312,8 @@ tnt.dataCollector = {
             case 4: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_sulfur.png">';
             case 'population': return '<img class="tnt_resource_icon tnt_icon_po" src="//gf3.geo.gfsrv.net/cdn2f/6d077d68d9ae22f9095515f282a112.png" style="width: 10px !important;">';
             case 'citizens': return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_population.png">';
+            case 'militaryUnits': return '<img class="tnt_resource_icon" src="/cdn/all/both/layout/advisors/general.png" style="height:15px;width:auto;">';
+            case 'navy': return '<img class="tnt_resource_icon" src="/cdn/all/both/img/city/shipyard_l.png" style="height:15px;width:auto;">';
             default: return '';
         }
     }

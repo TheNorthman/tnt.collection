@@ -34,6 +34,10 @@ tnt.tableBuilder = {
         if (settings.showCrystal) resourcesSpan++;
         if (settings.showSulfur) resourcesSpan++;
 
+        let militarySpan = 0;
+        if (settings.showMilitaryUnits) militarySpan++;
+        if (settings.showNavy) militarySpan++;
+
         // Build the HTML table structure
         let html = '<table id="tnt_resources_table" border="1" style="border-collapse:collapse;font:12px Arial,Helvetica,sans-serif;background-color:#fdf7dd;"><tbody>';
 
@@ -43,6 +47,9 @@ tnt.tableBuilder = {
         html += `<th colspan="${cityColspan}" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">City Info</th>`;
         if (resourcesSpan > 0) {
             html += `<th colspan="${resourcesSpan}" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">Resources</th>`;
+        }
+        if (militarySpan > 0) {
+            html += `<th colspan="${militarySpan}" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">Military</th>`;
         }
         html += '</tr>';
 
@@ -87,6 +94,14 @@ tnt.tableBuilder = {
         if (settings.showSulfur) {
             html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
             html += '<span class="tnt_tooltip_target" data-resource="sulfur">' + tnt.dataCollector.getIcon(4) + '</span></th>';
+        }
+        if (settings.showMilitaryUnits) {
+            html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
+            html += '<span class="tnt_tooltip_target" data-resource="militaryUnits">' + tnt.dataCollector.getIcon('militaryUnits') + '</span></th>';
+        }
+        if (settings.showNavy) {
+            html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
+            html += '<span class="tnt_tooltip_target" data-resource="navy">' + tnt.dataCollector.getIcon('navy') + '</span></th>';
         }
         html += '</tr>';
 
@@ -162,6 +177,14 @@ tnt.tableBuilder = {
                 const fontWeight = city.producedTradegood == 4 ? 'font-weight:bold;color:black;' : '';
                 html += `<td class="tnt_sulfur${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;${fontWeight}"><span title="${production}">${city.sulfur.toLocaleString()}</span></td>`;
             }
+            if (settings.showMilitaryUnits) {
+                const val = city.militaryUnits !== null && city.militaryUnits !== undefined ? city.militaryUnits.toLocaleString() : '-';
+                html += `<td class="tnt_military_units" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${val}</td>`;
+            }
+            if (settings.showNavy) {
+                const val = city.navy !== null && city.navy !== undefined ? city.navy.toLocaleString() : '-';
+                html += `<td class="tnt_navy" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${val}</td>`;
+            }
 
             html += '</tr>';
         });
@@ -193,6 +216,14 @@ tnt.tableBuilder = {
         }
         if (settings.showSulfur) {
             html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totals.sulfur.toLocaleString()}</td>`;
+        }
+        if (settings.showMilitaryUnits) {
+            const totalMilitary = totals.militaryUnits !== null ? totals.militaryUnits.toLocaleString() : '-';
+            html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totalMilitary}</td>`;
+        }
+        if (settings.showNavy) {
+            const totalNavy = totals.navy !== null ? totals.navy.toLocaleString() : '-';
+            html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totalNavy}</td>`;
         }
         html += '</tr>';
 

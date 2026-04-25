@@ -320,7 +320,9 @@ const tnt = {
                 showWine: this.get("cityShowResourcesWine", true),
                 showMarble: this.get("cityShowResourcesMarble", true),
                 showCrystal: this.get("cityShowResourcesCrystal", true),
-                showSulfur: this.get("cityShowResourcesSulfur", true)
+                showSulfur: this.get("cityShowResourcesSulfur", true),
+                showMilitaryUnits: this.get("cityShowMilitaryUnits", true),
+                showNavy: this.get("cityShowNavy", true)
             };
         },
 
@@ -364,6 +366,8 @@ const tnt = {
                 "cityShowResourcesMarble": true,
                 "cityShowResourcesCrystal": true,
                 "cityShowResourcesSulfur": true,
+                "cityShowMilitaryUnits": true,
+                "cityShowNavy": true,
                 "notificationAdvisors": true,
                 "notificationSound": true,
                 "citySwitcherActive": false,
@@ -981,6 +985,20 @@ const tnt = {
             transporters: {
                 free: () => tnt.utils.safeGet(() => ikariam.model.freeTransporters, 0),
                 max: () => tnt.utils.safeGet(() => ikariam.model.maxTransporters, 0)
+            },
+            units: {
+                total: () => tnt.utils.safeGet(() => {
+                    const army = ikariam.model.army;
+                    if (!army || typeof army !== 'object') return null;
+                    return Object.values(army).reduce((sum, count) => sum + (parseInt(count) || 0), 0);
+                }, null)
+            },
+            navy: {
+                total: () => tnt.utils.safeGet(() => {
+                    const fleet = ikariam.model.fleet;
+                    if (!fleet || typeof fleet !== 'object') return null;
+                    return Object.values(fleet).reduce((sum, count) => sum + (parseInt(count) || 0), 0);
+                }, null)
             }
         }
     },
@@ -1100,6 +1118,8 @@ tnt.ui = {
                         ${this.createCheckbox('tntCityShowResourcesMarble', 'Show Marble', resourceSettings.showMarble)}
                         ${this.createCheckbox('tntCityShowResourcesCrystal', 'Show Crystal', resourceSettings.showCrystal)}
                         ${this.createCheckbox('tntCityShowResourcesSulfur', 'Show Sulfur', resourceSettings.showSulfur)}
+                        ${this.createCheckbox('tntCityShowMilitaryUnits', 'Show military units', resourceSettings.showMilitaryUnits)}
+                        ${this.createCheckbox('tntCityShowNavy', 'Show navy', resourceSettings.showNavy)}
                     </div>
                 </div>
                 <div class="tnt_left" style="float:left;width:50%;">
@@ -1739,6 +1759,8 @@ tnt.events = {
             'tntCityShowResourcesMarble': 'cityShowResourcesMarble',
             'tntCityShowResourcesCrystal': 'cityShowResourcesCrystal',
             'tntCityShowResourcesSulfur': 'cityShowResourcesSulfur',
+            'tntCityShowMilitaryUnits': 'cityShowMilitaryUnits',
+            'tntCityShowNavy': 'cityShowNavy',
             'tntNotificationAdvisors': 'notificationAdvisors'
         };
 

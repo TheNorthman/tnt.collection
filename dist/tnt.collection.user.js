@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         TNT Collection
-// @version      2.1.2
+// @name         TNT Collection (dev)
+// @version      2.1.2-dev.1
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -13,8 +13,8 @@
 // @grant        GM_setValue
 // @grant        GM_log
 // @grant        GM_xmlhttpRequest
-// @downloadURL  https://raw.githubusercontent.com/TheNorthman/tnt.collection/main/dist/tnt.collection.user.js
-// @updateURL    https://raw.githubusercontent.com/TheNorthman/tnt.collection/main/dist/tnt.collection.user.js
+// @downloadURL  https://raw.githubusercontent.com/TheNorthman/tnt.collection/copilot/expand-tnt-collection-userscript/dist/tnt.collection.user.js
+// @updateURL    https://raw.githubusercontent.com/TheNorthman/tnt.collection/copilot/expand-tnt-collection-userscript/dist/tnt.collection.user.js
 // @homepageURL  https://github.com/TheNorthman/tnt.collection
 // @supportURL   https://github.com/TheNorthman/tnt.collection/issues
 // ==/UserScript==
@@ -344,7 +344,9 @@ const tnt = {
                 showWine: this.get("cityShowResourcesWine", true),
                 showMarble: this.get("cityShowResourcesMarble", true),
                 showCrystal: this.get("cityShowResourcesCrystal", true),
-                showSulfur: this.get("cityShowResourcesSulfur", true)
+                showSulfur: this.get("cityShowResourcesSulfur", true),
+                showMilitaryUnits: this.get("cityShowMilitaryUnits", true),
+                showNavy: this.get("cityShowNavy", true)
             };
         },
 
@@ -388,6 +390,8 @@ const tnt = {
                 "cityShowResourcesMarble": true,
                 "cityShowResourcesCrystal": true,
                 "cityShowResourcesSulfur": true,
+                "cityShowMilitaryUnits": true,
+                "cityShowNavy": true,
                 "notificationAdvisors": true,
                 "notificationSound": true,
                 "citySwitcherActive": false,
@@ -1005,6 +1009,20 @@ const tnt = {
             transporters: {
                 free: () => tnt.utils.safeGet(() => ikariam.model.freeTransporters, 0),
                 max: () => tnt.utils.safeGet(() => ikariam.model.maxTransporters, 0)
+            },
+            units: {
+                total: () => tnt.utils.safeGet(() => {
+                    const army = ikariam.model.army;
+                    if (!army || typeof army !== 'object') return null;
+                    return Object.values(army).reduce((sum, count) => sum + (parseInt(count) || 0), 0);
+                }, null)
+            },
+            navy: {
+                total: () => tnt.utils.safeGet(() => {
+                    const fleet = ikariam.model.fleet;
+                    if (!fleet || typeof fleet !== 'object') return null;
+                    return Object.values(fleet).reduce((sum, count) => sum + (parseInt(count) || 0), 0);
+                }, null)
             }
         }
     },
@@ -1124,6 +1142,8 @@ tnt.ui = {
                         ${this.createCheckbox('tntCityShowResourcesMarble', 'Show Marble', resourceSettings.showMarble)}
                         ${this.createCheckbox('tntCityShowResourcesCrystal', 'Show Crystal', resourceSettings.showCrystal)}
                         ${this.createCheckbox('tntCityShowResourcesSulfur', 'Show Sulfur', resourceSettings.showSulfur)}
+                        ${this.createCheckbox('tntCityShowMilitaryUnits', 'Show military units', resourceSettings.showMilitaryUnits)}
+                        ${this.createCheckbox('tntCityShowNavy', 'Show navy', resourceSettings.showNavy)}
                     </div>
                 </div>
                 <div class="tnt_left" style="float:left;width:50%;">
@@ -1763,6 +1783,8 @@ tnt.events = {
             'tntCityShowResourcesMarble': 'cityShowResourcesMarble',
             'tntCityShowResourcesCrystal': 'cityShowResourcesCrystal',
             'tntCityShowResourcesSulfur': 'cityShowResourcesSulfur',
+            'tntCityShowMilitaryUnits': 'cityShowMilitaryUnits',
+            'tntCityShowNavy': 'cityShowNavy',
             'tntNotificationAdvisors': 'notificationAdvisors'
         };
 
@@ -1888,6 +1910,9 @@ tnt.dataCollector = {
     collectOwnCityData(currentCityId) {
         const prev = $.extend(true, {}, tnt.data.storage.city[currentCityId] || {});
 
+        const militaryUnits = tnt.get.military.units.total();
+        const navy = tnt.get.military.navy.total();
+
         const cityData = {
             ...prev,
             name: tnt.get.city.name(currentCityId),
@@ -1906,6 +1931,8 @@ tnt.dataCollector = {
             cityLvl: tnt.get.city.level(),
             resourceProduction: tnt.get.city.production.resource(),
             tradegoodProduction: tnt.get.city.production.tradegood(),
+            militaryUnits: militaryUnits !== null ? militaryUnits : (prev.militaryUnits ?? null),
+            navy: navy !== null ? navy : (prev.navy ?? null),
             lastUpdate: Date.now(),
             isOwn: true
         };
@@ -2024,7 +2051,9 @@ tnt.dataCollector = {
             wine: 0,
             marble: 0,
             crystal: 0,
-            sulfur: 0
+            sulfur: 0,
+            militaryUnits: null,
+            navy: null
         };
 
         $.each(tnt.data.storage.city, function (cityID, cityData) {
@@ -2035,6 +2064,14 @@ tnt.dataCollector = {
             total.marble += cityData.marble || 0;
             total.crystal += cityData.crystal || 0;
             total.sulfur += cityData.sulfur || 0;
+            if (cityData.militaryUnits !== null && cityData.militaryUnits !== undefined) {
+                if (total.militaryUnits === null) total.militaryUnits = 0;
+                total.militaryUnits += cityData.militaryUnits || 0;
+            }
+            if (cityData.navy !== null && cityData.navy !== undefined) {
+                if (total.navy === null) total.navy = 0;
+                total.navy += cityData.navy || 0;
+            }
         });
 
         return total;
@@ -2157,6 +2194,8 @@ tnt.dataCollector = {
             case 4: return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_sulfur.png">';
             case 'population': return '<img class="tnt_resource_icon tnt_icon_po" src="//gf3.geo.gfsrv.net/cdn2f/6d077d68d9ae22f9095515f282a112.png" style="width: 10px !important;">';
             case 'citizens': return '<img class="tnt_resource_icon" src="/cdn/all/both/resources/icon_population.png">';
+            case 'militaryUnits': return '<img class="tnt_resource_icon" src="/cdn/all/both/layout/advisors/general.png" style="height:15px;width:auto;">';
+            case 'navy': return '<img class="tnt_resource_icon" src="/cdn/all/both/img/city/shipyard_l.png" style="height:15px;width:auto;">';
             default: return '';
         }
     }
@@ -2333,6 +2372,10 @@ tnt.tableBuilder = {
         if (settings.showCrystal) resourcesSpan++;
         if (settings.showSulfur) resourcesSpan++;
 
+        let militarySpan = 0;
+        if (settings.showMilitaryUnits) militarySpan++;
+        if (settings.showNavy) militarySpan++;
+
         // Build the HTML table structure
         let html = '<table id="tnt_resources_table" border="1" style="border-collapse:collapse;font:12px Arial,Helvetica,sans-serif;background-color:#fdf7dd;"><tbody>';
 
@@ -2342,6 +2385,9 @@ tnt.tableBuilder = {
         html += `<th colspan="${cityColspan}" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">City Info</th>`;
         if (resourcesSpan > 0) {
             html += `<th colspan="${resourcesSpan}" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">Resources</th>`;
+        }
+        if (militarySpan > 0) {
+            html += `<th colspan="${militarySpan}" class="tnt_category_header" style="background-color:#DBBE8C;border: 1px solid #000;padding:4px;font-weight:bold;text-align:center;">Military</th>`;
         }
         html += '</tr>';
 
@@ -2386,6 +2432,14 @@ tnt.tableBuilder = {
         if (settings.showSulfur) {
             html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
             html += '<span class="tnt_tooltip_target" data-resource="sulfur">' + tnt.dataCollector.getIcon(4) + '</span></th>';
+        }
+        if (settings.showMilitaryUnits) {
+            html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
+            html += '<span class="tnt_tooltip_target" data-resource="militaryUnits">' + tnt.dataCollector.getIcon('militaryUnits') + '</span></th>';
+        }
+        if (settings.showNavy) {
+            html += '<th class="tnt_center" style="padding:4px;text-align:center;font-weight:bold;border:1px solid #000;background-color:#faeac6;">';
+            html += '<span class="tnt_tooltip_target" data-resource="navy">' + tnt.dataCollector.getIcon('navy') + '</span></th>';
         }
         html += '</tr>';
 
@@ -2461,6 +2515,14 @@ tnt.tableBuilder = {
                 const fontWeight = city.producedTradegood == 4 ? 'font-weight:bold;color:black;' : '';
                 html += `<td class="tnt_sulfur${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;${fontWeight}"><span title="${production}">${city.sulfur.toLocaleString()}</span></td>`;
             }
+            if (settings.showMilitaryUnits) {
+                const val = city.militaryUnits !== null && city.militaryUnits !== undefined ? city.militaryUnits.toLocaleString() : '-';
+                html += `<td class="tnt_military_units" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${val}</td>`;
+            }
+            if (settings.showNavy) {
+                const val = city.navy !== null && city.navy !== undefined ? city.navy.toLocaleString() : '-';
+                html += `<td class="tnt_navy" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${val}</td>`;
+            }
 
             html += '</tr>';
         });
@@ -2492,6 +2554,14 @@ tnt.tableBuilder = {
         }
         if (settings.showSulfur) {
             html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totals.sulfur.toLocaleString()}</td>`;
+        }
+        if (settings.showMilitaryUnits) {
+            const totalMilitary = totals.militaryUnits !== null ? totals.militaryUnits.toLocaleString() : '-';
+            html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totalMilitary}</td>`;
+        }
+        if (settings.showNavy) {
+            const totalNavy = totals.navy !== null ? totals.navy.toLocaleString() : '-';
+            html += `<td class="tnt_total" style="padding:4px;text-align:right;border:1px solid #000;background-color:#faeac6;font-weight:bold;">${totalNavy}</td>`;
         }
         html += '</tr>';
 
@@ -3252,7 +3322,7 @@ tnt.tooltip = {
         return div;
     }
 
-    const DEFAULT_DEBUG_SETTINGS = { enable: false, level: 3 };
+    const DEFAULT_DEBUG_SETTINGS = { enable: true, level: 3 };
 
     function ensureContainer() {
         if ($('#tntDebugContainer').length === 0) {
