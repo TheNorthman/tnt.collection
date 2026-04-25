@@ -178,12 +178,12 @@ tnt.tableBuilder = {
                 html += `<td class="tnt_sulfur${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;${fontWeight}"><span title="${production}">${city.sulfur.toLocaleString()}</span></td>`;
             }
             if (settings.showMilitaryUnits) {
-                const val = city.militaryUnits !== null && city.militaryUnits !== undefined ? city.militaryUnits.toLocaleString() : '-';
-                html += `<td class="tnt_military_units" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${val}</td>`;
+                const militaryUnitsDisplay = city.militaryUnits !== null && city.militaryUnits !== undefined ? city.militaryUnits.toLocaleString() : '-';
+                html += `<td class="tnt_military_units" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${militaryUnitsDisplay}</td>`;
             }
             if (settings.showNavy) {
-                const val = city.navy !== null && city.navy !== undefined ? city.navy.toLocaleString() : '-';
-                html += `<td class="tnt_navy" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${val}</td>`;
+                const navyDisplay = city.navy !== null && city.navy !== undefined ? city.navy.toLocaleString() : '-';
+                html += `<td class="tnt_navy" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${navyDisplay}</td>`;
             }
 
             html += '</tr>';

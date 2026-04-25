@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         TNT Collection (dev)
-// @version      2.1.2-dev.1
+// @version      2.1.2-dev.2
 // @namespace    https://github.com/TheNorthman/tnt.collection
 // @author       Ronny
 // @description  TNT Collection Tools for Ikariam
@@ -2066,11 +2066,11 @@ tnt.dataCollector = {
             total.sulfur += cityData.sulfur || 0;
             if (cityData.militaryUnits !== null && cityData.militaryUnits !== undefined) {
                 if (total.militaryUnits === null) total.militaryUnits = 0;
-                total.militaryUnits += cityData.militaryUnits || 0;
+                total.militaryUnits += cityData.militaryUnits;
             }
             if (cityData.navy !== null && cityData.navy !== undefined) {
                 if (total.navy === null) total.navy = 0;
-                total.navy += cityData.navy || 0;
+                total.navy += cityData.navy;
             }
         });
 
@@ -2516,12 +2516,12 @@ tnt.tableBuilder = {
                 html += `<td class="tnt_sulfur${cssClass}" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;${fontWeight}"><span title="${production}">${city.sulfur.toLocaleString()}</span></td>`;
             }
             if (settings.showMilitaryUnits) {
-                const val = city.militaryUnits !== null && city.militaryUnits !== undefined ? city.militaryUnits.toLocaleString() : '-';
-                html += `<td class="tnt_military_units" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${val}</td>`;
+                const militaryUnitsDisplay = city.militaryUnits !== null && city.militaryUnits !== undefined ? city.militaryUnits.toLocaleString() : '-';
+                html += `<td class="tnt_military_units" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${militaryUnitsDisplay}</td>`;
             }
             if (settings.showNavy) {
-                const val = city.navy !== null && city.navy !== undefined ? city.navy.toLocaleString() : '-';
-                html += `<td class="tnt_navy" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${val}</td>`;
+                const navyDisplay = city.navy !== null && city.navy !== undefined ? city.navy.toLocaleString() : '-';
+                html += `<td class="tnt_navy" style="padding:4px;text-align:right;border:1px solid #000;background-color:#fdf7dd;">${navyDisplay}</td>`;
             }
 
             html += '</tr>';

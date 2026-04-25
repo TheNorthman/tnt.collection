@@ -184,11 +184,11 @@ tnt.dataCollector = {
             total.sulfur += cityData.sulfur || 0;
             if (cityData.militaryUnits !== null && cityData.militaryUnits !== undefined) {
                 if (total.militaryUnits === null) total.militaryUnits = 0;
-                total.militaryUnits += cityData.militaryUnits || 0;
+                total.militaryUnits += cityData.militaryUnits;
             }
             if (cityData.navy !== null && cityData.navy !== undefined) {
                 if (total.navy === null) total.navy = 0;
-                total.navy += cityData.navy || 0;
+                total.navy += cityData.navy;
             }
         });
 
